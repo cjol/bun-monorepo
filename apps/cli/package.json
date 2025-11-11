@@ -1,0 +1,20 @@
+{
+  "name": "cli",
+  "module": "index.ts",
+  "bin": {
+    "ai-starter": "./index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@ai-starter/app": "workspace:*",
+    "@ai-starter/db": "workspace:*",
+    "cleye": "^2.0.0"
+  }
+}

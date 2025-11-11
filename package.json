@@ -3,10 +3,11 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": ["packages/*", "apps/*"],
   "scripts": {
     "db:studio": "bunx drizzle-kit studio",
-    "db:push": "bunx drizzle-kit push"
+    "db:push": "bunx drizzle-kit push",
+    "cli": "bun apps/cli/index.ts"
   },
   "devDependencies": {
     "drizzle-kit": "^0.31.6"

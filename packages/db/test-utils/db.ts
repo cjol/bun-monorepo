@@ -10,13 +10,3 @@ export const testDB = async () => {
 
   return db;
 };
-
-export const getRepos = async () => {
-  const db = await testDB();
-  return {
-    db,
-    repos: {
-      foo: DrizzleFooRepository({ db }),
-    },
-  };
-};

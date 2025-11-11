@@ -1,15 +1,18 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import { getRepos, doSeedFoos, mockFoos } from "@ai-starter/db/test-utils";
+import { doSeedFoos, mockFoos, testDB } from "@ai-starter/db/test-utils";
+import { getRepos, type DB } from "@ai-starter/db";
 import { CoreAppService } from "./CoreAppService";
 
 describe("CoreAppService", () => {
-  let dbDeps: Awaited<ReturnType<typeof getRepos>>;
+  let db: DB;
+  let repos: ReturnType<typeof getRepos>;
   let service: ReturnType<typeof CoreAppService>;
 
   beforeEach(async () => {
-    dbDeps = await getRepos();
-    await doSeedFoos(dbDeps.db);
-    service = CoreAppService({ repos: dbDeps.repos });
+    db = await testDB();
+    repos = await getRepos(db);
+    await doSeedFoos(db);
+    service = CoreAppService({ repos: repos });
   });
 
   describe("getFoo", () => {
