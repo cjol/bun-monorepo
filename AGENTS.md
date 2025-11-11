@@ -30,6 +30,10 @@
 - It's not normally useful to annotate the return type of a function. Type
   inference is fine.
 - Always follow test-driven-development with a red-green-refactor cycle.
+- As far as possible, co-locate tests with the code they are testing. Only e2e
+  tests should go in a separate `tests/` folder at the root of the monorepo.
+- Don't stress out about code coverage, but do review it with
+  `bun test --coverage` to check there aren't any obvious blind spots.
 - Code is laid out according to a hexagonal architecture with strict dependency
   direction rules:
   - Core domain models and interfaces in `packages/core` must not depend on
