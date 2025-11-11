@@ -1,0 +1,7 @@
+{
+  "name": "ai-starter",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "workspaces": ["packages/*"]
+}
