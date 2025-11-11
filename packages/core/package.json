@@ -7,10 +7,10 @@
     "@types/bun": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5",
+    "drizzle-orm": "^0.44.7"
   },
   "dependencies": {
-    "drizzle-orm": "^0.44.7",
     "zod": "^4.1.12"
   }
 }

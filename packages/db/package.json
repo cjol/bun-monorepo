@@ -1,0 +1,17 @@
+{
+  "name": "@ai-starter/db",
+  "version": "0.0.1",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "^1.3.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@ai-starter/core": "workspace:*",
+    "@libsql/client": "^0.15.15",
+    "drizzle-orm": "^0.44.7"
+  }
+}

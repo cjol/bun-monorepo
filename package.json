@@ -3,5 +3,12 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
-  "workspaces": ["packages/*"]
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "db:studio": "bunx drizzle-kit studio",
+    "db:push": "bunx drizzle-kit push"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.6"
+  }
 }

@@ -1,12 +1,12 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { timestamps } from "./utils/timestamps";
 
 export const fooSchema = sqliteTable("foo", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .$defaultFn(() => new Date()),
+  name: text("name").notNull(),
+  ...timestamps,
 });
 
 export type Foo = typeof fooSchema.$inferSelect;
