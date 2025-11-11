@@ -70,6 +70,16 @@
         "typescript": "^5",
       },
     },
+    "tests": {
+      "name": "tests",
+      "dependencies": {
+        "@ai-starter/core": "workspace:*",
+        "@ai-starter/db": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+    },
   },
   "packages": {
     "@ai-starter/app": ["@ai-starter/app@workspace:packages/app"],
@@ -223,6 +233,8 @@
     "source-map-support": ["source-map-support@0.5.21", "", { "dependencies": { "buffer-from": "^1.0.0", "source-map": "^0.6.0" } }, "sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w=="],
 
     "terminal-columns": ["terminal-columns@2.0.0", "", {}, "sha512-6IByuUjyNZJXUtwDNm+OIe62zgwwaRbH+WMNTcx05O2G5V9WhvluAAHJY8OvUdwmzMPpqAD/7EUpGdI6ae1aiQ=="],
+
+    "tests": ["tests@workspace:tests"],
 
     "type-flag": ["type-flag@4.0.2", "", {}, "sha512-diALGSg9wBpvowixHbIeCJtXNxUKJHUNR8oE67K9zuPkpBe5FMmg+dpevDWmEwGQDmn/RJD3m7szs6Ssdz5A4w=="],
 

@@ -1,0 +1,12 @@
+{
+  "name": "tests",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@ai-starter/core": "workspace:*",
+    "@ai-starter/db": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
