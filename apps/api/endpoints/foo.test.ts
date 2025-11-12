@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import { Elysia } from "elysia";
 import { testDB, doSeedFoos, mockFoos } from "@ai-starter/db/test-utils";
 import { getRepos, type DB } from "@ai-starter/db";
 import { CoreAppService } from "@ai-starter/app";

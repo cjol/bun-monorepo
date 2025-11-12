@@ -2,10 +2,6 @@ import { describe, it, expect, beforeEach } from "bun:test";
 import { $ } from "bun";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import * as os from "node:os";
-import { getDB } from "@ai-starter/db";
-import { pushSQLiteSchema } from "drizzle-kit/api";
-import * as schema from "@ai-starter/core/schema";
 import { setupDB } from "./utils/db";
 
 describe("CLI e2e", () => {
@@ -35,6 +31,7 @@ describe("CLI e2e", () => {
     const idMatch = addResult.match(/ID:[^\n]*?([a-f0-9-]{36})/);
     expect(idMatch).not.toBeNull();
     const fooId = idMatch![1];
+    if (!fooId) throw new Error("Failed to extract foo ID");
 
     // 2. Get the foo
     const getResult =

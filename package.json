@@ -3,14 +3,30 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
-  "workspaces": ["packages/*", "apps/*", "tests"],
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "tests"
+  ],
   "scripts": {
     "db:studio": "bunx drizzle-kit studio",
     "db:push": "bunx drizzle-kit push",
     "cli": "bun apps/cli/index.ts",
-    "api": "bun apps/api/src/index.ts"
+    "api": "bun apps/api/src/index.ts",
+    "test": "bun test",
+    "typecheck": "tsc --build packages/*/tsconfig.json apps/*/tsconfig.json tests/tsconfig.json",
+    "lint": "eslint . && prettier --check .",
+    "lint:fix": "eslint . --fix && prettier --write .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "bun test && bun run typecheck && bun run lint"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.31.6"
+    "@eslint/js": "^9.39.1",
+    "drizzle-kit": "^0.31.6",
+    "eslint": "^9.39.1",
+    "prettier": "^3.2.5",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.4"
   }
 }

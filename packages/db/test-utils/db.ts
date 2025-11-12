@@ -1,4 +1,4 @@
-import { getDB, seedDB, type DB } from "../db";
+import { getDB, seedDB } from "../db";
 import { DrizzleFooRepository } from "../repositories";
 
 export const testDB = async () => {

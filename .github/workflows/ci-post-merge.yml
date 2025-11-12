@@ -1,0 +1,41 @@
+name: CI (Post-merge)
+
+# Runs automatically on pushes to main. To test this workflow from a branch, name the branch
+# using the "ci-post-merge/" prefix (e.g. ci-post-merge/update-workflow).
+on:
+  push:
+    branches: [main, "ci-post-merge/**"]
+
+jobs:
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun environment
+        uses: ./.github/actions/setup-bun
+
+      - name: Type check
+        run: bun run typecheck
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun environment
+        uses: ./.github/actions/setup-bun
+
+      - name: Lint
+        run: bun run lint
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun environment
+        uses: ./.github/actions/setup-bun
+
+      - name: Run tests
+        run: bun run test
