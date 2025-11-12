@@ -1,9 +1,6 @@
 {
-  "name": "@ai-starter/cli",
-  "module": "index.ts",
-  "bin": {
-    "ai-starter": "./index.ts"
-  },
+  "name": "@ai-starter/api",
+  "module": "src/index.ts",
   "devDependencies": {
     "@types/bun": "latest"
   },
@@ -14,7 +11,13 @@
   "type": "module",
   "dependencies": {
     "@ai-starter/app": "workspace:*",
+    "@ai-starter/core": "workspace:*",
     "@ai-starter/db": "workspace:*",
-    "cleye": "^2.0.0"
+    "@hapi/boom": "^10.0.1",
+    "elysia": "^1.1.28",
+    "zod": "^4.1.12"
+  },
+  "scripts": {
+    "start": "bun run index.ts"
   }
 }

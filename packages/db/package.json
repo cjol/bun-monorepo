@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@ai-starter/core": "workspace:*",
+    "@hapi/boom": "^10.0.1",
     "@libsql/client": "^0.15.15",
     "drizzle-orm": "^0.44.7"
   }

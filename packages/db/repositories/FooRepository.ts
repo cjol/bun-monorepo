@@ -1,6 +1,7 @@
 import { fooSchema, type FooRepository } from "@ai-starter/core";
 import type { DB } from "../db";
 import { eq } from "drizzle-orm";
+import { notFound } from "@hapi/boom";
 
 export interface Deps {
   db: DB;
@@ -23,6 +24,9 @@ export const DrizzleFooRepository = ({ db }: Deps): FooRepository => ({
       .set({ name })
       .where(eq(fooSchema.id, id))
       .returning();
+    if (!result) {
+      throw notFound(`Foo with ID ${id} not found`, { id });
+    }
     return result!;
   },
 });
