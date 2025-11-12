@@ -14,7 +14,9 @@
   "type": "module",
   "dependencies": {
     "@ai-starter/app": "workspace:*",
+    "@ai-starter/core": "workspace:*",
     "@ai-starter/db": "workspace:*",
+    "@hapi/boom": "^10.0.1",
     "cleye": "^2.0.0"
   }
 }

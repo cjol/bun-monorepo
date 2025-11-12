@@ -1,6 +1,8 @@
 import { command } from "cleye";
 import { getApp } from "../utils/app";
 import { FLAGS } from "../utils/flags";
+import type { Foo } from "@ai-starter/core";
+import { isBoom } from "@hapi/boom";
 
 export const patchFoo = command(
   {
@@ -22,7 +24,15 @@ export const patchFoo = command(
   },
   async (argv) => {
     const app = await getApp(argv.flags.database);
-    const result = await app.patchFoo(argv._.fooId, argv._.fooName);
+    let result: Foo | undefined;
+    try {
+      result = await app.patchFoo(argv._.fooId, argv._.fooName);
+    } catch (error) {
+      if (!isBoom(error) || error.output.statusCode !== 404) {
+        throw error;
+      }
+      // continue to handle not found case below
+    }
     if (!result) {
       console.log(
         `\x1b[1m\x1b[31mFoo with ID ${argv._.fooId} not found.\x1b[0m`

@@ -32,7 +32,9 @@
       },
       "dependencies": {
         "@ai-starter/app": "workspace:*",
+        "@ai-starter/core": "workspace:*",
         "@ai-starter/db": "workspace:*",
+        "@hapi/boom": "^10.0.1",
         "cleye": "^2.0.0",
       },
       "devDependencies": {
@@ -94,6 +96,7 @@
         "@ai-starter/api": "workspace:*",
         "@ai-starter/core": "workspace:*",
         "@ai-starter/db": "workspace:*",
+        "@elysiajs/eden": "^1.4.4",
         "elysia": "^1.1.28",
       },
       "devDependencies": {
@@ -115,6 +118,8 @@
     "@borewit/text-codec": ["@borewit/text-codec@0.1.1", "", {}, "sha512-5L/uBxmjaCIX5h8Z+uu+kA9BQLkc/Wl06UGR5ajNRxu+/XjonB5i8JpgFMrPj3LXTCPA0pv8yxUvbUi+QthGGA=="],
 
     "@drizzle-team/brocli": ["@drizzle-team/brocli@0.10.2", "", {}, "sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w=="],
+
+    "@elysiajs/eden": ["@elysiajs/eden@1.4.4", "", { "peerDependencies": { "elysia": ">= 1.4.0-exp.0" } }, "sha512-/LVqflmgUcCiXb8rz1iRq9Rx3SWfIV/EkoNqDFGMx+TvOyo8QHAygFXAVQz7RHs+jk6n6mEgpI6KlKBANoErsQ=="],
 
     "@esbuild-kit/core-utils": ["@esbuild-kit/core-utils@3.3.2", "", { "dependencies": { "esbuild": "~0.18.20", "source-map-support": "^0.5.21" } }, "sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ=="],
 

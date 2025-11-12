@@ -21,6 +21,8 @@ export const getApp = (ctx: Context) =>
     .get("/health", () => ({ status: "ok" }))
     .use(fooRoutes(ctx));
 
+export type App = ReturnType<typeof getApp>;
+
 if (import.meta.main) {
   const ctx = getContext(env.DATABASE_URL);
   const app = getApp(ctx).listen(3000);

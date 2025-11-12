@@ -6,24 +6,22 @@ import * as os from "node:os";
 import { getDB } from "@ai-starter/db";
 import { pushSQLiteSchema } from "drizzle-kit/api";
 import * as schema from "@ai-starter/core/schema";
+import { setupDB } from "./utils/db";
 
 describe("CLI e2e", () => {
   let tmpDir: string;
   let dbPath: string;
 
   beforeEach(async () => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "cli-test-"));
-    dbPath = path.join(tmpDir, "test.db");
-
-    // Initialize the database schema
-    const db = getDB(`file:${dbPath}`);
-    const { apply } = await pushSQLiteSchema(schema, db);
-    await apply();
+    ({ tmpDir, dbPath } = await setupDB("cli-test-"));
   });
 
   it("should add, get, patch, and get again a foo", async () => {
     const cliPath = path.resolve(__dirname, "../apps/cli/index.ts");
 
+    console.log(
+      `bun ${cliPath} add-foo "Initial Foo" --database file:${dbPath}`
+    );
     // 1. Add a foo
     const addResult =
       await $`bun ${cliPath} add-foo "Initial Foo" --database file:${dbPath}`.text();
@@ -89,6 +87,7 @@ describe("CLI e2e", () => {
 
     const patchResult =
       await $`bun ${cliPath} patch-foo non-existent-id "New Name" --database file:${dbPath}`.text();
+    console.log("Patch Result:", patchResult);
 
     expect(patchResult).toContain("not found");
 
