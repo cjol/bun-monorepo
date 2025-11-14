@@ -3,6 +3,7 @@ import { getContext, type Context } from "./context";
 import { fooRoutes } from "./endpoints/foo";
 import { matterRoutes } from "./endpoints/matter";
 import { billRoutes } from "./endpoints/bill";
+import { timeEntryRoutes } from "./endpoints/timeEntry";
 import { env } from "./utils/env";
 import { Boom, isBoom } from "@hapi/boom";
 
@@ -22,7 +23,8 @@ export const getApp = (ctx: Context) =>
     .get("/health", () => ({ status: "ok" }))
     .use(fooRoutes(ctx))
     .use(matterRoutes(ctx))
-    .use(billRoutes(ctx));
+    .use(billRoutes(ctx))
+    .use(timeEntryRoutes(ctx));
 
 export type App = ReturnType<typeof getApp>;
 
