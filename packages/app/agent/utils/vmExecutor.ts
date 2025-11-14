@@ -57,10 +57,15 @@ function createVMContext(config: VMExecutorConfig): Context {
             return String(arg);
           })
           .join(" ");
-        sandbox.__logs__.push(message);
+        (sandbox.__logs__ as string[]).push(message);
       },
     },
     __logs__: [] as string[],
+    __result__: undefined as unknown,
+    // Provide a helper function to explicitly set the result
+    return: (value: unknown) => {
+      sandbox.__result__ = value;
+    },
   };
 
   // Expose each tool as a function in the sandbox
@@ -104,11 +109,46 @@ export async function executeInVM(
   const context = createVMContext(config);
 
   try {
-    // Wrap the code to capture the return value and handle async code
-    // The code can be sync or async - we'll handle both
+    // Wrap the code to capture the result and handle async code
+    // We need to explicitly store the result in __result__ because
+    // VM contexts don't automatically return the last expression's value
+    // We execute the code and then try to capture the last expression's value
+    const codeLines = code.split('\n').map(l => l.trim()).filter(l => l);
+    const lastLine = codeLines[codeLines.length - 1] || '';
+    const isLastLineExpression = lastLine && 
+      !lastLine.endsWith(';') && 
+      !lastLine.match(/^(const|let|var|function|class|if|for|while|switch|try|return|throw|break|continue)\s/);
+    
+    // If it's a single expression, wrap it differently
+    const isSingleExpression = codeLines.length === 1 && isLastLineExpression;
+    
     const wrappedCode = `
       (async () => {
-        ${code}
+        try {
+          ${isSingleExpression 
+            ? `// Single expression - capture it directly
+               __result__ = ${code};`
+            : `// Execute all the code (statements)
+               ${code}
+               // If the last line looks like an expression, evaluate it to capture its value
+               ${isLastLineExpression ? `
+               if (__result__ === undefined) {
+                 try {
+                   __result__ = ${lastLine};
+                 } catch (e) {
+                   // Evaluation failed, result stays undefined
+                 }
+               }
+               ` : ''}`
+          }
+          // Handle promises
+          if (__result__ instanceof Promise) {
+            __result__ = await __result__;
+          }
+        } catch (error) {
+          __result__ = { __error__: error.message || String(error) };
+          throw error;
+        }
       })()
     `;
 
@@ -131,22 +171,35 @@ export async function executeInVM(
         : Promise.resolve(executionResult);
 
     // Race between execution and timeout
-    const result = await Promise.race([
+    await Promise.race([
       resultPromise,
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("Execution timeout")), timeout)
       ),
     ]);
 
+    // Extract the result from the sandbox
+    const result = (context as Record<string, unknown>).__result__;
+
+    // Check if there was an error stored in the result
+    if (
+      result &&
+      typeof result === "object" &&
+      "__error__" in result &&
+      typeof (result as { __error__: string }).__error__ === "string"
+    ) {
+      throw new Error((result as { __error__: string }).__error__);
+    }
+
     // Extract logs from the context
-    const logs = (context.__logs__ as string[]) || [];
+    const logs = ((context as Record<string, unknown>).__logs__ as string[]) || [];
 
     return {
       output: result,
       logs,
     };
   } catch (error) {
-    const logs = (context.__logs__ as string[]) || [];
+    const logs = ((context as Record<string, unknown>).__logs__ as string[]) || [];
     return {
       output: null,
       logs,
