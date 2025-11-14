@@ -21,6 +21,7 @@ describe("DrizzleBillRepository", () => {
         matterName: "Test Matter",
       })
       .returning();
+    if (!matter) throw new Error("Failed to create matter");
     matterId = matter.id;
   });
 
@@ -175,6 +176,7 @@ describe("DrizzleBillRepository", () => {
           matterName: "Matter 2",
         })
         .returning();
+      if (!matter2) throw new Error("Failed to create matter2");
 
       await repository.create({
         matterId,

@@ -22,6 +22,7 @@ describe("DrizzleTimeEntryRepository", () => {
         matterName: "Test Matter",
       })
       .returning();
+    if (!matter) throw new Error("Failed to create matter");
     matterId = matter.id;
 
     // Create a bill for foreign key reference
@@ -33,6 +34,7 @@ describe("DrizzleTimeEntryRepository", () => {
         periodEnd: new Date("2024-01-31"),
       })
       .returning();
+    if (!bill) throw new Error("Failed to create bill");
     billId = bill.id;
   });
 
@@ -193,6 +195,7 @@ describe("DrizzleTimeEntryRepository", () => {
           matterName: "Matter 2",
         })
         .returning();
+      if (!matter2) throw new Error("Failed to create matter2");
 
       await repository.create({
         matterId,

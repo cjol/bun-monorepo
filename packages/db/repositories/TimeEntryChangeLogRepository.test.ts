@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import {
-  timeEntryChangeLogSchema,
-  timeEntrySchema,
-  matterSchema,
-} from "@ai-starter/core";
+import { timeEntrySchema, matterSchema } from "@ai-starter/core";
 import { DrizzleTimeEntryChangeLogRepository } from "./TimeEntryChangeLogRepository";
 import type { DB } from "../db";
 import { testDB } from "../test-utils/db";
@@ -25,6 +21,7 @@ describe("DrizzleTimeEntryChangeLogRepository", () => {
         matterName: "Test Matter",
       })
       .returning();
+    if (!matter) throw new Error("Failed to create matter");
 
     // Create a time entry for foreign key reference
     const [timeEntry] = await db
@@ -36,6 +33,7 @@ describe("DrizzleTimeEntryChangeLogRepository", () => {
         description: "Original entry",
       })
       .returning();
+    if (!timeEntry) throw new Error("Failed to create timeEntry");
     timeEntryId = timeEntry.id;
   });
 
@@ -125,6 +123,7 @@ describe("DrizzleTimeEntryChangeLogRepository", () => {
           matterName: "Matter 2",
         })
         .returning();
+      if (!matter2) throw new Error("Failed to create matter2");
       const [timeEntry2] = await db
         .insert(timeEntrySchema)
         .values({
@@ -134,6 +133,7 @@ describe("DrizzleTimeEntryChangeLogRepository", () => {
           description: "Other entry",
         })
         .returning();
+      if (!timeEntry2) throw new Error("Failed to create timeEntry2");
 
       await repository.insert({
         timeEntryId,

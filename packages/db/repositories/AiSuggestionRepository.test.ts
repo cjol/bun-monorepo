@@ -28,6 +28,7 @@ describe("DrizzleAiSuggestionRepository", () => {
         matterName: "Test Matter",
       })
       .returning();
+    if (!matter) throw new Error("Failed to create matter");
 
     const [timeEntry] = await db
       .insert(timeEntrySchema)
@@ -38,6 +39,7 @@ describe("DrizzleAiSuggestionRepository", () => {
         description: "Original entry",
       })
       .returning();
+    if (!timeEntry) throw new Error("Failed to create timeEntry");
     timeEntryId = timeEntry.id;
 
     const [conversation] = await db
@@ -46,6 +48,7 @@ describe("DrizzleAiSuggestionRepository", () => {
         title: "Test Conversation",
       })
       .returning();
+    if (!conversation) throw new Error("Failed to create conversation");
 
     const [message] = await db
       .insert(messageSchema)
@@ -55,6 +58,7 @@ describe("DrizzleAiSuggestionRepository", () => {
         content: [{ type: "text", text: "Test message" }],
       })
       .returning();
+    if (!message) throw new Error("Failed to create message");
     messageId = message.id;
   });
 
@@ -212,6 +216,7 @@ describe("DrizzleAiSuggestionRepository", () => {
           matterName: "Matter 2",
         })
         .returning();
+      if (!matter2) throw new Error("Failed to create matter2");
       const [timeEntry2] = await db
         .insert(timeEntrySchema)
         .values({
@@ -221,6 +226,7 @@ describe("DrizzleAiSuggestionRepository", () => {
           description: "Other entry",
         })
         .returning();
+      if (!timeEntry2) throw new Error("Failed to create timeEntry2");
 
       await repository.create({
         timeEntryId,
