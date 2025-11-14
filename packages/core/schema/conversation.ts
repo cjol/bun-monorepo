@@ -6,6 +6,7 @@ export const conversationSchema = sqliteTable("conversation", {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   title: text("title"),
+  threadId: text("thread_id"),
   ...timestamps,
 });
 

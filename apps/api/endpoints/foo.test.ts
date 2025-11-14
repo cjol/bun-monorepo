@@ -1,7 +1,14 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import { testDB, mockFoos } from "@ai-starter/db/test-utils";
 import { getRepos, type DB } from "@ai-starter/db";
-import { CoreAppService } from "@ai-starter/app";
+import {
+  CoreAppService,
+  MatterService,
+  BillService,
+  TimeEntryService,
+  AiSuggestionService,
+  WorkflowService,
+} from "@ai-starter/app";
 import { getApp } from "..";
 
 describe("Foo API endpoints", () => {
@@ -11,7 +18,17 @@ describe("Foo API endpoints", () => {
   beforeEach(async () => {
     db = await testDB();
 
-    app = getApp({ app: CoreAppService({ repos: getRepos(db) }) });
+    const repos = getRepos(db);
+    app = getApp({
+      app: {
+        foo: CoreAppService({ repos }),
+        matter: MatterService({ repos }),
+        bill: BillService({ repos }),
+        timeEntry: TimeEntryService({ repos }),
+        aiSuggestion: AiSuggestionService({ repos }),
+        workflow: WorkflowService({ repos }),
+      },
+    });
   });
 
   describe("GET /foos/:id", () => {

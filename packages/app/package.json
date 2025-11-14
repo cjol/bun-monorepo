@@ -13,6 +13,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.44",
     "@ai-starter/core": "workspace:*",
+    "@hapi/boom": "^10.0.1",
     "@libsql/client": "^0.15.15",
     "ai": "^5.0.92",
     "drizzle-orm": "^0.44.7",
