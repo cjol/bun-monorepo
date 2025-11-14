@@ -9,7 +9,7 @@ describe("DrizzleWorkflowRepository", () => {
   let repository: ReturnType<typeof DrizzleWorkflowRepository>;
 
   beforeEach(async () => {
-    db = await testDB();
+    db = await testDB({ seed: false });
     repository = DrizzleWorkflowRepository({ db });
   });
 

@@ -13,13 +13,13 @@
     "db:push": "bunx drizzle-kit push",
     "cli": "bun apps/cli/index.ts",
     "api": "bun apps/api/src/index.ts",
-    "test": "bun test",
+    "test": "bun test packages/ apps/ tests/*.test.ts",
     "typecheck": "tsc --build packages/*/tsconfig.json apps/*/tsconfig.json tests/tsconfig.json",
     "lint": "eslint . && prettier --check .",
-    "lint:fix": "bun format && eslint --fix --unsafe .",
+    "lint:fix": "bun format && eslint --fix .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "bun test && bun run typecheck && bun run lint"
+    "check": "bun run test && bun run typecheck && bun run lint"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

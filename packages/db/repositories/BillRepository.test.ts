@@ -10,7 +10,7 @@ describe("DrizzleBillRepository", () => {
   let matterId: string;
 
   beforeEach(async () => {
-    db = await testDB();
+    db = await testDB({ seed: false });
     repository = DrizzleBillRepository({ db });
 
     // Create a matter for foreign key reference

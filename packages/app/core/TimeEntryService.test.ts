@@ -15,7 +15,7 @@ describe("TimeEntryService", () => {
   let billId: string;
 
   beforeEach(async () => {
-    db = await testDB();
+    db = await testDB({ seed: false });
     repos = await getRepos(db);
     service = TimeEntryService({ repos });
     matterService = MatterService({ repos });

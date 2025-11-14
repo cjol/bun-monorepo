@@ -16,7 +16,7 @@ describe("AiSuggestionService", () => {
   let messageId: string;
 
   beforeEach(async () => {
-    db = await testDB();
+    db = await testDB({ seed: false });
     repos = await getRepos(db);
     service = AiSuggestionService({ repos });
     timeEntryService = TimeEntryService({ repos });

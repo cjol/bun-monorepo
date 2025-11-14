@@ -12,7 +12,7 @@ describe("BillService", () => {
   let matterId: string;
 
   beforeEach(async () => {
-    db = await testDB();
+    db = await testDB({ seed: false });
     repos = await getRepos(db);
     service = BillService({ repos });
     matterService = MatterService({ repos });

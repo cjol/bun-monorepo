@@ -9,7 +9,7 @@ describe("WorkflowService", () => {
   let service: ReturnType<typeof WorkflowService>;
 
   beforeEach(async () => {
-    db = await testDB();
+    db = await testDB({ seed: false });
     repos = await getRepos(db);
     service = WorkflowService({ repos });
   });

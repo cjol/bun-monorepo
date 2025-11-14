@@ -9,7 +9,7 @@ describe("DrizzleMatterRepository", () => {
   let repository: ReturnType<typeof DrizzleMatterRepository>;
 
   beforeEach(async () => {
-    db = await testDB();
+    db = await testDB({ seed: false });
     repository = DrizzleMatterRepository({ db });
   });
 

@@ -11,7 +11,7 @@ describe("DrizzleTimeEntryRepository", () => {
   let billId: string;
 
   beforeEach(async () => {
-    db = await testDB();
+    db = await testDB({ seed: false });
     repository = DrizzleTimeEntryRepository({ db });
 
     // Create a matter for foreign key reference

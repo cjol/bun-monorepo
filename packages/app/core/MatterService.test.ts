@@ -9,7 +9,7 @@ describe("MatterService", () => {
   let service: ReturnType<typeof MatterService>;
 
   beforeEach(async () => {
-    db = await testDB();
+    db = await testDB({ seed: false });
     repos = await getRepos(db);
     service = MatterService({ repos });
   });

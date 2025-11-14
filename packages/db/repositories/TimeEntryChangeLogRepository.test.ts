@@ -10,7 +10,7 @@ describe("DrizzleTimeEntryChangeLogRepository", () => {
   let timeEntryId: string;
 
   beforeEach(async () => {
-    db = await testDB();
+    db = await testDB({ seed: false });
     repository = DrizzleTimeEntryChangeLogRepository({ db });
 
     // Create a matter for foreign key reference

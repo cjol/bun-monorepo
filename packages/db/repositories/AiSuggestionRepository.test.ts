@@ -17,7 +17,7 @@ describe("DrizzleAiSuggestionRepository", () => {
   let messageId: string;
 
   beforeEach(async () => {
-    db = await testDB();
+    db = await testDB({ seed: false });
     repository = DrizzleAiSuggestionRepository({ db });
 
     // Create dependencies for foreign keys
