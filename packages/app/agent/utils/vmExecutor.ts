@@ -61,11 +61,7 @@ function createVMContext(config: VMExecutorConfig): Context {
       },
     },
     __logs__: [] as string[],
-    __result__: undefined as unknown,
-    // Provide a helper function to explicitly set the result
-    return: (value: unknown) => {
-      sandbox.__result__ = value;
-    },
+    result: undefined as unknown,
   };
 
   // Expose each tool as a function in the sandbox
@@ -110,63 +106,25 @@ export async function executeInVM(
   const context = createVMContext(config);
 
   try {
-    // We need to safely inject the code into the VM context
-    // Use JSON.stringify to properly escape the code string, then eval it within the VM
+    // Wrap the code to assign it to the result variable
+    // Simple wrapper: try as expression first, fall back to executing statements
     const codeJson = JSON.stringify(code);
-    
-    // Wrap the code to capture the result and handle async code
-    // Strategy: Try to evaluate as an expression first, if that fails, execute as statements
-    // and try to capture the last expression
     const wrappedCode = `
       (async () => {
         try {
-          const codeStr = ${codeJson};
-          let result;
-          
-          // First, try to evaluate the entire code as an expression
-          // This works for single expressions like "1 + 1" or "await func()"
-          try {
-            result = eval('(' + codeStr + ')');
-            __result__ = result;
-          } catch (e) {
-            // If that fails, it's likely statements. Execute them and try to capture last expression
-            eval(codeStr);
-            
-            // Now try to extract and evaluate the last expression
-            // Handle both multi-line (split by \\n) and single-line (split by ;) code
-            const lines = codeStr.split('\\n').map(l => l.trim()).filter(l => l);
-            let lastExpr = '';
-            
-            if (lines.length > 1) {
-              // Multi-line: get the last line
-              lastExpr = lines[lines.length - 1];
-            } else if (lines.length === 1) {
-              // Single line: split by semicolons and get the last part
-              const parts = lines[0].split(';').map(p => p.trim()).filter(p => p);
-              if (parts.length > 0) {
-                lastExpr = parts[parts.length - 1];
-              }
-            }
-            
-            // Only try if last expression looks like an expression (not a statement)
-            if (lastExpr && !lastExpr.endsWith(';') && 
-                !lastExpr.match(/^(const|let|var|function|class|if|for|while|switch|try|return|throw|break|continue)\\s/)) {
-              try {
-                __result__ = eval(lastExpr);
-              } catch (e2) {
-                // Last expression evaluation failed, result stays undefined
-                // (or whatever was set by the code itself)
-              }
+          result = eval('(' + ${codeJson} + ')');
+        } catch (e) {
+          eval(${codeJson});
+          const parts = ${codeJson}.split(/[;\\n]/).map(p => p.trim()).filter(p => p);
+          if (parts.length > 0) {
+            const last = parts[parts.length - 1];
+            if (last && !last.match(/^(const|let|var|function|class|if|for|while|switch|try|return)/)) {
+              try { result = eval(last); } catch (e2) {}
             }
           }
-          
-          // Handle promises
-          if (__result__ instanceof Promise) {
-            __result__ = await __result__;
-          }
-        } catch (error) {
-          __result__ = { __error__: error.message || String(error) };
-          throw error;
+        }
+        if (result instanceof Promise) {
+          result = await result;
         }
       })()
     `;
@@ -198,17 +156,7 @@ export async function executeInVM(
     ]);
 
     // Extract the result from the sandbox
-    const result = (context as Record<string, unknown>).__result__;
-
-    // Check if there was an error stored in the result
-    if (
-      result &&
-      typeof result === "object" &&
-      "__error__" in result &&
-      typeof (result as { __error__: string }).__error__ === "string"
-    ) {
-      throw new Error((result as { __error__: string }).__error__);
-    }
+    const result = (context as Record<string, unknown>).result;
 
     // Extract logs from the context
     const logs = ((context as Record<string, unknown>).__logs__ as string[]) || [];
