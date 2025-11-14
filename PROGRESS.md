@@ -15,3 +15,15 @@ All tests pass and typecheck succeeds - schemas are ready for repository impleme
 Implemented all 6 V3 repositories following TDD pattern with curried dependency injection.
 All 87 repository tests passing with full CRUD operations, query methods, and proper error handling.
 Repositories exported via getRepos() and test-utils updated for easy testing.
+
+## Core Domain Models Complete
+
+Created validators for all 6 V3 schemas (matter, bill, timeEntry, timeEntryChangeLog, aiSuggestion, workflow) following existing patterns.
+All validators include proper validation rules (UUID, string lengths, enums, numeric constraints) and are exported from packages/core.
+18 validator tests passing - core layer fully typed with no external dependencies except Zod.
+
+## Application Services Complete
+
+Implemented 5 V3 application services (MatterService, BillService, TimeEntryService, AiSuggestionService, WorkflowService) following hexagonal architecture.
+All services use curried dependency injection, depend only on core repository interfaces, and include comprehensive test coverage.
+TimeEntryService automatically logs changes; AiSuggestionService applies suggestions to time entries on approval with change logging.
