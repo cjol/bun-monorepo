@@ -27,6 +27,13 @@ export const DrizzleConversationRepository = ({
     return result ?? null;
   },
 
+  async getByThreadId(threadId: string) {
+    const result = await db.query.conversationSchema.findFirst({
+      where: eq(conversationSchema.threadId, threadId),
+    });
+    return result ?? null;
+  },
+
   async create(data) {
     const [result] = await db
       .insert(conversationSchema)

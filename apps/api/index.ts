@@ -1,6 +1,11 @@
 import { Elysia } from "elysia";
 import { getContext, type Context } from "./context";
 import { fooRoutes } from "./endpoints/foo";
+import { matterRoutes } from "./endpoints/matter";
+import { billRoutes } from "./endpoints/bill";
+import { timeEntryRoutes } from "./endpoints/timeEntry";
+import { aiSuggestionRoutes } from "./endpoints/aiSuggestion";
+import { workflowRoutes } from "./endpoints/workflow";
 import { env } from "./utils/env";
 import { Boom, isBoom } from "@hapi/boom";
 
@@ -18,7 +23,12 @@ export const getApp = (ctx: Context) =>
     })
     .get("/", () => ({ message: "AI Starter API" }))
     .get("/health", () => ({ status: "ok" }))
-    .use(fooRoutes(ctx));
+    .use(fooRoutes(ctx))
+    .use(matterRoutes(ctx))
+    .use(billRoutes(ctx))
+    .use(timeEntryRoutes(ctx))
+    .use(aiSuggestionRoutes(ctx))
+    .use(workflowRoutes(ctx));
 
 export type App = ReturnType<typeof getApp>;
 

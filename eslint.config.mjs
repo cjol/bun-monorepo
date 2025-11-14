@@ -7,6 +7,9 @@ export default defineConfig(
   tseslint.configs.strict,
   tseslint.configs.stylistic,
   {
+    ignores: ["old-v2/**/*"],
+  },
+  {
     rules: {
       "@typescript-eslint/no-unused-vars": [
         "error",

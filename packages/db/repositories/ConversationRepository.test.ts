@@ -51,6 +51,32 @@ describe("DrizzleConversationRepository", () => {
     });
   });
 
+  describe("getByThreadId", () => {
+    it("should return null when no conversation with threadId exists", async () => {
+      const result = await repository.getByThreadId("non-existent-thread");
+      expect(result).toBeNull();
+    });
+
+    it("should return conversation when threadId matches", async () => {
+      // First create a conversation with a threadId
+      const now = new Date();
+      now.setMilliseconds(0);
+      await repository.create({
+        id: "00000000-0000-4000-8000-000000000100",
+        title: "Thread Test",
+        threadId: "email-thread-123",
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      const result = await repository.getByThreadId("email-thread-123");
+
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe("00000000-0000-4000-8000-000000000100");
+      expect(result?.threadId).toBe("email-thread-123");
+    });
+  });
+
   describe("create", () => {
     it("should create a new conversation with a title", async () => {
       const now = new Date();

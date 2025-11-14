@@ -1,0 +1,432 @@
+import { Experimental_Agent as Agent, stepCountIs } from "ai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { z } from "zod";
+import type {
+  MatterService as MatterServiceType,
+  BillService as BillServiceType,
+  TimeEntryService as TimeEntryServiceType,
+  AiSuggestionService as AiSuggestionServiceType,
+  WorkflowService as WorkflowServiceType,
+} from "../core";
+import {
+  createSandboxTool,
+  generateFunctionDocs,
+  type SandboxFunction,
+} from "./utils";
+
+/**
+ * Options for creating a general-purpose agent.
+ */
+export interface CreateGeneralPurposeAgentOptions {
+  /**
+   * Application services for timesheet management operations.
+   */
+  services: {
+    matter: MatterServiceType;
+    bill: BillServiceType;
+    timeEntry: TimeEntryServiceType;
+    aiSuggestion: AiSuggestionServiceType;
+    workflow: WorkflowServiceType;
+  };
+
+  /**
+   * Optional workflow instructions to include in the agent's system prompt.
+   * These provide context and guidelines for the agent's behavior.
+   */
+  workflowInstructions?: string;
+}
+
+/**
+ * Creates the sandbox functions available to the general-purpose agent.
+ * These functions allow the agent to interact with matters, bills, time entries,
+ * AI suggestions, and workflows.
+ */
+function createTimesheetManagementFunctions(
+  services: CreateGeneralPurposeAgentOptions["services"]
+) {
+  // Matter functions
+  const getMatter: SandboxFunction<{ id: string }, unknown> = {
+    description: "Fetch a specific matter by ID",
+    inputSchema: z.object({
+      id: z.string().uuid().describe("The UUID of the matter to fetch"),
+    }),
+    execute: async ({ id }) => {
+      const matter = await services.matter.getMatter(id);
+      if (!matter) {
+        throw new Error(`Matter with ID ${id} not found`);
+      }
+      return matter;
+    },
+  };
+
+  const createMatter: SandboxFunction<
+    { clientName: string; matterName: string; description: string | null },
+    unknown
+  > = {
+    description: "Create a new matter",
+    inputSchema: z.object({
+      clientName: z.string().describe("Name of the client"),
+      matterName: z.string().describe("Name of the matter"),
+      description: z
+        .string()
+        .nullable()
+        .describe("Optional description of the matter"),
+    }),
+    execute: async ({ clientName, matterName, description }) => {
+      return services.matter.createMatter({
+        clientName,
+        matterName,
+        description,
+      });
+    },
+  };
+
+  const updateMatter: SandboxFunction<
+    {
+      id: string;
+      clientName?: string;
+      matterName?: string;
+      description?: string | null;
+    },
+    unknown
+  > = {
+    description: "Update an existing matter",
+    inputSchema: z.object({
+      id: z.string().uuid().describe("The UUID of the matter to update"),
+      clientName: z.string().optional().describe("New client name"),
+      matterName: z.string().optional().describe("New matter name"),
+      description: z.string().nullable().optional().describe("New description"),
+    }),
+    execute: async ({ id, ...data }) => {
+      return services.matter.updateMatter(id, data);
+    },
+  };
+
+  // Bill functions
+  const getBill: SandboxFunction<{ id: string }, unknown> = {
+    description: "Fetch a specific bill by ID",
+    inputSchema: z.object({
+      id: z.string().uuid().describe("The UUID of the bill to fetch"),
+    }),
+    execute: async ({ id }) => {
+      const bill = await services.bill.getBill(id);
+      if (!bill) {
+        throw new Error(`Bill with ID ${id} not found`);
+      }
+      return bill;
+    },
+  };
+
+  const createBill: SandboxFunction<
+    {
+      matterId: string;
+      periodStart: string;
+      periodEnd: string;
+      status: "draft" | "finalized" | "sent" | "paid";
+    },
+    unknown
+  > = {
+    description: "Create a new bill for a matter",
+    inputSchema: z.object({
+      matterId: z.string().uuid().describe("The UUID of the matter"),
+      periodStart: z
+        .string()
+        .describe("ISO date string for period start (e.g. 2025-01-01)"),
+      periodEnd: z
+        .string()
+        .describe("ISO date string for period end (e.g. 2025-01-31)"),
+      status: z
+        .enum(["draft", "finalized", "sent", "paid"])
+        .describe("Status of the bill"),
+    }),
+    execute: async ({ matterId, periodStart, periodEnd, status }) => {
+      return services.bill.createBill({
+        matterId,
+        periodStart: new Date(periodStart),
+        periodEnd: new Date(periodEnd),
+        status,
+      });
+    },
+  };
+
+  const listBillsByMatter: SandboxFunction<{ matterId: string }, unknown[]> = {
+    description: "List all bills for a specific matter",
+    inputSchema: z.object({
+      matterId: z.string().uuid().describe("The UUID of the matter"),
+    }),
+    execute: async ({ matterId }) => {
+      return services.bill.listByMatter(matterId);
+    },
+  };
+
+  // Time entry functions
+  const getTimeEntry: SandboxFunction<{ id: string }, unknown> = {
+    description: "Fetch a specific time entry by ID",
+    inputSchema: z.object({
+      id: z.string().uuid().describe("The UUID of the time entry to fetch"),
+    }),
+    execute: async ({ id }) => {
+      const entry = await services.timeEntry.getTimeEntry(id);
+      if (!entry) {
+        throw new Error(`Time entry with ID ${id} not found`);
+      }
+      return entry;
+    },
+  };
+
+  const createTimeEntry: SandboxFunction<
+    {
+      matterId: string;
+      billId: string | null;
+      date: string;
+      hours: number;
+      description: string;
+    },
+    unknown
+  > = {
+    description: "Create a new time entry",
+    inputSchema: z.object({
+      matterId: z.string().uuid().describe("The UUID of the matter"),
+      billId: z
+        .string()
+        .uuid()
+        .nullable()
+        .describe("The UUID of the bill (if assigned)"),
+      date: z.string().describe("ISO date string (e.g. 2025-01-01)"),
+      hours: z.number().positive().describe("Number of hours worked"),
+      description: z.string().describe("Description of the work performed"),
+    }),
+    execute: async ({ matterId, billId, date, hours, description }) => {
+      return services.timeEntry.createTimeEntry({
+        matterId,
+        billId,
+        date: new Date(date),
+        hours,
+        description,
+      });
+    },
+  };
+
+  const updateTimeEntry: SandboxFunction<
+    {
+      id: string;
+      matterId?: string;
+      billId?: string | null;
+      date?: string;
+      hours?: number;
+      description?: string;
+    },
+    unknown
+  > = {
+    description:
+      "Update an existing time entry (creates a changelog entry automatically)",
+    inputSchema: z.object({
+      id: z.string().uuid().describe("The UUID of the time entry to update"),
+      matterId: z.string().uuid().optional().describe("New matter ID"),
+      billId: z.string().uuid().nullable().optional().describe("New bill ID"),
+      date: z.string().optional().describe("New date (ISO string)"),
+      hours: z.number().positive().optional().describe("New hours"),
+      description: z.string().optional().describe("New description"),
+    }),
+    execute: async ({ id, date, ...data }) => {
+      return services.timeEntry.updateTimeEntry(id, {
+        ...data,
+        ...(date ? { date: new Date(date) } : {}),
+      });
+    },
+  };
+
+  const listTimeEntriesByMatter: SandboxFunction<
+    { matterId: string },
+    unknown[]
+  > = {
+    description: "List all time entries for a specific matter",
+    inputSchema: z.object({
+      matterId: z.string().uuid().describe("The UUID of the matter"),
+    }),
+    execute: async ({ matterId }) => {
+      return services.timeEntry.listByMatter(matterId);
+    },
+  };
+
+  const listTimeEntriesByBill: SandboxFunction<{ billId: string }, unknown[]> =
+    {
+      description: "List all time entries for a specific bill",
+      inputSchema: z.object({
+        billId: z.string().uuid().describe("The UUID of the bill"),
+      }),
+      execute: async ({ billId }) => {
+        return services.timeEntry.listByBill(billId);
+      },
+    };
+
+  // AI suggestion functions
+  const createAiSuggestion: SandboxFunction<
+    {
+      timeEntryId: string;
+      messageId: string;
+      suggestedChanges: Record<string, unknown>;
+    },
+    unknown
+  > = {
+    description:
+      "Create an AI suggestion for time entry changes (for review/approval)",
+    inputSchema: z.object({
+      timeEntryId: z
+        .string()
+        .uuid()
+        .describe("The UUID of the time entry to suggest changes for"),
+      messageId: z
+        .string()
+        .uuid()
+        .describe("The UUID of the message containing the suggestion"),
+      suggestedChanges: z
+        .record(z.string(), z.unknown())
+        .describe(
+          "Object containing the suggested changes (e.g. { hours: 2.5, description: 'New text' })"
+        ),
+    }),
+    execute: async ({ timeEntryId, messageId, suggestedChanges }) => {
+      return services.aiSuggestion.createSuggestion({
+        timeEntryId,
+        messageId,
+        suggestedChanges,
+      });
+    },
+  };
+
+  const listPendingSuggestions: SandboxFunction<unknown, unknown[]> = {
+    description: "List all pending AI suggestions",
+    inputSchema: z.object({}),
+    execute: async () => {
+      return services.aiSuggestion.listByStatus("pending");
+    },
+  };
+
+  // Workflow functions
+  const listWorkflows: SandboxFunction<unknown, unknown[]> = {
+    description: "List all available workflows",
+    inputSchema: z.object({}),
+    execute: async () => {
+      return services.workflow.listAll();
+    },
+  };
+
+  const getWorkflow: SandboxFunction<{ id: string }, unknown> = {
+    description: "Fetch a specific workflow by ID",
+    inputSchema: z.object({
+      id: z.string().uuid().describe("The UUID of the workflow to fetch"),
+    }),
+    execute: async ({ id }) => {
+      const workflow = await services.workflow.getWorkflow(id);
+      if (!workflow) {
+        throw new Error(`Workflow with ID ${id} not found`);
+      }
+      return workflow;
+    },
+  };
+
+  return {
+    getMatter,
+    createMatter,
+    updateMatter,
+    getBill,
+    createBill,
+    listBillsByMatter,
+    getTimeEntry,
+    createTimeEntry,
+    updateTimeEntry,
+    listTimeEntriesByMatter,
+    listTimeEntriesByBill,
+    createAiSuggestion,
+    listPendingSuggestions,
+    listWorkflows,
+    getWorkflow,
+  } as Record<string, SandboxFunction<unknown, unknown>>;
+}
+
+/**
+ * Creates a general-purpose agent for timesheet management.
+ *
+ * This agent can:
+ * - Create, read, and update matters, bills, and time entries
+ * - Query time entries by matter or bill
+ * - Create AI suggestions for time entry changes
+ * - Read workflow instructions for context
+ * - Execute custom JavaScript code to analyze and transform data
+ *
+ * The agent uses a sandbox environment to execute code safely while providing
+ * access to timesheet management functions.
+ *
+ * @param options Configuration including services and optional workflow instructions
+ * @returns A configured AI agent with timesheet management capabilities
+ *
+ * @example
+ * ```typescript
+ * const agent = createGeneralPurposeAgent({
+ *   services: {
+ *     matter: MatterService({ repos }),
+ *     bill: BillService({ repos }),
+ *     timeEntry: TimeEntryService({ repos }),
+ *     aiSuggestion: AiSuggestionService({ repos }),
+ *     workflow: WorkflowService({ repos })
+ *   },
+ *   workflowInstructions: "Always validate hours are positive"
+ * });
+ * ```
+ */
+export function createGeneralPurposeAgent(
+  options: CreateGeneralPurposeAgentOptions
+) {
+  const { services, workflowInstructions } = options;
+  const sandboxFunctions = createTimesheetManagementFunctions(services);
+
+  const systemPrompt = `You are a timesheet management assistant. You help users manage matters, bills, and time entries.
+
+You have access to a code sandbox where you can execute JavaScript code to process and analyze timesheet data.
+You can call functions directly from your code to fetch data and perform operations.
+
+All functions are async and must be awaited.
+
+Example usage:
+
+\`\`\`javascript
+// Fetch a matter
+const matter = await getMatter({ id: "some-uuid" });
+console.log("Matter:", matter.matterName);
+
+// Create a time entry
+const entry = await createTimeEntry({
+  matterId: matter.id,
+  billId: null,
+  date: "2025-01-15",
+  hours: 2.5,
+  description: "Client meeting"
+});
+
+// List time entries for a matter
+const entries = await listTimeEntriesByMatter({ matterId: matter.id });
+const totalHours = entries.reduce((sum, e) => sum + e.hours, 0);
+return totalHours;
+\`\`\`
+
+You can combine function calls with any JavaScript logic to analyze and transform data.
+Use console.log() for debugging -- you will be able to see the logs in the output.
+
+The return value will be shown to the user, but not to you to preserve your context window and protect sensitive information.
+
+${workflowInstructions ? `\n## Workflow Instructions\n\n${workflowInstructions}\n\nFollow these instructions when executing tasks.\n` : ""}
+${generateFunctionDocs(sandboxFunctions)}`;
+
+  return new Agent({
+    model: anthropic("claude-haiku-4-5"),
+    system: systemPrompt,
+    tools: {
+      runCode: createSandboxTool({
+        functions: sandboxFunctions,
+        timeout: 30000,
+      }),
+    },
+    stopWhen: stepCountIs(10),
+  });
+}
