@@ -1,2 +1,9 @@
 export { streamAgent, type SimplifiedStreamPart } from "./streamAgent";
 export { wrapStreamWithPromise } from "./wrapStreamWithPromise";
+export {
+  createSandboxTool,
+  type SandboxFunction,
+  type CreateSandboxToolOptions,
+  type SandboxExecutionResult,
+} from "./createSandboxTool";
+export { generateFunctionDocs } from "./generateFunctionDocs";

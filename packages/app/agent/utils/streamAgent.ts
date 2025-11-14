@@ -1,4 +1,4 @@
-import type { Experimental_Agent as Agent } from "ai";
+import type { Experimental_Agent as Agent, ToolSet } from "ai";
 import type { ModelMessage } from "ai";
 import type { Message, NewMessage } from "@ai-starter/core";
 
@@ -10,7 +10,7 @@ export type SimplifiedStreamPart =
   | { type: "message"; message: Message };
 
 export interface StreamAgentProps {
-  agent: Agent<any, any>;
+  agent: Agent<ToolSet>;
   conversationId: string;
   messages: ModelMessage[];
   onCompleteMessage: (newMessage: NewMessage) => Promise<Message>;

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import { testDB, doSeedFoos, mockFoos } from "@ai-starter/db/test-utils";
+import { testDB, mockFoos } from "@ai-starter/db/test-utils";
 import { getRepos, type DB } from "@ai-starter/db";
 import { CoreAppService } from "@ai-starter/app";
 import { getApp } from "..";

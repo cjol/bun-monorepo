@@ -30,4 +30,8 @@ export const DrizzleFooRepository = ({ db }: Deps): FooRepository => ({
     }
     return result;
   },
+  async listAll() {
+    const results = await db.query.fooSchema.findMany();
+    return results;
+  },
 });

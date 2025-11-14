@@ -9,7 +9,6 @@ import {
   startTextStream,
   endTextStream,
 } from "../utils/render";
-import ora from "ora";
 import chalk from "chalk";
 
 export const chat = command(
@@ -78,49 +77,34 @@ export const chat = command(
       });
     }
 
-    // Show spinner while generating response
-    // const spinner = ora("Generating response...").start();
+    const { stream } = await agent.sendMessage(conversationId, message);
 
-    try {
-      const { stream } = await agent.sendMessage(conversationId, message);
+    let textStreamStarted = false;
 
-      let textStreamStarted = false;
-
-      // Stream and render content as it arrives
-      for await (const chunk of stream) {
-        if (chunk.type === "text-delta") {
-          // Start text stream if not already started
-          if (!textStreamStarted) {
-            startTextStream("assistant");
-            textStreamStarted = true;
-            // spinner.stop();
-          }
-          renderTextDelta(chunk.delta);
-        } else if (chunk.type === "message") {
-          // Clear spinner before first output to prevent ghost effect
-          // spinner.clear();
-          // End text stream if it was started
-          if (textStreamStarted) {
-            endTextStream();
-            textStreamStarted = false;
-            // spinner.start("Generating response...");
-          }
-          // Render complete messages (tool calls, tool results)
-          // skip text parts as they were already streamed
-          renderMessage(chunk.message, { skipTextParts: true });
+    // Stream and render content as it arrives
+    for await (const chunk of stream) {
+      if (chunk.type === "text-delta") {
+        // Start text stream if not already started
+        if (!textStreamStarted) {
+          startTextStream("assistant");
+          textStreamStarted = true;
         }
+        renderTextDelta(chunk.delta);
+      } else if (chunk.type === "message") {
+        // End text stream if it was started
+        if (textStreamStarted) {
+          endTextStream();
+          textStreamStarted = false;
+        }
+        // Render complete messages (tool calls, tool results)
+        // skip text parts as they were already streamed
+        renderMessage(chunk.message, { skipTextParts: true });
       }
+    }
 
-      // Stop spinner after stream completes
-      // spinner.stop();
-
-      // End text stream if it's still open
-      if (textStreamStarted) {
-        endTextStream();
-      }
-    } catch (error) {
-      // spinner.fail("Failed to generate response");
-      throw error;
+    // End text stream if it's still open
+    if (textStreamStarted) {
+      endTextStream();
     }
   }
 );

@@ -1,5 +1,5 @@
 import { command } from "cleye";
-import { getApp, getContext } from "../utils/app";
+import { getContext } from "../utils/app";
 import { FLAGS } from "../utils/flags";
 import type { Foo } from "@ai-starter/core";
 import { isBoom } from "@hapi/boom";

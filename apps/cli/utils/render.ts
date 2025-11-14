@@ -19,8 +19,7 @@ export function renderMessage(
 
   // Check if there are any parts that should be rendered
   const hasRenderableParts = message.content.some(
-    (part) =>
-      part.type !== "text" || !opts.skipTextParts
+    (part) => part.type !== "text" || !opts.skipTextParts
   );
 
   // Only render if there are parts to render

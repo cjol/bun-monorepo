@@ -5,40 +5,17 @@ import {
   type Message,
   type NewConversation,
   type NewMessage,
+  type FooRepository,
 } from "@ai-starter/core";
 import type { CoreAppService } from "../core/CoreAppService";
-import { stepCountIs, tool, type ModelMessage } from "ai";
+import { type ModelMessage } from "ai";
 
 import { Experimental_Agent as Agent } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
-import z from "zod";
 import {
   streamAgent,
   wrapStreamWithPromise,
   type SimplifiedStreamPart,
 } from "./utils";
-
-const myAgent = new Agent({
-  model: anthropic("claude-haiku-4-5"),
-  system:
-    "You are a helpful assistant for an extraterrestrial weather service.",
-  tools: {
-    getWeather: tool({
-      description: "Get Weather",
-      inputSchema: z.object({
-        location: z
-          .string()
-          .describe("The city and state, e.g. San Francisco, CA"),
-      }),
-      execute: async () => {
-        // Execute code and return result
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        return { output: Math.floor(Math.random() * 30) + " degrees celsius" };
-      },
-    }),
-  },
-  stopWhen: stepCountIs(5),
-});
 
 /**
  * These are the dependencies required by the AiAgentService.
@@ -48,9 +25,11 @@ export interface AiAgentServiceDeps {
   repos: {
     conversation: ConversationRepository;
     message: MessageRepository;
+    foo: FooRepository;
   };
   coreService: CoreAppService;
-  agent?: typeof myAgent;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  agent: Agent<any>;
 }
 
 /**
@@ -60,7 +39,7 @@ export interface AiAgentServiceDeps {
  * @returns The AiAgentService.
  */
 export const AiAgentService = (deps: AiAgentServiceDeps) => {
-  const { repos, agent = myAgent } = deps;
+  const { repos, agent } = deps;
 
   return {
     /**

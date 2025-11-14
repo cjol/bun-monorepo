@@ -4,6 +4,7 @@ import { CoreAppService } from "../core/CoreAppService";
 import { testDB } from "@ai-starter/db/test-utils";
 import { getRepos, type DB } from "@ai-starter/db";
 import type { Message } from "@ai-starter/core";
+import { createDataAnalysisAgent } from "./examples";
 
 describe("AiAgentService.sendMessage - stream execution test", () => {
   let db: DB;
@@ -14,7 +15,11 @@ describe("AiAgentService.sendMessage - stream execution test", () => {
     db = await testDB({ seed: false });
     repos = getRepos(db);
     const coreService = CoreAppService({ repos });
-    service = AiAgentService({ repos, coreService });
+    service = AiAgentService({
+      repos,
+      coreService,
+      agent: createDataAnalysisAgent(repos.foo),
+    });
   });
 
   test(

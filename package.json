@@ -16,7 +16,7 @@
     "test": "bun test",
     "typecheck": "tsc --build packages/*/tsconfig.json apps/*/tsconfig.json tests/tsconfig.json",
     "lint": "eslint . && prettier --check .",
-    "lint:fix": "eslint . --fix && prettier --write .",
+    "lint:fix": "bun format && eslint --fix --unsafe .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "bun test && bun run typecheck && bun run lint"

@@ -41,12 +41,13 @@ export interface ToolResultPart {
 
 export type ToolResultOutput =
   | { type: "text"; value: string }
-  | { type: "json"; value: any }
+  | { type: "json"; value: unknown }
   | { type: "error-text"; value: string }
-  | { type: "error-json"; value: any }
+  | { type: "error-json"; value: unknown }
   | {
       type: "content";
-      value: (| {
+      value: (
+        | {
             type: "text";
 
             /**
@@ -67,7 +68,8 @@ export type ToolResultOutput =
           @see https://www.iana.org/assignments/media-types/media-types.xhtml
             */
             mediaType: string;
-          })[];
+          }
+      )[];
     };
 
 export type Message = typeof messageSchema.$inferSelect;
