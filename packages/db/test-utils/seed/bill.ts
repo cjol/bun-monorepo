@@ -4,8 +4,8 @@ import { seedNow } from "./foo";
 
 export const mockBills = [
   {
-    id: "bill-1",
-    matterId: "matter-1",
+    id: "00000000-0000-4000-8000-000000000101",
+    matterId: "00000000-0000-4000-8000-000000000001",
     periodStart: new Date("2024-01-01"),
     periodEnd: new Date("2024-01-31"),
     status: "draft" as const,
@@ -13,8 +13,8 @@ export const mockBills = [
     updatedAt: seedNow,
   },
   {
-    id: "bill-2",
-    matterId: "matter-1",
+    id: "00000000-0000-4000-8000-000000000102",
+    matterId: "00000000-0000-4000-8000-000000000001",
     periodStart: new Date("2024-02-01"),
     periodEnd: new Date("2024-02-29"),
     status: "finalized" as const,
@@ -22,8 +22,8 @@ export const mockBills = [
     updatedAt: seedNow,
   },
   {
-    id: "bill-3",
-    matterId: "matter-2",
+    id: "00000000-0000-4000-8000-000000000103",
+    matterId: "00000000-0000-4000-8000-000000000002",
     periodStart: new Date("2024-01-01"),
     periodEnd: new Date("2024-01-31"),
     status: "sent" as const,

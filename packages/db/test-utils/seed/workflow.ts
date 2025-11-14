@@ -4,14 +4,14 @@ import { seedNow } from "./foo";
 
 export const mockWorkflows = [
   {
-    id: "workflow-1",
+    id: "00000000-0000-4000-8000-000000000401",
     name: "Monthly Billing",
     instructions: "Generate bills for all matters at the end of each month",
     createdAt: seedNow,
     updatedAt: seedNow,
   },
   {
-    id: "workflow-2",
+    id: "00000000-0000-4000-8000-000000000402",
     name: "Time Entry Review",
     instructions: "Review all unbilled time entries and suggest improvements",
     createdAt: seedNow,

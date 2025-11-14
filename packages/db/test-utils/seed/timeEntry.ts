@@ -4,9 +4,9 @@ import { seedNow } from "./foo";
 
 export const mockTimeEntries = [
   {
-    id: "time-entry-1",
-    matterId: "matter-1",
-    billId: "bill-1",
+    id: "00000000-0000-4000-8000-000000000201",
+    matterId: "00000000-0000-4000-8000-000000000001",
+    billId: "00000000-0000-4000-8000-000000000101",
     date: new Date("2024-01-15"),
     hours: 2.5,
     description: "Client meeting and follow-up",
@@ -14,9 +14,9 @@ export const mockTimeEntries = [
     updatedAt: seedNow,
   },
   {
-    id: "time-entry-2",
-    matterId: "matter-1",
-    billId: "bill-1",
+    id: "00000000-0000-4000-8000-000000000202",
+    matterId: "00000000-0000-4000-8000-000000000001",
+    billId: "00000000-0000-4000-8000-000000000101",
     date: new Date("2024-01-16"),
     hours: 4.0,
     description: "Document review",
@@ -24,8 +24,8 @@ export const mockTimeEntries = [
     updatedAt: seedNow,
   },
   {
-    id: "time-entry-3",
-    matterId: "matter-2",
+    id: "00000000-0000-4000-8000-000000000203",
+    matterId: "00000000-0000-4000-8000-000000000002",
     billId: null,
     date: new Date("2024-01-20"),
     hours: 1.5,

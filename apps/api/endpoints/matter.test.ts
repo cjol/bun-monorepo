@@ -34,7 +34,9 @@ describe("Matter API endpoints", () => {
   describe("GET /matters/:id", () => {
     it("should return a matter when it exists", async () => {
       const response = await app.handle(
-        new Request("http://localhost/matters/matter-1")
+        new Request(
+          "http://localhost/matters/00000000-0000-4000-8000-000000000001"
+        )
       );
 
       expect(response.status).toBe(200);
@@ -127,17 +129,20 @@ describe("Matter API endpoints", () => {
   describe("PATCH /matters/:id", () => {
     it("should update a matter's clientName", async () => {
       const response = await app.handle(
-        new Request("http://localhost/matters/matter-1", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ clientName: "Updated Client" }),
-        })
+        new Request(
+          "http://localhost/matters/00000000-0000-4000-8000-000000000001",
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ clientName: "Updated Client" }),
+          }
+        )
       );
 
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body).toEqual({
-        id: "matter-1",
+        id: "00000000-0000-4000-8000-000000000001",
         clientName: "Updated Client",
         matterName: mockMatters[0].matterName,
         description: mockMatters[0].description,
@@ -148,11 +153,14 @@ describe("Matter API endpoints", () => {
 
     it("should update a matter's matterName", async () => {
       const response = await app.handle(
-        new Request("http://localhost/matters/matter-1", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ matterName: "Updated Matter" }),
-        })
+        new Request(
+          "http://localhost/matters/00000000-0000-4000-8000-000000000001",
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ matterName: "Updated Matter" }),
+          }
+        )
       );
 
       expect(response.status).toBe(200);
@@ -181,16 +189,21 @@ describe("Matter API endpoints", () => {
   describe("DELETE /matters/:id", () => {
     it("should delete a matter", async () => {
       const response = await app.handle(
-        new Request("http://localhost/matters/matter-1", {
-          method: "DELETE",
-        })
+        new Request(
+          "http://localhost/matters/00000000-0000-4000-8000-000000000001",
+          {
+            method: "DELETE",
+          }
+        )
       );
 
       expect(response.status).toBe(204);
 
       // Verify it's deleted
       const getResponse = await app.handle(
-        new Request("http://localhost/matters/matter-1")
+        new Request(
+          "http://localhost/matters/00000000-0000-4000-8000-000000000001"
+        )
       );
       expect(getResponse.status).toBe(404);
     });

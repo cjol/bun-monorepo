@@ -4,7 +4,7 @@ import { seedNow } from "./foo";
 
 export const mockMatters = [
   {
-    id: "matter-1",
+    id: "00000000-0000-4000-8000-000000000001",
     clientName: "Acme Corp",
     matterName: "Contract Review",
     description: "Annual contract review",
@@ -12,7 +12,7 @@ export const mockMatters = [
     updatedAt: seedNow,
   },
   {
-    id: "matter-2",
+    id: "00000000-0000-4000-8000-000000000002",
     clientName: "TechStart Inc",
     matterName: "IP Litigation",
     description: null,
