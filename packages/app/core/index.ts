@@ -18,3 +18,11 @@ export type { WorkflowService as WorkflowServiceType } from "./WorkflowService";
 
 export { EmailIngestionService } from "./EmailIngestionService";
 export type { EmailIngestionService as EmailIngestionServiceType } from "./EmailIngestionService";
+
+export { EmailSendingService } from "./EmailSendingService";
+export type { EmailSendingService as EmailSendingServiceType } from "./EmailSendingService";
+export type {
+  EmailProvider,
+  SendEmailParams,
+  SendEmailResult,
+} from "./EmailSendingService";
