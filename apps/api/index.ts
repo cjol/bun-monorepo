@@ -5,6 +5,7 @@ import { matterRoutes } from "./endpoints/matter";
 import { billRoutes } from "./endpoints/bill";
 import { timeEntryRoutes } from "./endpoints/timeEntry";
 import { aiSuggestionRoutes } from "./endpoints/aiSuggestion";
+import { workflowRoutes } from "./endpoints/workflow";
 import { env } from "./utils/env";
 import { Boom, isBoom } from "@hapi/boom";
 
@@ -26,7 +27,8 @@ export const getApp = (ctx: Context) =>
     .use(matterRoutes(ctx))
     .use(billRoutes(ctx))
     .use(timeEntryRoutes(ctx))
-    .use(aiSuggestionRoutes(ctx));
+    .use(aiSuggestionRoutes(ctx))
+    .use(workflowRoutes(ctx));
 
 export type App = ReturnType<typeof getApp>;
 
