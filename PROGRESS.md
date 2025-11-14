@@ -27,3 +27,9 @@ All validators include proper validation rules (UUID, string lengths, enums, num
 Implemented 5 V3 application services (MatterService, BillService, TimeEntryService, AiSuggestionService, WorkflowService) following hexagonal architecture.
 All services use curried dependency injection, depend only on core repository interfaces, and include comprehensive test coverage.
 TimeEntryService automatically logs changes; AiSuggestionService applies suggestions to time entries on approval with change logging.
+
+## GeneralPurposeAgent Complete
+
+Built GeneralPurposeAgent for timesheet management following existing agent patterns with sandbox code execution capabilities.
+Agent provides 16 functions for CRUD operations on matters, bills, time entries, AI suggestions, and workflows with optional workflow context.
+All 8 tests passing - agent can execute JavaScript code with full access to V3 services for data analysis and manipulation.
