@@ -39,3 +39,9 @@ All 8 tests passing - agent can execute JavaScript code with full access to V3 s
 Implemented all REST/RPC endpoints in apps/api following TDD with consistent patterns across all endpoints.
 Created timeEntry (16 tests), aiSuggestion (14 tests), and workflow (11 tests) endpoints with full CRUD operations.
 All 70 API endpoint tests passing - complete coverage for matters, bills, time entries, AI suggestions, and workflows.
+
+## Test Infrastructure Fixed
+
+Fixed test failures caused by testDB() seeding data by default - repository and service unit tests now use unseeded databases.
+Updated test script to exclude old-v2 legacy code from test runs, linting, and formatting.
+All 264 tests passing with full typecheck and lint compliance - ready for CI/CD.
