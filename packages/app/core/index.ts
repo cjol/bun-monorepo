@@ -15,3 +15,6 @@ export type { AiSuggestionService as AiSuggestionServiceType } from "./AiSuggest
 
 export { WorkflowService } from "./WorkflowService";
 export type { WorkflowService as WorkflowServiceType } from "./WorkflowService";
+
+export { EmailIngestionService } from "./EmailIngestionService";
+export type { EmailIngestionService as EmailIngestionServiceType } from "./EmailIngestionService";

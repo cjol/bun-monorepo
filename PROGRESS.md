@@ -45,3 +45,9 @@ All 70 API endpoint tests passing - complete coverage for matters, bills, time e
 Fixed test failures caused by testDB() seeding data by default - repository and service unit tests now use unseeded databases.
 Updated test script to exclude old-v2 legacy code from test runs, linting, and formatting.
 All 264 tests passing with full typecheck and lint compliance - ready for CI/CD.
+
+## Email Ingestion Service Complete
+
+Created EmailIngestionService with webhook payload parsing, conversation/message creation, and thread ID tracking.
+Extended conversation schema with threadId field and added getByThreadId repository method for email thread matching.
+All 273 tests passing including 7 comprehensive EmailIngestionService tests - service ready for webhook integration.
