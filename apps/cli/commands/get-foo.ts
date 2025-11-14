@@ -1,5 +1,5 @@
 import { command } from "cleye";
-import { getApp } from "../utils/app";
+import { getApp, getContext } from "../utils/app";
 import { FLAGS } from "../utils/flags";
 
 export const getFoo = command(
@@ -15,7 +15,7 @@ export const getFoo = command(
     parameters: ["<foo id>"],
   },
   async (argv) => {
-    const app = await getApp(argv.flags.database);
+    const { app } = await getContext(argv.flags.database);
     const result = await app.getFoo(argv._.fooId);
     if (!result) {
       console.log(

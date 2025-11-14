@@ -3,7 +3,6 @@ import { fooSchema } from "@ai-starter/core";
 import { DrizzleFooRepository } from "./FooRepository";
 import type { DB } from "../db";
 import { testDB } from "../test-utils/db";
-import { doSeedFoos } from "../test-utils";
 
 describe("DrizzleFooRepository", () => {
   let db: DB;
@@ -11,7 +10,6 @@ describe("DrizzleFooRepository", () => {
 
   beforeEach(async () => {
     db = await testDB();
-    doSeedFoos(db);
     repository = DrizzleFooRepository({ db });
   });
 

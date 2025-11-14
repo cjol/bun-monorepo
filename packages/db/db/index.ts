@@ -8,7 +8,7 @@ export const getDB = (location: ":memory:" | (string & {}) = ":memory:") => {
 
 export type DB = ReturnType<typeof getDB>;
 
-export const seedDB = async (db: DB) => {
+export const migrateDB = async (db: DB) => {
   const { apply } = await pushSQLiteSchema(schema, db);
   await apply();
 };

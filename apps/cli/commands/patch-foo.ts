@@ -1,5 +1,5 @@
 import { command } from "cleye";
-import { getApp } from "../utils/app";
+import { getApp, getContext } from "../utils/app";
 import { FLAGS } from "../utils/flags";
 import type { Foo } from "@ai-starter/core";
 import { isBoom } from "@hapi/boom";
@@ -23,7 +23,7 @@ export const patchFoo = command(
     parameters: ["<foo id>", "<foo name>"],
   },
   async (argv) => {
-    const app = await getApp(argv.flags.database);
+    const { app } = await getContext(argv.flags.database);
     let result: Foo | undefined;
     try {
       result = await app.patchFoo(argv._.fooId, argv._.fooName);

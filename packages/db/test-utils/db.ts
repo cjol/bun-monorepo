@@ -1,9 +1,16 @@
-import { getDB, seedDB } from "../db";
-import { DrizzleFooRepository } from "../repositories";
+import { getDB, migrateDB } from "../db";
+import {
+  DrizzleFooRepository,
+  DrizzleConversationRepository,
+  DrizzleMessageRepository,
+} from "../repositories";
+import { doSeedAll } from "./seed/all";
 
-export const testDB = async () => {
+export const testDB = async (opts: { seed?: boolean } = {}) => {
+  const { seed = true } = opts;
   const db = getDB(":memory:");
-  await seedDB(db);
+  await migrateDB(db);
+  if (seed) await doSeedAll(db);
   return db;
 };
 
@@ -13,6 +20,8 @@ export const getRepos = async () => {
     db,
     repos: {
       foo: DrizzleFooRepository({ db }),
+      conversation: DrizzleConversationRepository({ db }),
+      message: DrizzleMessageRepository({ db }),
     },
   };
 };

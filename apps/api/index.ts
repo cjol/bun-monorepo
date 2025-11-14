@@ -8,7 +8,6 @@ export const getApp = (ctx: Context) =>
   new Elysia()
     .error({ Boom })
     .onError(({ error, status }) => {
-      console.log("Error occurred:", isBoom(error));
       if (isBoom(error)) {
         // don't repeat the status code
         const { statusCode: _statusCode, ...payload } = error.output.payload;

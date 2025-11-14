@@ -11,8 +11,11 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.44",
     "@ai-starter/core": "workspace:*",
     "@libsql/client": "^0.15.15",
-    "drizzle-orm": "^0.44.7"
+    "ai": "^5.0.92",
+    "drizzle-orm": "^0.44.7",
+    "zod": "^4.1.12"
   }
 }

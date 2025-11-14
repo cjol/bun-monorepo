@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import { doSeedFoos, mockFoos, testDB } from "@ai-starter/db/test-utils";
+import { mockFoos, testDB } from "@ai-starter/db/test-utils";
 import { getRepos, type DB } from "@ai-starter/db";
 import { CoreAppService } from "./CoreAppService";
 
@@ -11,7 +11,6 @@ describe("CoreAppService", () => {
   beforeEach(async () => {
     db = await testDB();
     repos = await getRepos(db);
-    await doSeedFoos(db);
     service = CoreAppService({ repos: repos });
   });
 

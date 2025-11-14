@@ -1,5 +1,5 @@
 import { command } from "cleye";
-import { getApp } from "../utils/app";
+import { getApp, getContext } from "../utils/app";
 import { FLAGS } from "../utils/flags";
 
 export const addFoo = command(
@@ -15,7 +15,7 @@ export const addFoo = command(
     parameters: ["<foo name>"],
   },
   async (argv) => {
-    const app = await getApp(argv.flags.database);
+    const { app } = await getContext(argv.flags.database);
     const result = await app.createFoo(argv._.fooName);
     if (!result) {
       console.log(`\x1b[1m\x1b[31mFailed to create foo.\x1b[0m`);

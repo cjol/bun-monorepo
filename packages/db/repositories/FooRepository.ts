@@ -3,7 +3,7 @@ import type { DB } from "../db";
 import { eq } from "drizzle-orm";
 import { notFound, badImplementation } from "@hapi/boom";
 
-export interface Deps {
+interface Deps {
   db: DB;
 }
 

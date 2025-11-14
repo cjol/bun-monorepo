@@ -10,7 +10,6 @@ describe("Foo API endpoints", () => {
 
   beforeEach(async () => {
     db = await testDB();
-    await doSeedFoos(db);
 
     app = getApp({ app: CoreAppService({ repos: getRepos(db) }) });
   });
