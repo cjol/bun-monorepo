@@ -33,3 +33,9 @@ TimeEntryService automatically logs changes; AiSuggestionService applies suggest
 Built GeneralPurposeAgent for timesheet management following existing agent patterns with sandbox code execution capabilities.
 Agent provides 16 functions for CRUD operations on matters, bills, time entries, AI suggestions, and workflows with optional workflow context.
 All 8 tests passing - agent can execute JavaScript code with full access to V3 services for data analysis and manipulation.
+
+## V3 API Endpoints In Progress
+
+Creating REST/RPC endpoints in apps/api for all V3 entities following TDD and existing foo.ts patterns.
+Updated Context to compose all V3 services; created test seed data with proper UUIDs for all entities.
+Matter and Bill endpoints complete with full CRUD and query operations - 21 tests passing.
