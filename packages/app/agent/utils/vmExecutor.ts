@@ -72,7 +72,8 @@ function createVMContext(config: VMExecutorConfig): Context {
   for (const [toolName, toolDef] of Object.entries(tools)) {
     sandbox[toolName] = async (...args: unknown[]) => {
       // Validate input using the tool's schema
-      const inputSchema = toolDef.parameters;
+      // CoreTool exposes the schema as 'parameters'
+      const inputSchema = (toolDef as any).parameters;
       if (inputSchema) {
         // If the tool expects a single object argument, parse it
         // Otherwise, pass arguments as-is
@@ -109,38 +110,56 @@ export async function executeInVM(
   const context = createVMContext(config);
 
   try {
+    // We need to safely inject the code into the VM context
+    // Use JSON.stringify to properly escape the code string, then eval it within the VM
+    const codeJson = JSON.stringify(code);
+    
     // Wrap the code to capture the result and handle async code
-    // We need to explicitly store the result in __result__ because
-    // VM contexts don't automatically return the last expression's value
-    // We execute the code and then try to capture the last expression's value
-    const codeLines = code.split('\n').map(l => l.trim()).filter(l => l);
-    const lastLine = codeLines[codeLines.length - 1] || '';
-    const isLastLineExpression = lastLine && 
-      !lastLine.endsWith(';') && 
-      !lastLine.match(/^(const|let|var|function|class|if|for|while|switch|try|return|throw|break|continue)\s/);
-    
-    // If it's a single expression, wrap it differently
-    const isSingleExpression = codeLines.length === 1 && isLastLineExpression;
-    
+    // Strategy: Try to evaluate as an expression first, if that fails, execute as statements
+    // and try to capture the last expression
     const wrappedCode = `
       (async () => {
         try {
-          ${isSingleExpression 
-            ? `// Single expression - capture it directly
-               __result__ = ${code};`
-            : `// Execute all the code (statements)
-               ${code}
-               // If the last line looks like an expression, evaluate it to capture its value
-               ${isLastLineExpression ? `
-               if (__result__ === undefined) {
-                 try {
-                   __result__ = ${lastLine};
-                 } catch (e) {
-                   // Evaluation failed, result stays undefined
-                 }
-               }
-               ` : ''}`
+          const codeStr = ${codeJson};
+          let result;
+          
+          // First, try to evaluate the entire code as an expression
+          // This works for single expressions like "1 + 1" or "await func()"
+          try {
+            result = eval('(' + codeStr + ')');
+            __result__ = result;
+          } catch (e) {
+            // If that fails, it's likely statements. Execute them and try to capture last expression
+            eval(codeStr);
+            
+            // Now try to extract and evaluate the last expression
+            // Handle both multi-line (split by \\n) and single-line (split by ;) code
+            const lines = codeStr.split('\\n').map(l => l.trim()).filter(l => l);
+            let lastExpr = '';
+            
+            if (lines.length > 1) {
+              // Multi-line: get the last line
+              lastExpr = lines[lines.length - 1];
+            } else if (lines.length === 1) {
+              // Single line: split by semicolons and get the last part
+              const parts = lines[0].split(';').map(p => p.trim()).filter(p => p);
+              if (parts.length > 0) {
+                lastExpr = parts[parts.length - 1];
+              }
+            }
+            
+            // Only try if last expression looks like an expression (not a statement)
+            if (lastExpr && !lastExpr.endsWith(';') && 
+                !lastExpr.match(/^(const|let|var|function|class|if|for|while|switch|try|return|throw|break|continue)\\s/)) {
+              try {
+                __result__ = eval(lastExpr);
+              } catch (e2) {
+                // Last expression evaluation failed, result stays undefined
+                // (or whatever was set by the code itself)
+              }
+            }
           }
+          
           // Handle promises
           if (__result__ instanceof Promise) {
             __result__ = await __result__;
