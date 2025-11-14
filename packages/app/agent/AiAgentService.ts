@@ -7,9 +7,9 @@ import {
   type NewMessage,
 } from "@ai-starter/core";
 import type { CoreAppService } from "../core/CoreAppService";
-import { stepCountIs, tool, type ModelMessage } from "ai";
+import { stepCountIs, tool, type ModelMessage, type CoreTool } from "ai";
 
-import { Experimental_Agent as Agent } from "ai";
+import { Experimental_Agent as Agent, type Experimental_Agent } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import z from "zod";
 import {
@@ -17,6 +17,10 @@ import {
   wrapStreamWithPromise,
   type SimplifiedStreamPart,
 } from "./utils";
+import {
+  createVMCodeExecutionTool,
+  type VMCodeExecutionToolConfig,
+} from "./tools";
 
 const myAgent = new Agent({
   model: anthropic("claude-haiku-4-5"),
@@ -50,7 +54,17 @@ export interface AiAgentServiceDeps {
     message: MessageRepository;
   };
   coreService: CoreAppService;
-  agent?: typeof myAgent;
+  agent?: Experimental_Agent<any, any>;
+  /**
+   * Tools to expose to the VM sandbox for code execution.
+   * These should be in the same format as AI SDK tool definitions (with zod schemas).
+   * If provided, a VM code execution tool will be added to the agent's tools.
+   */
+  vmTools?: Record<string, CoreTool<any, any>>;
+  /**
+   * Timeout in milliseconds for VM code execution (default: 30000)
+   */
+  vmTimeout?: number;
 }
 
 /**
@@ -60,7 +74,44 @@ export interface AiAgentServiceDeps {
  * @returns The AiAgentService.
  */
 export const AiAgentService = (deps: AiAgentServiceDeps) => {
-  const { repos, agent = myAgent } = deps;
+  const { repos, vmTools, vmTimeout, agent: providedAgent } = deps;
+
+  // Build agent tools
+  const agentTools: Record<string, any> = {
+    getWeather: tool({
+      description: "Get Weather",
+      inputSchema: z.object({
+        location: z
+          .string()
+          .describe("The city and state, e.g. San Francisco, CA"),
+      }),
+      execute: async () => {
+        // Execute code and return result
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        return { output: Math.floor(Math.random() * 30) + " degrees celsius" };
+      },
+    }),
+  };
+
+  // Add VM code execution tool if VM tools are provided
+  if (vmTools && Object.keys(vmTools).length > 0) {
+    const vmToolConfig: VMCodeExecutionToolConfig = {
+      exposedTools: vmTools,
+      timeout: vmTimeout,
+    };
+    agentTools.executeCode = createVMCodeExecutionTool(vmToolConfig);
+  }
+
+  // Create agent with tools
+  const agent =
+    providedAgent ??
+    new Agent({
+      model: anthropic("claude-haiku-4-5"),
+      system:
+        "You are a helpful assistant for an extraterrestrial weather service.",
+      tools: agentTools,
+      stopWhen: stepCountIs(5),
+    });
 
   return {
     /**
