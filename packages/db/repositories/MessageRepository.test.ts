@@ -21,9 +21,13 @@ describe("DrizzleMessageRepository", () => {
 
       expect(result).toHaveLength(4);
       expect(result[0]?.role).toBe("user");
-      expect(result[0]?.content).toBe("Hello, how are you?");
+      expect(result[0]?.content).toEqual([
+        { type: "text", text: "Hello, how are you?" },
+      ]);
       expect(result[1]?.role).toBe("assistant");
-      expect(result[1]?.content).toBe("I'm doing well, thank you!");
+      expect(result[1]?.content).toEqual([
+        { type: "text", text: "I'm doing well, thank you!" },
+      ]);
       expect(result[2]?.role).toBe("assistant");
       expect(Array.isArray(result[2]?.content)).toBe(true);
       expect(result[3]?.role).toBe("tool");
@@ -47,7 +51,7 @@ describe("DrizzleMessageRepository", () => {
         id: "00000000-0000-4000-8000-000000000099",
         conversationId: mockConversations[1].id,
         role: "user",
-        content: "New message",
+        content: [{ type: "text", text: "New message" }],
         createdAt: now,
         updatedAt: now,
       });
@@ -58,7 +62,9 @@ describe("DrizzleMessageRepository", () => {
 
       expect(result).toBeArrayOfSize(1);
       expect(result[0]!.id).toBe("00000000-0000-4000-8000-000000000099");
-      expect(result[0]!.content).toBe("New message");
+      expect(result[0]!.content).toEqual([
+        { type: "text", text: "New message" },
+      ]);
       expect(result[0]!.role).toBe("user");
     });
 
@@ -70,7 +76,7 @@ describe("DrizzleMessageRepository", () => {
           type: "tool-call" as const,
           toolName: "getFoo",
           toolCallId: "call-1",
-          args: { id: "foo-1" },
+          input: { id: "foo-1" },
         },
       ];
       await repository.create({
@@ -96,7 +102,7 @@ describe("DrizzleMessageRepository", () => {
       const message = await repository.create({
         conversationId: mockConversations[1].id,
         role: "user",
-        content: "Auto ID message",
+        content: [{ type: "text", text: "Auto ID message" }],
       });
 
       const result = await repository.listByConversation(
