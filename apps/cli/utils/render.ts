@@ -17,9 +17,21 @@ export function renderMessage(
 
   const roleColor = roleColors[message.role] || chalk.reset;
 
-  for (const part of message.content) {
-    process.stdout.write(`\n${roleColor.bold(message.role + ":")} `);
+  // Check if there are any parts that should be rendered
+  const hasRenderableParts = message.content.some(
+    (part) =>
+      part.type !== "text" || !opts.skipTextParts
+  );
 
+  // Only render if there are parts to render
+  if (!hasRenderableParts) {
+    return;
+  }
+
+  // Write role prefix once before rendering parts
+  process.stdout.write(`\n${roleColor.bold(message.role + ":")} `);
+
+  for (const part of message.content) {
     switch (part.type) {
       case "text":
         if (opts.skipTextParts) break;
