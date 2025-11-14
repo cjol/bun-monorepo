@@ -15,7 +15,7 @@ export const fooRoutes = ({ app }: Context) =>
     .get(
       "/:id",
       async ({ params, status }) => {
-        const result = await app.getFoo(params.id);
+        const result = await app.foo.getFoo(params.id);
         if (!result) {
           throw notFound(`Foo with ID ${params.id} not found`);
         }
@@ -26,7 +26,7 @@ export const fooRoutes = ({ app }: Context) =>
     .post(
       "/",
       async ({ body, status }) => {
-        const result = await app.createFoo(body.name);
+        const result = await app.foo.createFoo(body.name);
         return status(201, result);
       },
       { body: fooBodySchema }
@@ -34,7 +34,7 @@ export const fooRoutes = ({ app }: Context) =>
     .patch(
       "/:id",
       async ({ params, body, status }) => {
-        const result = await app.patchFoo(params.id, body.name);
+        const result = await app.foo.patchFoo(params.id, body.name);
         return status(200, result);
       },
       { params: idParamsSchema, body: fooBodySchema }
