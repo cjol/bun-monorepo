@@ -45,3 +45,9 @@ All 70 API endpoint tests passing - complete coverage for matters, bills, time e
 Fixed test failures caused by testDB() seeding data by default - repository and service unit tests now use unseeded databases.
 Updated test script to exclude old-v2 legacy code from test runs, linting, and formatting.
 All 264 tests passing with full typecheck and lint compliance - ready for CI/CD.
+
+## PR #5 Test Isolation Fixed
+
+Fixed failing tests in CI by changing testDB to use `file::memory:?cache=private` for proper database isolation between parallel tests.
+Previously, `:memory:` databases were being shared across tests causing seed data to leak into tests expecting empty databases.
+All CI checks now pass (Type Check, Lint, Test) - PR #5 ready to merge.
