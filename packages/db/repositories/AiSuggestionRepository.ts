@@ -1,9 +1,10 @@
 import {
   aiSuggestionSchema,
+  timeEntrySchema,
   type AiSuggestionRepository,
 } from "@ai-starter/core";
 import type { DB } from "../db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { notFound, badImplementation } from "@hapi/boom";
 
 interface Deps {
@@ -47,9 +48,16 @@ export const DrizzleAiSuggestionRepository = ({
       throw notFound(`AiSuggestion with ID ${id} not found`, { id });
     }
   },
-  async listAll() {
-    const results = await db.query.aiSuggestionSchema.findMany();
-    return results;
+  async listByMatter(matterId: string) {
+    const results = await db
+      .select()
+      .from(aiSuggestionSchema)
+      .innerJoin(
+        timeEntrySchema,
+        eq(aiSuggestionSchema.timeEntryId, timeEntrySchema.id)
+      )
+      .where(eq(timeEntrySchema.matterId, matterId));
+    return results.map((r) => r.ai_suggestion);
   },
   async listByTimeEntry(timeEntryId: string) {
     const results = await db.query.aiSuggestionSchema.findMany({
@@ -57,10 +65,23 @@ export const DrizzleAiSuggestionRepository = ({
     });
     return results;
   },
-  async listByStatus(status: "pending" | "approved" | "rejected") {
-    const results = await db.query.aiSuggestionSchema.findMany({
-      where: eq(aiSuggestionSchema.status, status),
-    });
-    return results;
+  async listByMatterAndStatus(
+    matterId: string,
+    status: "pending" | "approved" | "rejected"
+  ) {
+    const results = await db
+      .select()
+      .from(aiSuggestionSchema)
+      .innerJoin(
+        timeEntrySchema,
+        eq(aiSuggestionSchema.timeEntryId, timeEntrySchema.id)
+      )
+      .where(
+        and(
+          eq(timeEntrySchema.matterId, matterId),
+          eq(aiSuggestionSchema.status, status)
+        )
+      );
+    return results.map((r) => r.ai_suggestion);
   },
 });

@@ -1,6 +1,6 @@
 import { timeEntrySchema, type TimeEntryRepository } from "@ai-starter/core";
 import type { DB } from "../db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { notFound, badImplementation } from "@hapi/boom";
 
 interface Deps {
@@ -41,19 +41,18 @@ export const DrizzleTimeEntryRepository = ({
       throw notFound(`TimeEntry with ID ${id} not found`, { id });
     }
   },
-  async listAll() {
-    const results = await db.query.timeEntrySchema.findMany();
-    return results;
-  },
   async listByMatter(matterId: string) {
     const results = await db.query.timeEntrySchema.findMany({
       where: eq(timeEntrySchema.matterId, matterId),
     });
     return results;
   },
-  async listByBill(billId: string) {
+  async listByMatterAndBill(matterId: string, billId: string) {
     const results = await db.query.timeEntrySchema.findMany({
-      where: eq(timeEntrySchema.billId, billId),
+      where: and(
+        eq(timeEntrySchema.matterId, matterId),
+        eq(timeEntrySchema.billId, billId)
+      ),
     });
     return results;
   },

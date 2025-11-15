@@ -39,10 +39,6 @@ export const DrizzleBillRepository = ({ db }: Deps): BillRepository => ({
       throw notFound(`Bill with ID ${id} not found`, { id });
     }
   },
-  async listAll() {
-    const results = await db.query.billSchema.findMany();
-    return results;
-  },
   async listByMatter(matterId: string) {
     const results = await db.query.billSchema.findMany({
       where: eq(billSchema.matterId, matterId),
