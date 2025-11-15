@@ -13,6 +13,7 @@ import { testDB } from "../test-utils/db";
 describe("DrizzleAiSuggestionRepository", () => {
   let db: DB;
   let repository: ReturnType<typeof DrizzleAiSuggestionRepository>;
+  let matterId: string;
   let timeEntryId: string;
   let messageId: string;
 
@@ -29,6 +30,7 @@ describe("DrizzleAiSuggestionRepository", () => {
       })
       .returning();
     if (!matter) throw new Error("Failed to create matter");
+    matterId = matter.id;
 
     const [timeEntry] = await db
       .insert(timeEntrySchema)
@@ -177,13 +179,13 @@ describe("DrizzleAiSuggestionRepository", () => {
     });
   });
 
-  describe("listAll", () => {
+  describe("listByMatter", () => {
     it("should return empty array when no suggestions exist", async () => {
-      const results = await repository.listAll();
+      const results = await repository.listByMatter(matterId);
       expect(results).toEqual([]);
     });
 
-    it("should return all suggestions", async () => {
+    it("should return all suggestions for matter", async () => {
       await repository.create({
         timeEntryId,
         messageId,
@@ -195,7 +197,7 @@ describe("DrizzleAiSuggestionRepository", () => {
         suggestedChanges: { hours: 3.5 },
       });
 
-      const results = await repository.listAll();
+      const results = await repository.listByMatter(matterId);
 
       expect(results).toHaveLength(2);
     });
@@ -246,7 +248,7 @@ describe("DrizzleAiSuggestionRepository", () => {
     });
   });
 
-  describe("listByStatus", () => {
+  describe("listByMatterAndStatus", () => {
     it("should return suggestions with pending status", async () => {
       await repository.create({
         timeEntryId,
@@ -261,7 +263,10 @@ describe("DrizzleAiSuggestionRepository", () => {
         status: "approved",
       });
 
-      const results = await repository.listByStatus("pending");
+      const results = await repository.listByMatterAndStatus(
+        matterId,
+        "pending"
+      );
 
       expect(results).toHaveLength(1);
       expect(results[0]?.status).toBe("pending");
@@ -275,7 +280,10 @@ describe("DrizzleAiSuggestionRepository", () => {
       });
       await repository.updateStatus(s1.id, "approved");
 
-      const results = await repository.listByStatus("approved");
+      const results = await repository.listByMatterAndStatus(
+        matterId,
+        "approved"
+      );
 
       expect(results).toHaveLength(1);
       expect(results[0]?.status).toBe("approved");
@@ -289,7 +297,10 @@ describe("DrizzleAiSuggestionRepository", () => {
         status: "pending",
       });
 
-      const results = await repository.listByStatus("rejected");
+      const results = await repository.listByMatterAndStatus(
+        matterId,
+        "rejected"
+      );
 
       expect(results).toEqual([]);
     });

@@ -154,9 +154,9 @@ describe("DrizzleTimeEntryRepository", () => {
     });
   });
 
-  describe("listAll", () => {
+  describe("listByMatter", () => {
     it("should return empty array when no time entries exist", async () => {
-      const results = await repository.listAll();
+      const results = await repository.listByMatter(matterId);
       expect(results).toEqual([]);
     });
 
@@ -174,7 +174,7 @@ describe("DrizzleTimeEntryRepository", () => {
         description: "Entry 2",
       });
 
-      const results = await repository.listAll();
+      const results = await repository.listByMatter(matterId);
 
       expect(results).toHaveLength(2);
     });
@@ -217,9 +217,9 @@ describe("DrizzleTimeEntryRepository", () => {
     });
   });
 
-  describe("listByBill", () => {
+  describe("listByMatterAndBill", () => {
     it("should return empty array when no time entries for bill", async () => {
-      const results = await repository.listByBill(billId);
+      const results = await repository.listByMatterAndBill(matterId, billId);
       expect(results).toEqual([]);
     });
 
@@ -238,7 +238,7 @@ describe("DrizzleTimeEntryRepository", () => {
         description: "Entry 2",
       });
 
-      const results = await repository.listByBill(billId);
+      const results = await repository.listByMatterAndBill(matterId, billId);
 
       expect(results).toHaveLength(1);
       expect(results[0]?.billId).toBe(billId);

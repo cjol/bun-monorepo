@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import { workflowSchema } from "@ai-starter/core";
+import { workflowSchema, matterSchema } from "@ai-starter/core";
 import { DrizzleWorkflowRepository } from "./WorkflowRepository";
 import type { DB } from "../db";
 import { testDB } from "../test-utils/db";
@@ -7,10 +7,22 @@ import { testDB } from "../test-utils/db";
 describe("DrizzleWorkflowRepository", () => {
   let db: DB;
   let repository: ReturnType<typeof DrizzleWorkflowRepository>;
+  let matterId: string;
 
   beforeEach(async () => {
     db = await testDB();
     repository = DrizzleWorkflowRepository({ db });
+
+    // Create a matter for foreign key reference
+    const [matter] = await db
+      .insert(matterSchema)
+      .values({
+        clientName: "Test Client",
+        matterName: "Test Matter",
+      })
+      .returning();
+    if (!matter) throw new Error("Failed to create matter");
+    matterId = matter.id;
   });
 
   describe("get", () => {
@@ -22,6 +34,7 @@ describe("DrizzleWorkflowRepository", () => {
     it("should return workflow when it exists", async () => {
       await db.insert(workflowSchema).values({
         id: "test-id",
+        matterId,
         name: "Test Workflow",
         instructions: "Do this and that",
         createdAt: new Date(),
@@ -43,6 +56,7 @@ describe("DrizzleWorkflowRepository", () => {
       now.setMilliseconds(0); // SQLite precision fix
       const workflow = await repository.create({
         id: "new-id",
+        matterId,
         name: "New Workflow",
         instructions: "Follow these steps...",
         createdAt: now,
@@ -60,6 +74,7 @@ describe("DrizzleWorkflowRepository", () => {
 
     it("should assign an ID and timestamps for a new workflow", async () => {
       const workflow = await repository.create({
+        matterId,
         name: "Auto Workflow",
         instructions: "Automated instructions",
       });
@@ -76,6 +91,7 @@ describe("DrizzleWorkflowRepository", () => {
   describe("update", () => {
     it("should update a workflow", async () => {
       const workflow = await repository.create({
+        matterId,
         name: "Original Name",
         instructions: "Original instructions",
       });
@@ -91,6 +107,7 @@ describe("DrizzleWorkflowRepository", () => {
 
     it("should partially update a workflow", async () => {
       const workflow = await repository.create({
+        matterId,
         name: "Original Name",
         instructions: "Original instructions",
       });
@@ -113,6 +130,7 @@ describe("DrizzleWorkflowRepository", () => {
   describe("delete", () => {
     it("should delete a workflow", async () => {
       const workflow = await repository.create({
+        matterId,
         name: "To Delete",
         instructions: "Will be deleted",
       });
@@ -128,23 +146,25 @@ describe("DrizzleWorkflowRepository", () => {
     });
   });
 
-  describe("listAll", () => {
+  describe("listByMatter", () => {
     it("should return empty array when no workflows exist", async () => {
-      const results = await repository.listAll();
+      const results = await repository.listByMatter(matterId);
       expect(results).toEqual([]);
     });
 
-    it("should return all workflows", async () => {
+    it("should return all workflows for matter", async () => {
       await repository.create({
+        matterId,
         name: "Workflow 1",
         instructions: "Instructions 1",
       });
       await repository.create({
+        matterId,
         name: "Workflow 2",
         instructions: "Instructions 2",
       });
 
-      const results = await repository.listAll();
+      const results = await repository.listByMatter(matterId);
 
       expect(results).toHaveLength(2);
     });

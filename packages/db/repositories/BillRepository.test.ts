@@ -137,9 +137,9 @@ describe("DrizzleBillRepository", () => {
     });
   });
 
-  describe("listAll", () => {
+  describe("listByMatter", () => {
     it("should return empty array when no bills exist", async () => {
-      const results = await repository.listAll();
+      const results = await repository.listByMatter(matterId);
       expect(results).toEqual([]);
     });
 
@@ -155,7 +155,7 @@ describe("DrizzleBillRepository", () => {
         periodEnd: new Date("2024-02-29"),
       });
 
-      const results = await repository.listAll();
+      const results = await repository.listByMatter(matterId);
 
       expect(results).toHaveLength(2);
     });
