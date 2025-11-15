@@ -5,6 +5,7 @@ export const timekeeperRoleValidator = z.object({
   timekeeperId: z.string().uuid(),
   matterId: z.string().uuid(),
   role: z.string().min(1),
+  billableRate: z.number().positive(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
 });

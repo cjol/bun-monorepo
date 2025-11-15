@@ -1,4 +1,4 @@
-import { sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, real } from "drizzle-orm/sqlite-core";
 import { timestamps } from "./utils/timestamps";
 import { timekeeperSchema } from "./timekeeper";
 import { matterSchema } from "./matter";
@@ -14,6 +14,7 @@ export const timekeeperRoleSchema = sqliteTable("timekeeper_role", {
     .notNull()
     .references(() => matterSchema.id, { onDelete: "cascade" }),
   role: text("role").notNull(),
+  billableRate: real("billable_rate").notNull(),
   ...timestamps,
 });
 
