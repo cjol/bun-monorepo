@@ -52,3 +52,16 @@ TimeEntryService automatically logs changes; AiSuggestionService applies suggest
 - Update API endpoints to provide matterId parameters where needed
 - Update seed data to include matterId for workflows
 - Fix General Purpose Agent to use updated service methods
+
+## Critical Fields Added (Latest Update)
+
+### Completed:
+- Added `timekeeperId` foreign key to `timeEntry` schema - links each time entry to the person who did the work
+- Added `billableRate` field to `timekeeperRole` schema - stores the hourly rate for that timekeeper on that specific matter
+- Updated validators to match schema changes
+
+### Why These Are Critical:
+- **timekeeperId on TimeEntry**: Without this, we can't track WHO did the work, only what work was done
+- **billableRate on TimekeeperRole**: Without this, we can't calculate billing amounts - different timekeepers charge different rates, and the same timekeeper may charge different rates on different matters
+
+PR #3 now has the complete data model for proper time tracking and billing.
