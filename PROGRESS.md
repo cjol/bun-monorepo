@@ -28,9 +28,10 @@ Implemented 5 V3 application services (MatterService, BillService, TimeEntryServ
 All services use curried dependency injection, depend only on core repository interfaces, and include comprehensive test coverage.
 TimeEntryService automatically logs changes; AiSuggestionService applies suggestions to time entries on approval with change logging.
 
-## PR #3 Review Comments - Matter Scoping Updates (In Progress)
+## PR #3 Review Comments - Matter Scoping Updates
 
 ### Completed:
+
 1. Added `timekeeper` and `timekeeperRole` schemas with proper relationships
 2. Updated `workflow` schema to include `matterId` for matter scoping
 3. Updated all repository interfaces to use matter-scoped list methods:
@@ -42,11 +43,12 @@ TimeEntryService automatically logs changes; AiSuggestionService applies suggest
 5. Added TimekeeperRepository and TimekeeperRoleRepository implementations
 6. Updated service layer to use new repository signatures
 7. Added all V3 validators (matter, bill, timeEntry, aiSuggestion, workflow, timekeeper, timekeeperRole)
+8. Fixed all repository tests to use matter-scoped query methods
+9. Fixed all service tests to pass matterId parameters to matter-scoped methods
+10. All 176 tests passing (3 errors in old-v2 folder only, which can be ignored)
 
 ### Remaining Work:
-- Update all test files to match new service/repository signatures
+
 - Update API endpoints to provide matterId parameters
 - Update seed data to include matterId for workflows
 - Fix General Purpose Agent to use updated service methods
-- Run full test suite and fix any remaining issues
-
