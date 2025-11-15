@@ -299,14 +299,14 @@ describe("TimeEntryService", () => {
         description: "Unbilled work",
       });
 
-      const result = await service.listByBill(billId);
+      const result = await service.listByBill(matterId, billId);
       expect(result).toHaveLength(2);
       expect(result).toContainEqual(entry1);
       expect(result).toContainEqual(entry2);
     });
 
     it("should return empty array if no time entries exist", async () => {
-      const result = await service.listByBill(billId);
+      const result = await service.listByBill(matterId, billId);
       expect(result).toEqual([]);
     });
   });

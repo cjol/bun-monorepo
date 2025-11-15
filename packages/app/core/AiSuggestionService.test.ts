@@ -188,17 +188,17 @@ describe("AiSuggestionService", () => {
 
       await service.approveSuggestion(pending1.id);
 
-      const pendingResults = await service.listByStatus("pending");
+      const pendingResults = await service.listByStatus(matterId, "pending");
       expect(pendingResults).toHaveLength(1);
       expect(pendingResults[0]!.id).toBe(pending2.id);
 
-      const approvedResults = await service.listByStatus("approved");
+      const approvedResults = await service.listByStatus(matterId, "approved");
       expect(approvedResults).toHaveLength(1);
       expect(approvedResults[0]!.id).toBe(pending1.id);
     });
 
     it("should return empty array if no suggestions have that status", async () => {
-      const result = await service.listByStatus("rejected");
+      const result = await service.listByStatus(matterId, "rejected");
       expect(result).toEqual([]);
     });
   });

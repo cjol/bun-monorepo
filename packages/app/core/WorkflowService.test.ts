@@ -2,21 +2,33 @@ import { describe, it, expect, beforeEach } from "bun:test";
 import { testDB } from "@ai-starter/db/test-utils";
 import { getRepos, type DB } from "@ai-starter/db";
 import { WorkflowService } from "./WorkflowService";
+import { MatterService } from "./MatterService";
 
 describe("WorkflowService", () => {
   let db: DB;
   let repos: ReturnType<typeof getRepos>;
   let service: ReturnType<typeof WorkflowService>;
+  let matterService: ReturnType<typeof MatterService>;
+  let matterId: string;
 
   beforeEach(async () => {
     db = await testDB();
     repos = await getRepos(db);
     service = WorkflowService({ repos });
+    matterService = MatterService({ repos });
+
+    const matter = await matterService.createMatter({
+      clientName: "Test Client",
+      matterName: "Test Matter",
+      description: null,
+    });
+    matterId = matter.id;
   });
 
   describe("getWorkflow", () => {
     it("should return a workflow by id", async () => {
       const created = await service.createWorkflow({
+        matterId,
         name: "Daily Report",
         instructions: "Generate a daily summary of all time entries",
       });
@@ -34,6 +46,7 @@ describe("WorkflowService", () => {
   describe("createWorkflow", () => {
     it("should validate and create a new workflow", async () => {
       const result = await service.createWorkflow({
+        matterId,
         name: "Daily Report",
         instructions: "Generate a daily summary of all time entries",
       });
@@ -42,6 +55,7 @@ describe("WorkflowService", () => {
         id: expect.stringMatching(
           /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
         ),
+        matterId,
         name: "Daily Report",
         instructions: "Generate a daily summary of all time entries",
         createdAt: expect.any(Date),
@@ -52,6 +66,7 @@ describe("WorkflowService", () => {
     it("should throw an error if name is empty", async () => {
       await expect(
         service.createWorkflow({
+          matterId,
           name: "",
           instructions: "Some instructions",
         })
@@ -61,6 +76,7 @@ describe("WorkflowService", () => {
     it("should throw an error if instructions are empty", async () => {
       await expect(
         service.createWorkflow({
+          matterId,
           name: "Daily Report",
           instructions: "",
         })
@@ -71,6 +87,7 @@ describe("WorkflowService", () => {
   describe("updateWorkflow", () => {
     it("should update workflow fields", async () => {
       const created = await service.createWorkflow({
+        matterId,
         name: "Daily Report",
         instructions: "Generate a daily summary",
       });
@@ -84,6 +101,7 @@ describe("WorkflowService", () => {
 
       expect(result).toEqual({
         id: created.id,
+        matterId,
         name: "Updated Daily Report",
         instructions: "Generate an updated daily summary",
         createdAt: created.createdAt,
@@ -96,6 +114,7 @@ describe("WorkflowService", () => {
 
     it("should validate updated fields", async () => {
       const created = await service.createWorkflow({
+        matterId,
         name: "Daily Report",
         instructions: "Generate a daily summary",
       });
@@ -111,6 +130,7 @@ describe("WorkflowService", () => {
   describe("deleteWorkflow", () => {
     it("should delete a workflow", async () => {
       const created = await service.createWorkflow({
+        matterId,
         name: "Daily Report",
         instructions: "Generate a daily summary",
       });
@@ -122,26 +142,28 @@ describe("WorkflowService", () => {
     });
   });
 
-  describe("listAll", () => {
-    it("should list all workflows", async () => {
+  describe("listByMatter", () => {
+    it("should list all workflows for a matter", async () => {
       const workflow1 = await service.createWorkflow({
+        matterId,
         name: "Daily Report",
         instructions: "Generate a daily summary",
       });
 
       const workflow2 = await service.createWorkflow({
+        matterId,
         name: "Weekly Report",
         instructions: "Generate a weekly summary",
       });
 
-      const result = await service.listAll();
+      const result = await service.listByMatter(matterId);
       expect(result).toHaveLength(2);
       expect(result).toContainEqual(workflow1);
       expect(result).toContainEqual(workflow2);
     });
 
     it("should return empty array if no workflows exist", async () => {
-      const result = await service.listAll();
+      const result = await service.listByMatter(matterId);
       expect(result).toEqual([]);
     });
   });
