@@ -13,3 +13,5 @@ export * from "./timeEntry";
 export * from "./timeEntryChangeLog";
 export * from "./aiSuggestion";
 export * from "./workflow";
+export * from "./timekeeper";
+export * from "./timekeeperRole";
