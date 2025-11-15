@@ -128,8 +128,11 @@ export const TimeEntryService = (deps: Deps) => {
       return repos.timeEntry.listByMatter(matterId);
     },
 
-    listByBill: async (billId: string): Promise<TimeEntry[]> => {
-      return repos.timeEntry.listByBill(billId);
+    listByBill: async (
+      matterId: string,
+      billId: string
+    ): Promise<TimeEntry[]> => {
+      return repos.timeEntry.listByMatterAndBill(matterId, billId);
     },
   };
 };

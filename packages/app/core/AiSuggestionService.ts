@@ -108,9 +108,14 @@ export const AiSuggestionService = (deps: Deps) => {
     },
 
     listByStatus: async (
+      matterId: string,
       status: "pending" | "approved" | "rejected"
     ): Promise<AiSuggestion[]> => {
-      return repos.aiSuggestion.listByStatus(status);
+      return repos.aiSuggestion.listByMatterAndStatus(matterId, status);
+    },
+
+    listByMatter: async (matterId: string): Promise<AiSuggestion[]> => {
+      return repos.aiSuggestion.listByMatter(matterId);
     },
   };
 };

@@ -20,11 +20,13 @@ export const WorkflowService = (deps: Deps) => {
     },
 
     createWorkflow: async (data: {
+      matterId: string;
       name: string;
       instructions: string;
     }): Promise<Workflow> => {
       const newWorkflow: NewWorkflow = {
         id: crypto.randomUUID(),
+        matterId: data.matterId,
         name: data.name,
         instructions: data.instructions,
         createdAt: new Date(),
@@ -60,8 +62,8 @@ export const WorkflowService = (deps: Deps) => {
       return repos.workflow.delete(id);
     },
 
-    listAll: async (): Promise<Workflow[]> => {
-      return repos.workflow.listAll();
+    listByMatter: async (matterId: string): Promise<Workflow[]> => {
+      return repos.workflow.listByMatter(matterId);
     },
   };
 };
