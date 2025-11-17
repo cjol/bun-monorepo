@@ -1,25 +1,23 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import {
-  aiSuggestionSchema,
-  timeEntrySchema,
-  matterSchema,
-  conversationSchema,
-  messageSchema,
-} from "@ai-starter/core";
+import { aiSuggestionSchema, matterSchema } from "@ai-starter/core";
 import { DrizzleAiSuggestionRepository } from "./AiSuggestionRepository";
 import type { DB } from "../db";
 import { testDB } from "../test-utils/db";
+import { doSeedRoles, createTestTimekeeper } from "../test-utils/seed";
 
 describe("DrizzleAiSuggestionRepository", () => {
   let db: DB;
   let repository: ReturnType<typeof DrizzleAiSuggestionRepository>;
   let matterId: string;
   let timeEntryId: string;
-  let messageId: string;
+  let timekeeperId: string;
 
   beforeEach(async () => {
     db = await testDB();
     repository = DrizzleAiSuggestionRepository({ db });
+
+    // Create roles
+    await doSeedRoles(db);
 
     // Create dependencies for foreign keys
     const [matter] = await db
@@ -32,10 +30,18 @@ describe("DrizzleAiSuggestionRepository", () => {
     if (!matter) throw new Error("Failed to create matter");
     matterId = matter.id;
 
+    // Create timekeeper
+    const timekeeper = await createTestTimekeeper(db, matterId);
+    if (!timekeeper) throw new Error("Failed to create timekeeper");
+    timekeeperId = timekeeper.id;
+
+    // Create time entry
+    const { timeEntrySchema } = await import("@ai-starter/core");
     const [timeEntry] = await db
       .insert(timeEntrySchema)
       .values({
         matterId: matter.id,
+        timekeeperId,
         date: new Date("2024-01-15"),
         hours: 2.0,
         description: "Original entry",
@@ -43,25 +49,6 @@ describe("DrizzleAiSuggestionRepository", () => {
       .returning();
     if (!timeEntry) throw new Error("Failed to create timeEntry");
     timeEntryId = timeEntry.id;
-
-    const [conversation] = await db
-      .insert(conversationSchema)
-      .values({
-        title: "Test Conversation",
-      })
-      .returning();
-    if (!conversation) throw new Error("Failed to create conversation");
-
-    const [message] = await db
-      .insert(messageSchema)
-      .values({
-        conversationId: conversation.id,
-        role: "assistant",
-        content: [{ type: "text", text: "Test message" }],
-      })
-      .returning();
-    if (!message) throw new Error("Failed to create message");
-    messageId = message.id;
   });
 
   describe("get", () => {
@@ -74,7 +61,6 @@ describe("DrizzleAiSuggestionRepository", () => {
       await db.insert(aiSuggestionSchema).values({
         id: "test-id",
         timeEntryId,
-        messageId,
         suggestedChanges: { hours: 3.0 },
         status: "pending",
         createdAt: new Date(),
@@ -97,7 +83,6 @@ describe("DrizzleAiSuggestionRepository", () => {
       const suggestion = await repository.create({
         id: "new-id",
         timeEntryId,
-        messageId,
         suggestedChanges: { hours: 3.5, description: "Updated" },
         status: "pending",
         createdAt: now,
@@ -116,7 +101,6 @@ describe("DrizzleAiSuggestionRepository", () => {
     it("should assign an ID and timestamps with default pending status", async () => {
       const suggestion = await repository.create({
         timeEntryId,
-        messageId,
         suggestedChanges: { hours: 2.5 },
       });
 
@@ -131,7 +115,6 @@ describe("DrizzleAiSuggestionRepository", () => {
     it("should update suggestion status to approved", async () => {
       const suggestion = await repository.create({
         timeEntryId,
-        messageId,
         suggestedChanges: { hours: 3.0 },
       });
 
@@ -144,7 +127,6 @@ describe("DrizzleAiSuggestionRepository", () => {
     it("should update suggestion status to rejected", async () => {
       const suggestion = await repository.create({
         timeEntryId,
-        messageId,
         suggestedChanges: { hours: 3.0 },
       });
 
@@ -164,7 +146,6 @@ describe("DrizzleAiSuggestionRepository", () => {
     it("should delete a suggestion", async () => {
       const suggestion = await repository.create({
         timeEntryId,
-        messageId,
         suggestedChanges: { hours: 3.0 },
       });
 
@@ -188,12 +169,10 @@ describe("DrizzleAiSuggestionRepository", () => {
     it("should return all suggestions for matter", async () => {
       await repository.create({
         timeEntryId,
-        messageId,
         suggestedChanges: { hours: 2.5 },
       });
       await repository.create({
         timeEntryId,
-        messageId,
         suggestedChanges: { hours: 3.5 },
       });
 
@@ -219,10 +198,21 @@ describe("DrizzleAiSuggestionRepository", () => {
         })
         .returning();
       if (!matter2) throw new Error("Failed to create matter2");
+
+      const timekeeper2 = await createTestTimekeeper(
+        db,
+        matter2.id,
+        "role-associate",
+        { email: "test2@example.com" }
+      );
+      if (!timekeeper2) throw new Error("Failed to create timekeeper2");
+
+      const { timeEntrySchema } = await import("@ai-starter/core");
       const [timeEntry2] = await db
         .insert(timeEntrySchema)
         .values({
           matterId: matter2.id,
+          timekeeperId: timekeeper2.id,
           date: new Date("2024-01-16"),
           hours: 1.0,
           description: "Other entry",
@@ -232,12 +222,10 @@ describe("DrizzleAiSuggestionRepository", () => {
 
       await repository.create({
         timeEntryId,
-        messageId,
         suggestedChanges: { hours: 2.5 },
       });
       await repository.create({
         timeEntryId: timeEntry2.id,
-        messageId,
         suggestedChanges: { hours: 1.5 },
       });
 
@@ -252,13 +240,11 @@ describe("DrizzleAiSuggestionRepository", () => {
     it("should return suggestions with pending status", async () => {
       await repository.create({
         timeEntryId,
-        messageId,
         suggestedChanges: { hours: 2.5 },
         status: "pending",
       });
       await repository.create({
         timeEntryId,
-        messageId,
         suggestedChanges: { hours: 3.5 },
         status: "approved",
       });
@@ -275,7 +261,6 @@ describe("DrizzleAiSuggestionRepository", () => {
     it("should return suggestions with approved status", async () => {
       const s1 = await repository.create({
         timeEntryId,
-        messageId,
         suggestedChanges: { hours: 2.5 },
       });
       await repository.updateStatus(s1.id, "approved");
@@ -292,7 +277,6 @@ describe("DrizzleAiSuggestionRepository", () => {
     it("should return empty array when no suggestions match status", async () => {
       await repository.create({
         timeEntryId,
-        messageId,
         suggestedChanges: { hours: 2.5 },
         status: "pending",
       });

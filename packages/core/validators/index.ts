@@ -17,3 +17,5 @@ export * from "./aiSuggestion";
 export * from "./workflow";
 export * from "./timekeeper";
 export * from "./timekeeperRole";
+export * from "./role";
+export * from "./rate";

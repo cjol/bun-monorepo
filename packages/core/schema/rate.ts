@@ -1,9 +1,9 @@
-import { sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, real } from "drizzle-orm/sqlite-core";
 import { timestamps } from "./utils/timestamps";
 import { matterSchema } from "./matter";
 import { roleSchema } from "./role";
 
-export const timekeeperSchema = sqliteTable("timekeeper", {
+export const rateSchema = sqliteTable("rate", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -13,10 +13,9 @@ export const timekeeperSchema = sqliteTable("timekeeper", {
   roleId: text("role_id")
     .notNull()
     .references(() => roleSchema.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
-  email: text("email").notNull(),
+  hourlyRate: real("hourly_rate").notNull(),
   ...timestamps,
 });
 
-export type Timekeeper = typeof timekeeperSchema.$inferSelect;
-export type NewTimekeeper = typeof timekeeperSchema.$inferInsert;
+export type Rate = typeof rateSchema.$inferSelect;
+export type NewRate = typeof rateSchema.$inferInsert;
