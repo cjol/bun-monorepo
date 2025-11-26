@@ -3,15 +3,21 @@ import { timeEntrySchema, matterSchema } from "@ai-starter/core";
 import { DrizzleTimeEntryChangeLogRepository } from "./TimeEntryChangeLogRepository";
 import type { DB } from "../db";
 import { testDB } from "../test-utils/db";
+import { doSeedRoles, createTestTimekeeper } from "../test-utils/seed";
 
 describe("DrizzleTimeEntryChangeLogRepository", () => {
   let db: DB;
   let repository: ReturnType<typeof DrizzleTimeEntryChangeLogRepository>;
   let timeEntryId: string;
+  let timekeeperId: string;
+  let timeEntry: typeof timeEntrySchema.$inferSelect;
 
   beforeEach(async () => {
     db = await testDB();
     repository = DrizzleTimeEntryChangeLogRepository({ db });
+
+    // Seed roles
+    await doSeedRoles(db);
 
     // Create a matter for foreign key reference
     const [matter] = await db
@@ -23,18 +29,25 @@ describe("DrizzleTimeEntryChangeLogRepository", () => {
       .returning();
     if (!matter) throw new Error("Failed to create matter");
 
+    // Create timekeeper
+    const timekeeper = await createTestTimekeeper(db, matter.id);
+    if (!timekeeper) throw new Error("Failed to create timekeeper");
+    timekeeperId = timekeeper.id;
+
     // Create a time entry for foreign key reference
-    const [timeEntry] = await db
+    const [entry] = await db
       .insert(timeEntrySchema)
       .values({
         matterId: matter.id,
+        timekeeperId,
         date: new Date("2024-01-15"),
         hours: 2.0,
         description: "Original entry",
       })
       .returning();
-    if (!timeEntry) throw new Error("Failed to create timeEntry");
-    timeEntryId = timeEntry.id;
+    if (!entry) throw new Error("Failed to create timeEntry");
+    timeEntry = entry;
+    timeEntryId = entry.id;
   });
 
   describe("insert", () => {
@@ -42,51 +55,51 @@ describe("DrizzleTimeEntryChangeLogRepository", () => {
       const now = new Date();
       now.setMilliseconds(0); // SQLite precision fix
 
+      const beforeData = { ...timeEntry, hours: 2.0, description: "Original" };
+      const afterData = { ...timeEntry, hours: 3.0, description: "Updated" };
+
       const changeLog = await repository.insert({
-        id: "test-id",
         timeEntryId,
-        beforeData: { hours: 2.0, description: "Original" },
-        afterData: { hours: 3.0, description: "Updated" },
+        beforeData,
+        afterData,
         changedAt: now,
       });
 
-      expect(changeLog.id).toBe("test-id");
       expect(changeLog.timeEntryId).toBe(timeEntryId);
-      expect(changeLog.beforeData).toEqual({
-        hours: 2.0,
-        description: "Original",
-      });
-      expect(changeLog.afterData).toEqual({
-        hours: 3.0,
-        description: "Updated",
-      });
+      expect(changeLog.beforeData?.hours).toBe(2.0);
+      expect(changeLog.beforeData?.description).toBe("Original");
+      expect(changeLog.afterData.hours).toBe(3.0);
+      expect(changeLog.afterData.description).toBe("Updated");
       expect(changeLog.changedAt).toEqual(now);
     });
 
     it("should assign an ID and timestamp for a new change log", async () => {
+      const afterData = { ...timeEntry, hours: 3.0, description: "Updated" };
+
       const changeLog = await repository.insert({
         timeEntryId,
-        afterData: { hours: 3.0, description: "Updated" },
+        afterData,
       });
 
       expect(changeLog.id).toBeDefined();
       expect(changeLog.changedAt).toBeDefined();
       expect(changeLog.beforeData).toBeNull();
-      expect(changeLog.afterData).toEqual({
-        hours: 3.0,
-        description: "Updated",
-      });
+      expect(changeLog.afterData.hours).toBe(3.0);
+      expect(changeLog.afterData.description).toBe("Updated");
     });
 
     it("should handle beforeData as null for initial creation", async () => {
+      const afterData = { ...timeEntry, hours: 1.0, description: "New" };
+
       const changeLog = await repository.insert({
         timeEntryId,
         beforeData: null,
-        afterData: { hours: 1.0, description: "New" },
+        afterData,
       });
 
       expect(changeLog.beforeData).toBeNull();
-      expect(changeLog.afterData).toEqual({ hours: 1.0, description: "New" });
+      expect(changeLog.afterData.hours).toBe(1.0);
+      expect(changeLog.afterData.description).toBe("New");
     });
   });
 
@@ -99,12 +112,12 @@ describe("DrizzleTimeEntryChangeLogRepository", () => {
     it("should return all change logs for a time entry", async () => {
       await repository.insert({
         timeEntryId,
-        afterData: { hours: 2.5, description: "Change 1" },
+        afterData: { ...timeEntry, hours: 2.5, description: "Change 1" },
       });
       await repository.insert({
         timeEntryId,
-        beforeData: { hours: 2.5, description: "Change 1" },
-        afterData: { hours: 3.0, description: "Change 2" },
+        beforeData: { ...timeEntry, hours: 2.5, description: "Change 1" },
+        afterData: { ...timeEntry, hours: 3.0, description: "Change 2" },
       });
 
       const results = await repository.listByTimeEntry(timeEntryId);
@@ -124,10 +137,21 @@ describe("DrizzleTimeEntryChangeLogRepository", () => {
         })
         .returning();
       if (!matter2) throw new Error("Failed to create matter2");
+
+      // Create timekeeper for matter2
+      const timekeeper2 = await createTestTimekeeper(
+        db,
+        matter2.id,
+        "role-associate",
+        { email: "test2@example.com" }
+      );
+      if (!timekeeper2) throw new Error("Failed to create timekeeper2");
+
       const [timeEntry2] = await db
         .insert(timeEntrySchema)
         .values({
           matterId: matter2.id,
+          timekeeperId: timekeeper2.id,
           date: new Date("2024-01-16"),
           hours: 1.0,
           description: "Other entry",
@@ -137,11 +161,11 @@ describe("DrizzleTimeEntryChangeLogRepository", () => {
 
       await repository.insert({
         timeEntryId,
-        afterData: { hours: 2.5, description: "Change 1" },
+        afterData: { ...timeEntry, hours: 2.5, description: "Change 1" },
       });
       await repository.insert({
         timeEntryId: timeEntry2.id,
-        afterData: { hours: 1.5, description: "Change 2" },
+        afterData: { ...timeEntry2, hours: 1.5, description: "Change 2" },
       });
 
       const results = await repository.listByTimeEntry(timeEntryId);

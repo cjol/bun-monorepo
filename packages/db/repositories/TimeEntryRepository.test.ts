@@ -3,16 +3,21 @@ import { timeEntrySchema, matterSchema, billSchema } from "@ai-starter/core";
 import { DrizzleTimeEntryRepository } from "./TimeEntryRepository";
 import type { DB } from "../db";
 import { testDB } from "../test-utils/db";
+import { doSeedRoles, createTestTimekeeper } from "../test-utils/seed";
 
 describe("DrizzleTimeEntryRepository", () => {
   let db: DB;
   let repository: ReturnType<typeof DrizzleTimeEntryRepository>;
   let matterId: string;
   let billId: string;
+  let timekeeperId: string;
 
   beforeEach(async () => {
     db = await testDB();
     repository = DrizzleTimeEntryRepository({ db });
+
+    // Seed roles
+    await doSeedRoles(db);
 
     // Create a matter for foreign key reference
     const [matter] = await db
@@ -24,6 +29,11 @@ describe("DrizzleTimeEntryRepository", () => {
       .returning();
     if (!matter) throw new Error("Failed to create matter");
     matterId = matter.id;
+
+    // Create timekeeper
+    const timekeeper = await createTestTimekeeper(db, matterId);
+    if (!timekeeper) throw new Error("Failed to create timekeeper");
+    timekeeperId = timekeeper.id;
 
     // Create a bill for foreign key reference
     const [bill] = await db
@@ -48,6 +58,7 @@ describe("DrizzleTimeEntryRepository", () => {
       await db.insert(timeEntrySchema).values({
         id: "test-id",
         matterId,
+        timekeeperId,
         billId,
         date: new Date("2024-01-15"),
         hours: 2.5,
@@ -74,6 +85,7 @@ describe("DrizzleTimeEntryRepository", () => {
       const timeEntry = await repository.create({
         id: "new-id",
         matterId,
+        timekeeperId,
         billId,
         date,
         hours: 3.5,
@@ -94,6 +106,7 @@ describe("DrizzleTimeEntryRepository", () => {
     it("should assign an ID and timestamps for a new time entry", async () => {
       const timeEntry = await repository.create({
         matterId,
+        timekeeperId,
         date: new Date("2024-01-15"),
         hours: 1.5,
         description: "Auto entry",
@@ -112,6 +125,7 @@ describe("DrizzleTimeEntryRepository", () => {
     it("should update a time entry", async () => {
       const timeEntry = await repository.create({
         matterId,
+        timekeeperId,
         date: new Date("2024-01-15"),
         hours: 2.0,
         description: "Original description",
@@ -138,6 +152,7 @@ describe("DrizzleTimeEntryRepository", () => {
     it("should delete a time entry", async () => {
       const timeEntry = await repository.create({
         matterId,
+        timekeeperId,
         date: new Date("2024-01-15"),
         hours: 1.0,
         description: "To delete",
@@ -163,12 +178,14 @@ describe("DrizzleTimeEntryRepository", () => {
     it("should return all time entries", async () => {
       await repository.create({
         matterId,
+        timekeeperId,
         date: new Date("2024-01-15"),
         hours: 1.0,
         description: "Entry 1",
       });
       await repository.create({
         matterId,
+        timekeeperId,
         date: new Date("2024-01-16"),
         hours: 2.0,
         description: "Entry 2",
@@ -197,14 +214,25 @@ describe("DrizzleTimeEntryRepository", () => {
         .returning();
       if (!matter2) throw new Error("Failed to create matter2");
 
+      // Create timekeeper for matter2
+      const timekeeper2 = await createTestTimekeeper(
+        db,
+        matter2.id,
+        "role-associate",
+        { email: "test2@example.com" }
+      );
+      if (!timekeeper2) throw new Error("Failed to create timekeeper2");
+
       await repository.create({
         matterId,
+        timekeeperId,
         date: new Date("2024-01-15"),
         hours: 1.0,
         description: "Entry 1",
       });
       await repository.create({
         matterId: matter2.id,
+        timekeeperId: timekeeper2.id,
         date: new Date("2024-01-15"),
         hours: 2.0,
         description: "Entry 2",
@@ -226,6 +254,7 @@ describe("DrizzleTimeEntryRepository", () => {
     it("should return time entries for specific bill", async () => {
       await repository.create({
         matterId,
+        timekeeperId,
         billId,
         date: new Date("2024-01-15"),
         hours: 1.0,
@@ -233,6 +262,7 @@ describe("DrizzleTimeEntryRepository", () => {
       });
       await repository.create({
         matterId,
+        timekeeperId,
         date: new Date("2024-01-15"),
         hours: 2.0,
         description: "Entry 2",

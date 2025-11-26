@@ -3,7 +3,6 @@ import type {
   TimekeeperRole,
   NewTimekeeperRole,
 } from "@ai-starter/core";
-import { timekeeperRoleValidator } from "@ai-starter/core";
 
 export interface Deps {
   repos: {
@@ -19,22 +18,10 @@ export const TimekeeperRoleService = (deps: Deps) => {
       return repos.timekeeperRole.get(id);
     },
 
-    createTimekeeperRole: async (data: {
-      timekeeperId: string;
-      matterId: string;
-      role: string;
-    }): Promise<TimekeeperRole> => {
-      const newRole: NewTimekeeperRole = {
-        id: crypto.randomUUID(),
-        timekeeperId: data.timekeeperId,
-        matterId: data.matterId,
-        role: data.role,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      timekeeperRoleValidator.parse(newRole);
-      return repos.timekeeperRole.create(newRole);
+    createTimekeeperRole: async (
+      data: NewTimekeeperRole
+    ): Promise<TimekeeperRole> => {
+      return repos.timekeeperRole.create(data);
     },
 
     updateTimekeeperRole: async (
@@ -43,11 +30,6 @@ export const TimekeeperRoleService = (deps: Deps) => {
         role: string;
       }>
     ): Promise<TimekeeperRole> => {
-      // Validate individual fields if provided
-      if (data.role !== undefined) {
-        timekeeperRoleValidator.shape.role.parse(data.role);
-      }
-
       return repos.timekeeperRole.update(id, {
         ...data,
         updatedAt: new Date(),

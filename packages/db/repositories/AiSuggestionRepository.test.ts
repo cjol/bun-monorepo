@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import { aiSuggestionSchema, matterSchema } from "@ai-starter/core";
+import {
+  aiSuggestionSchema,
+  matterSchema,
+  type TimeEntry,
+} from "@ai-starter/core";
 import { DrizzleAiSuggestionRepository } from "./AiSuggestionRepository";
 import type { DB } from "../db";
 import { testDB } from "../test-utils/db";
@@ -9,7 +13,7 @@ describe("DrizzleAiSuggestionRepository", () => {
   let db: DB;
   let repository: ReturnType<typeof DrizzleAiSuggestionRepository>;
   let matterId: string;
-  let timeEntryId: string;
+  let timeEntry: TimeEntry;
   let timekeeperId: string;
 
   beforeEach(async () => {
@@ -37,7 +41,7 @@ describe("DrizzleAiSuggestionRepository", () => {
 
     // Create time entry
     const { timeEntrySchema } = await import("@ai-starter/core");
-    const [timeEntry] = await db
+    const results = await db
       .insert(timeEntrySchema)
       .values({
         matterId: matter.id,
@@ -47,8 +51,30 @@ describe("DrizzleAiSuggestionRepository", () => {
         description: "Original entry",
       })
       .returning();
-    if (!timeEntry) throw new Error("Failed to create timeEntry");
-    timeEntryId = timeEntry.id;
+    if (!results[0]) throw new Error("Failed to create timeEntry");
+    timeEntry = results[0];
+
+    // Create conversation and message for AI suggestions
+    const { conversationSchema, messageSchema } = await import(
+      "@ai-starter/core"
+    );
+    const [conversation] = await db
+      .insert(conversationSchema)
+      .values({
+        title: "Test Conversation",
+      })
+      .returning();
+    if (!conversation) throw new Error("Failed to create conversation");
+
+    const [message] = await db
+      .insert(messageSchema)
+      .values({
+        conversationId: conversation.id,
+        role: "assistant",
+        content: [{ type: "text", text: "AI suggestion message" }],
+      })
+      .returning();
+    if (!message) throw new Error("Failed to create message");
   });
 
   describe("get", () => {
@@ -60,11 +86,9 @@ describe("DrizzleAiSuggestionRepository", () => {
     it("should return suggestion when it exists", async () => {
       await db.insert(aiSuggestionSchema).values({
         id: "test-id",
-        timeEntryId,
-        suggestedChanges: { hours: 3.0 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 3.0 },
         status: "pending",
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       const result = await repository.get("test-id");
@@ -82,16 +106,20 @@ describe("DrizzleAiSuggestionRepository", () => {
 
       const suggestion = await repository.create({
         id: "new-id",
-        timeEntryId,
-        suggestedChanges: { hours: 3.5, description: "Updated" },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 3.5, description: "Updated" },
         status: "pending",
         createdAt: now,
         updatedAt: now,
       });
 
       expect(suggestion.id).toBe("new-id");
-      expect(suggestion.timeEntryId).toBe(timeEntryId);
+      expect(suggestion.timeEntryId).toBe(timeEntry.id);
       expect(suggestion.suggestedChanges).toEqual({
+        ...timeEntry,
+        id: undefined,
+        createdAt: undefined,
+        updatedAt: undefined,
         hours: 3.5,
         description: "Updated",
       });
@@ -100,8 +128,8 @@ describe("DrizzleAiSuggestionRepository", () => {
 
     it("should assign an ID and timestamps with default pending status", async () => {
       const suggestion = await repository.create({
-        timeEntryId,
-        suggestedChanges: { hours: 2.5 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 2.5 },
       });
 
       expect(suggestion.id).toBeDefined();
@@ -114,8 +142,8 @@ describe("DrizzleAiSuggestionRepository", () => {
   describe("updateStatus", () => {
     it("should update suggestion status to approved", async () => {
       const suggestion = await repository.create({
-        timeEntryId,
-        suggestedChanges: { hours: 3.0 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 3.0 },
       });
 
       const updated = await repository.updateStatus(suggestion.id, "approved");
@@ -126,8 +154,8 @@ describe("DrizzleAiSuggestionRepository", () => {
 
     it("should update suggestion status to rejected", async () => {
       const suggestion = await repository.create({
-        timeEntryId,
-        suggestedChanges: { hours: 3.0 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 3.0 },
       });
 
       const updated = await repository.updateStatus(suggestion.id, "rejected");
@@ -145,8 +173,8 @@ describe("DrizzleAiSuggestionRepository", () => {
   describe("delete", () => {
     it("should delete a suggestion", async () => {
       const suggestion = await repository.create({
-        timeEntryId,
-        suggestedChanges: { hours: 3.0 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 3.0 },
       });
 
       await repository.delete(suggestion.id);
@@ -168,12 +196,12 @@ describe("DrizzleAiSuggestionRepository", () => {
 
     it("should return all suggestions for matter", async () => {
       await repository.create({
-        timeEntryId,
-        suggestedChanges: { hours: 2.5 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 2.5 },
       });
       await repository.create({
-        timeEntryId,
-        suggestedChanges: { hours: 3.5 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 3.5 },
       });
 
       const results = await repository.listByMatter(matterId);
@@ -184,7 +212,7 @@ describe("DrizzleAiSuggestionRepository", () => {
 
   describe("listByTimeEntry", () => {
     it("should return empty array when no suggestions for time entry", async () => {
-      const results = await repository.listByTimeEntry(timeEntryId);
+      const results = await repository.listByTimeEntry(timeEntry.id);
       expect(results).toEqual([]);
     });
 
@@ -221,31 +249,31 @@ describe("DrizzleAiSuggestionRepository", () => {
       if (!timeEntry2) throw new Error("Failed to create timeEntry2");
 
       await repository.create({
-        timeEntryId,
-        suggestedChanges: { hours: 2.5 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 2.5 },
       });
       await repository.create({
         timeEntryId: timeEntry2.id,
-        suggestedChanges: { hours: 1.5 },
+        suggestedChanges: { ...timeEntry2, hours: 1.5 },
       });
 
-      const results = await repository.listByTimeEntry(timeEntryId);
+      const results = await repository.listByTimeEntry(timeEntry2.id);
 
       expect(results).toHaveLength(1);
-      expect(results[0]?.timeEntryId).toBe(timeEntryId);
+      expect(results[0]?.timeEntryId).toBe(timeEntry2.id);
     });
   });
 
   describe("listByMatterAndStatus", () => {
     it("should return suggestions with pending status", async () => {
       await repository.create({
-        timeEntryId,
-        suggestedChanges: { hours: 2.5 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 2.5 },
         status: "pending",
       });
       await repository.create({
-        timeEntryId,
-        suggestedChanges: { hours: 3.5 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 3.5 },
         status: "approved",
       });
 
@@ -260,8 +288,8 @@ describe("DrizzleAiSuggestionRepository", () => {
 
     it("should return suggestions with approved status", async () => {
       const s1 = await repository.create({
-        timeEntryId,
-        suggestedChanges: { hours: 2.5 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 2.5 },
       });
       await repository.updateStatus(s1.id, "approved");
 
@@ -276,8 +304,8 @@ describe("DrizzleAiSuggestionRepository", () => {
 
     it("should return empty array when no suggestions match status", async () => {
       await repository.create({
-        timeEntryId,
-        suggestedChanges: { hours: 2.5 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 2.5 },
         status: "pending",
       });
 

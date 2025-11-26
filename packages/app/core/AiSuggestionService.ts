@@ -3,9 +3,8 @@ import {
   type TimeEntryRepository,
   type TimeEntryChangeLogRepository,
   type AiSuggestion,
-  type NewAiSuggestion,
   type NewTimeEntryChangeLog,
-  aiSuggestionValidator,
+  type NewTimeEntry,
 } from "@ai-starter/core";
 import { notFound, badRequest } from "@hapi/boom";
 
@@ -17,43 +16,19 @@ export interface Deps {
   };
 }
 
-const serializeTimeEntry = (
-  entry: Awaited<ReturnType<TimeEntryRepository["get"]>>
-): Record<string, unknown> => {
-  if (!entry) throw new Error("TimeEntry not found");
-  return {
-    id: entry.id,
-    matterId: entry.matterId,
-    billId: entry.billId,
-    date: entry.date.toISOString(),
-    hours: entry.hours,
-    description: entry.description,
-    createdAt: entry.createdAt.toISOString(),
-    updatedAt: entry.updatedAt.toISOString(),
-  };
-};
-
 export const AiSuggestionService = (deps: Deps) => {
   const { repos } = deps;
 
   return {
     createSuggestion: async (data: {
       timeEntryId: string;
-      messageId: string;
-      suggestedChanges: Record<string, unknown>;
+      suggestedChanges: NewTimeEntry;
     }): Promise<AiSuggestion> => {
-      const newSuggestion: NewAiSuggestion = {
-        id: crypto.randomUUID(),
+      return repos.aiSuggestion.create({
         timeEntryId: data.timeEntryId,
-        messageId: data.messageId,
         suggestedChanges: data.suggestedChanges,
         status: "pending",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      aiSuggestionValidator.parse(newSuggestion);
-      return repos.aiSuggestion.create(newSuggestion);
+      });
     },
 
     approveSuggestion: async (id: string): Promise<AiSuggestion> => {
@@ -75,18 +50,16 @@ export const AiSuggestionService = (deps: Deps) => {
       }
 
       // Apply the suggested changes to the time entry
-      const updated = await repos.timeEntry.update(suggestion.timeEntryId, {
-        ...suggestion.suggestedChanges,
-        updatedAt: new Date(),
-      });
+      const updated = await repos.timeEntry.update(
+        suggestion.timeEntryId,
+        suggestion.suggestedChanges
+      );
 
       // Log the update
       const changeLog: NewTimeEntryChangeLog = {
-        id: crypto.randomUUID(),
         timeEntryId: updated.id,
-        beforeData: serializeTimeEntry(existing),
-        afterData: serializeTimeEntry(updated),
-        changedAt: new Date(),
+        beforeData: existing,
+        afterData: updated,
       };
       await repos.timeEntryChangeLog.insert(changeLog);
 

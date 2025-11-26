@@ -9,7 +9,6 @@ export const aiSuggestionStatusValidator = z.enum([
 export const aiSuggestionValidator = z.object({
   id: z.uuid(),
   timeEntryId: z.uuid(),
-  messageId: z.uuid(),
   suggestedChanges: z.record(z.string(), z.unknown()),
   status: aiSuggestionStatusValidator,
   createdAt: z.date(),

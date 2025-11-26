@@ -1,9 +1,14 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import { testDB } from "@ai-starter/db/test-utils";
+import {
+  testDB,
+  doSeedRoles,
+  createTestTimekeeper,
+} from "@ai-starter/db/test-utils";
 import { getRepos, type DB } from "@ai-starter/db";
 import { AiSuggestionService } from "./AiSuggestionService";
 import { TimeEntryService } from "./TimeEntryService";
 import { MatterService } from "./MatterService";
+import type { TimeEntry } from "@ai-starter/core";
 
 describe("AiSuggestionService", () => {
   let db: DB;
@@ -12,8 +17,8 @@ describe("AiSuggestionService", () => {
   let timeEntryService: ReturnType<typeof TimeEntryService>;
   let matterService: ReturnType<typeof MatterService>;
   let matterId: string;
-  let timeEntryId: string;
-  let messageId: string;
+  let timeEntry: TimeEntry;
+  let timekeeperId: string;
 
   beforeEach(async () => {
     db = await testDB();
@@ -22,6 +27,9 @@ describe("AiSuggestionService", () => {
     timeEntryService = TimeEntryService({ repos });
     matterService = MatterService({ repos });
 
+    // Seed roles
+    await doSeedRoles(db);
+
     const matter = await matterService.createMatter({
       clientName: "Test Client",
       matterName: "Test Matter",
@@ -29,14 +37,19 @@ describe("AiSuggestionService", () => {
     });
     matterId = matter.id;
 
-    const timeEntry = await timeEntryService.createTimeEntry({
+    // Create timekeeper
+    const timekeeper = await createTestTimekeeper(db, matterId);
+    if (!timekeeper) throw new Error("Failed to create timekeeper");
+    timekeeperId = timekeeper.id;
+
+    timeEntry = await timeEntryService.createTimeEntry({
       matterId,
+      timekeeperId,
       billId: null,
       date: new Date("2024-01-15"),
       hours: 2.5,
       description: "Client consultation",
     });
-    timeEntryId = timeEntry.id;
 
     // Create a mock conversation and message
     const conversationId = crypto.randomUUID();
@@ -47,7 +60,7 @@ describe("AiSuggestionService", () => {
       updatedAt: new Date(),
     });
 
-    messageId = crypto.randomUUID();
+    const messageId = crypto.randomUUID();
     await repos.message.create({
       id: messageId,
       conversationId,
@@ -61,18 +74,27 @@ describe("AiSuggestionService", () => {
   describe("createSuggestion", () => {
     it("should create a new AI suggestion", async () => {
       const result = await service.createSuggestion({
-        timeEntryId,
-        messageId,
-        suggestedChanges: { hours: 3.0, description: "Updated description" },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: {
+          ...timeEntry,
+          hours: 3.0,
+          description: "Updated description",
+        },
       });
 
       expect(result).toEqual({
         id: expect.stringMatching(
           /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
         ),
-        timeEntryId,
-        messageId,
-        suggestedChanges: { hours: 3.0, description: "Updated description" },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: {
+          ...timeEntry,
+          id: undefined,
+          createdAt: undefined,
+          updatedAt: undefined,
+          hours: 3.0,
+          description: "Updated description",
+        },
         status: "pending",
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
@@ -83,9 +105,8 @@ describe("AiSuggestionService", () => {
   describe("approveSuggestion", () => {
     it("should approve suggestion and apply changes to time entry", async () => {
       const suggestion = await service.createSuggestion({
-        timeEntryId,
-        messageId,
-        suggestedChanges: { hours: 3.5 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 3.5 },
       });
 
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -95,11 +116,13 @@ describe("AiSuggestionService", () => {
       expect(result.status).toBe("approved");
 
       // Verify the time entry was updated
-      const updatedTimeEntry = await timeEntryService.getTimeEntry(timeEntryId);
+      const updatedTimeEntry = await timeEntryService.getTimeEntry(
+        timeEntry.id
+      );
       expect(updatedTimeEntry?.hours).toBe(3.5);
 
       // Verify a change log was created
-      const logs = await repos.timeEntryChangeLog.listByTimeEntry(timeEntryId);
+      const logs = await repos.timeEntryChangeLog.listByTimeEntry(timeEntry.id);
       expect(logs.length).toBeGreaterThan(1);
     });
 
@@ -111,9 +134,8 @@ describe("AiSuggestionService", () => {
 
     it("should throw an error if suggestion is already approved", async () => {
       const suggestion = await service.createSuggestion({
-        timeEntryId,
-        messageId,
-        suggestedChanges: { hours: 3.5 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 3.5 },
       });
 
       await service.approveSuggestion(suggestion.id);
@@ -125,9 +147,8 @@ describe("AiSuggestionService", () => {
   describe("rejectSuggestion", () => {
     it("should reject a suggestion without applying changes", async () => {
       const suggestion = await service.createSuggestion({
-        timeEntryId,
-        messageId,
-        suggestedChanges: { hours: 3.5 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 3.5 },
       });
 
       const result = await service.rejectSuggestion(suggestion.id);
@@ -135,8 +156,8 @@ describe("AiSuggestionService", () => {
       expect(result.status).toBe("rejected");
 
       // Verify the time entry was NOT updated
-      const timeEntry = await timeEntryService.getTimeEntry(timeEntryId);
-      expect(timeEntry?.hours).toBe(2.5);
+      const dbTimeEntry = await timeEntryService.getTimeEntry(timeEntry.id);
+      expect(dbTimeEntry?.hours).toBe(2.5);
     });
 
     it("should throw an error if suggestion does not exist", async () => {
@@ -149,25 +170,26 @@ describe("AiSuggestionService", () => {
   describe("listByTimeEntry", () => {
     it("should list all suggestions for a time entry", async () => {
       const suggestion1 = await service.createSuggestion({
-        timeEntryId,
-        messageId,
-        suggestedChanges: { hours: 3.0 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 3.0 },
       });
 
       const suggestion2 = await service.createSuggestion({
-        timeEntryId,
-        messageId,
-        suggestedChanges: { description: "Different description" },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: {
+          ...timeEntry,
+          description: "Different description",
+        },
       });
 
-      const result = await service.listByTimeEntry(timeEntryId);
+      const result = await service.listByTimeEntry(timeEntry.id);
       expect(result).toHaveLength(2);
       expect(result).toContainEqual(suggestion1);
       expect(result).toContainEqual(suggestion2);
     });
 
     it("should return empty array if no suggestions exist", async () => {
-      const result = await service.listByTimeEntry(timeEntryId);
+      const result = await service.listByTimeEntry(timeEntry.id);
       expect(result).toEqual([]);
     });
   });
@@ -175,15 +197,13 @@ describe("AiSuggestionService", () => {
   describe("listByStatus", () => {
     it("should list all suggestions with a specific status", async () => {
       const pending1 = await service.createSuggestion({
-        timeEntryId,
-        messageId,
-        suggestedChanges: { hours: 3.0 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 3.0 },
       });
 
       const pending2 = await service.createSuggestion({
-        timeEntryId,
-        messageId,
-        suggestedChanges: { hours: 3.5 },
+        timeEntryId: timeEntry.id,
+        suggestedChanges: { ...timeEntry, hours: 3.5 },
       });
 
       await service.approveSuggestion(pending1.id);

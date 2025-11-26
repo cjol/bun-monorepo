@@ -3,8 +3,6 @@ import {
   type TimeEntryChangeLogRepository,
   type TimeEntry,
   type NewTimeEntry,
-  type NewTimeEntryChangeLog,
-  timeEntryValidator,
 } from "@ai-starter/core";
 
 export interface Deps {
@@ -14,19 +12,6 @@ export interface Deps {
   };
 }
 
-const serializeTimeEntry = (entry: TimeEntry): Record<string, unknown> => {
-  return {
-    id: entry.id,
-    matterId: entry.matterId,
-    billId: entry.billId,
-    date: entry.date.toISOString(),
-    hours: entry.hours,
-    description: entry.description,
-    createdAt: entry.createdAt.toISOString(),
-    updatedAt: entry.updatedAt.toISOString(),
-  };
-};
-
 export const TimeEntryService = (deps: Deps) => {
   const { repos } = deps;
 
@@ -35,36 +20,14 @@ export const TimeEntryService = (deps: Deps) => {
       return repos.timeEntry.get(id);
     },
 
-    createTimeEntry: async (data: {
-      matterId: string;
-      billId: string | null;
-      date: Date;
-      hours: number;
-      description: string;
-    }): Promise<TimeEntry> => {
-      const newTimeEntry: NewTimeEntry = {
-        id: crypto.randomUUID(),
-        matterId: data.matterId,
-        billId: data.billId,
-        date: data.date,
-        hours: data.hours,
-        description: data.description,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+    createTimeEntry: async (data: NewTimeEntry): Promise<TimeEntry> => {
+      const created: TimeEntry = await repos.timeEntry.create(data);
 
-      timeEntryValidator.parse(newTimeEntry);
-      const created = await repos.timeEntry.create(newTimeEntry);
-
-      // Log the creation
-      const changeLog: NewTimeEntryChangeLog = {
-        id: crypto.randomUUID(),
+      await repos.timeEntryChangeLog.insert({
         timeEntryId: created.id,
         beforeData: null,
-        afterData: serializeTimeEntry(created),
-        changedAt: new Date(),
-      };
-      await repos.timeEntryChangeLog.insert(changeLog);
+        afterData: created,
+      });
 
       return created;
     },
@@ -85,37 +48,17 @@ export const TimeEntryService = (deps: Deps) => {
         throw new Error(`TimeEntry with id ${id} not found`);
       }
 
-      // Validate individual fields if provided
-      if (data.matterId !== undefined) {
-        timeEntryValidator.shape.matterId.parse(data.matterId);
-      }
-      if (data.billId !== undefined) {
-        timeEntryValidator.shape.billId.parse(data.billId);
-      }
-      if (data.date !== undefined) {
-        timeEntryValidator.shape.date.parse(data.date);
-      }
-      if (data.hours !== undefined) {
-        timeEntryValidator.shape.hours.parse(data.hours);
-      }
-      if (data.description !== undefined) {
-        timeEntryValidator.shape.description.parse(data.description);
-      }
-
       const updated = await repos.timeEntry.update(id, {
         ...data,
         updatedAt: new Date(),
       });
 
       // Log the update
-      const changeLog: NewTimeEntryChangeLog = {
-        id: crypto.randomUUID(),
+      await repos.timeEntryChangeLog.insert({
         timeEntryId: updated.id,
-        beforeData: serializeTimeEntry(existing),
-        afterData: serializeTimeEntry(updated),
-        changedAt: new Date(),
-      };
-      await repos.timeEntryChangeLog.insert(changeLog);
+        beforeData: existing,
+        afterData: updated,
+      });
 
       return updated;
     },

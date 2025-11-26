@@ -56,11 +56,13 @@ TimeEntryService automatically logs changes; AiSuggestionService applies suggest
 ## Critical Fields Added (Latest Update)
 
 ### Completed:
+
 - Added `timekeeperId` foreign key to `timeEntry` schema - links each time entry to the person who did the work
 - Added `billableRate` field to `timekeeperRole` schema - stores the hourly rate for that timekeeper on that specific matter
 - Updated validators to match schema changes
 
 ### Why These Are Critical:
+
 - **timekeeperId on TimeEntry**: Without this, we can't track WHO did the work, only what work was done
 - **billableRate on TimekeeperRole**: Without this, we can't calculate billing amounts - different timekeepers charge different rates, and the same timekeeper may charge different rates on different matters
 
