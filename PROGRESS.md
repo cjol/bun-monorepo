@@ -45,3 +45,15 @@ All 264 tests passing with full typecheck and lint compliance - ready for CI/CD.
 Fixed failing tests in CI by changing testDB to use `file::memory:?cache=private` for proper database isolation between parallel tests.
 Previously, `:memory:` databases were being shared across tests causing seed data to leak into tests expecting empty databases.
 All CI checks now pass (Type Check, Lint, Test) - PR #5 ready to merge.
+
+## PR Merge: Updated for Main Branch Changes
+
+Merged main branch into PR branch and resolved all conflicts. Updated codebase to match new architecture:
+- Added timekeeperId to timeEntry schema and API endpoints
+- Removed messageId from aiSuggestion schema and endpoints
+- Updated all repository/service methods to require matterId for queries
+- Removed validators directory and all manual ID/timestamp generation
+- Updated API endpoints to match new service signatures
+- Fixed service dependencies (AiSuggestionService now depends on TimeEntryService)
+- Updated test setup to use new service dependency pattern
+- All schemas updated with custom column types (jsonTimeEntry, jsonNewTimeEntry)

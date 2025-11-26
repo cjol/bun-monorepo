@@ -19,13 +19,14 @@ describe("Workflow API endpoints", () => {
     db = await testDB();
 
     const repos = getRepos(db);
+    const timeEntry = TimeEntryService({ repos });
     app = getApp({
       app: {
         foo: CoreAppService({ repos }),
         matter: MatterService({ repos }),
         bill: BillService({ repos }),
-        timeEntry: TimeEntryService({ repos }),
-        aiSuggestion: AiSuggestionService({ repos }),
+        timeEntry,
+        aiSuggestion: AiSuggestionService({ repos, services: { timeEntry } }),
         workflow: WorkflowService({ repos }),
       },
     });
