@@ -12,6 +12,8 @@ import {
   TimeEntryService,
   AiSuggestionService,
   WorkflowService,
+  TimekeeperService,
+  TimekeeperRoleService,
 } from "../core";
 import type { SandboxExecutionResult } from "./utils";
 
@@ -24,6 +26,8 @@ describe("createGeneralPurposeAgent", () => {
     timeEntry: ReturnType<typeof TimeEntryService>;
     aiSuggestion: ReturnType<typeof AiSuggestionService>;
     workflow: ReturnType<typeof WorkflowService>;
+    timekeeper: ReturnType<typeof TimekeeperService>;
+    timekeeperRole: ReturnType<typeof TimekeeperRoleService>;
   };
 
   beforeEach(async () => {
@@ -36,6 +40,8 @@ describe("createGeneralPurposeAgent", () => {
       timeEntry,
       aiSuggestion: AiSuggestionService({ repos, services: { timeEntry } }),
       workflow: WorkflowService({ repos }),
+      timekeeper: TimekeeperService({ repos }),
+      timekeeperRole: TimekeeperRoleService({ repos }),
     };
   });
 
@@ -74,6 +80,8 @@ describe("GeneralPurposeAgent sandbox functions", () => {
     timeEntry: ReturnType<typeof TimeEntryService>;
     aiSuggestion: ReturnType<typeof AiSuggestionService>;
     workflow: ReturnType<typeof WorkflowService>;
+    timekeeper: ReturnType<typeof TimekeeperService>;
+    timekeeperRole: ReturnType<typeof TimekeeperRoleService>;
   };
 
   beforeEach(async () => {
@@ -87,6 +95,8 @@ describe("GeneralPurposeAgent sandbox functions", () => {
       timeEntry,
       aiSuggestion: AiSuggestionService({ repos, services: { timeEntry } }),
       workflow: WorkflowService({ repos }),
+      timekeeper: TimekeeperService({ repos }),
+      timekeeperRole: TimekeeperRoleService({ repos }),
     };
   });
 

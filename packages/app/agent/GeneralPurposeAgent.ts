@@ -7,6 +7,8 @@ import type {
   TimeEntryService as TimeEntryServiceType,
   AiSuggestionService as AiSuggestionServiceType,
   WorkflowService as WorkflowServiceType,
+  TimekeeperService as TimekeeperServiceType,
+  TimekeeperRoleService as TimekeeperRoleServiceType,
 } from "../core";
 import {
   createSandboxTool,
@@ -27,6 +29,8 @@ export interface CreateGeneralPurposeAgentOptions {
     timeEntry: TimeEntryServiceType;
     aiSuggestion: AiSuggestionServiceType;
     workflow: WorkflowServiceType;
+    timekeeper: TimekeeperServiceType;
+    timekeeperRole: TimekeeperRoleServiceType;
   };
 
   /**
@@ -363,6 +367,192 @@ function createTimesheetManagementFunctions(
     },
   };
 
+  // Timekeeper functions
+  const getTimekeeper: SandboxFunction<{ id: string }, unknown> = {
+    description: "Fetch a specific timekeeper by ID",
+    inputSchema: z.object({
+      id: z.string().uuid().describe("The UUID of the timekeeper to fetch"),
+    }),
+    execute: async ({ id }) => {
+      const timekeeper = await services.timekeeper.getTimekeeper(id);
+      if (!timekeeper) {
+        throw new Error(`Timekeeper with ID ${id} not found`);
+      }
+      return timekeeper;
+    },
+  };
+
+  const getTimekeeperByEmail: SandboxFunction<{ email: string }, unknown> = {
+    description: "Fetch a timekeeper by email address",
+    inputSchema: z.object({
+      email: z.string().email().describe("The email address of the timekeeper"),
+    }),
+    execute: async ({ email }) => {
+      const timekeeper = await services.timekeeper.getTimekeeperByEmail(email);
+      if (!timekeeper) {
+        throw new Error(`Timekeeper with email ${email} not found`);
+      }
+      return timekeeper;
+    },
+  };
+
+  const createTimekeeper: SandboxFunction<
+    {
+      matterId: string;
+      roleId: string;
+      name: string;
+      email: string;
+    },
+    unknown
+  > = {
+    description: "Create a new timekeeper",
+    inputSchema: z.object({
+      matterId: z.string().uuid().describe("The UUID of the matter"),
+      roleId: z.string().uuid().describe("The UUID of the role"),
+      name: z.string().describe("Name of the timekeeper"),
+      email: z.string().email().describe("Email address of the timekeeper"),
+    }),
+    execute: async ({ matterId, roleId, name, email }) => {
+      return services.timekeeper.createTimekeeper({
+        matterId,
+        roleId,
+        name,
+        email,
+      });
+    },
+  };
+
+  const updateTimekeeper: SandboxFunction<
+    {
+      id: string;
+      matterId?: string;
+      roleId?: string;
+      name?: string;
+      email?: string;
+    },
+    unknown
+  > = {
+    description: "Update an existing timekeeper",
+    inputSchema: z.object({
+      id: z.string().uuid().describe("The UUID of the timekeeper to update"),
+      matterId: z.string().uuid().optional().describe("New matter ID"),
+      roleId: z.string().uuid().optional().describe("New role ID"),
+      name: z.string().optional().describe("New name"),
+      email: z.string().email().optional().describe("New email address"),
+    }),
+    execute: async ({ id, ...data }) => {
+      return services.timekeeper.updateTimekeeper(id, data);
+    },
+  };
+
+  const listAllTimekeepers: SandboxFunction<unknown, unknown[]> = {
+    description: "List all timekeepers",
+    inputSchema: z.object({}),
+    execute: async () => {
+      return services.timekeeper.listAllTimekeepers();
+    },
+  };
+
+  // TimekeeperRole functions
+  const getTimekeeperRole: SandboxFunction<{ id: string }, unknown> = {
+    description: "Fetch a specific timekeeper role by ID",
+    inputSchema: z.object({
+      id: z
+        .string()
+        .uuid()
+        .describe("The UUID of the timekeeper role to fetch"),
+    }),
+    execute: async ({ id }) => {
+      const role = await services.timekeeperRole.getTimekeeperRole(id);
+      if (!role) {
+        throw new Error(`TimekeeperRole with ID ${id} not found`);
+      }
+      return role;
+    },
+  };
+
+  const createTimekeeperRole: SandboxFunction<
+    {
+      timekeeperId: string;
+      matterId: string;
+      role: string;
+      billableRate: number;
+    },
+    unknown
+  > = {
+    description: "Create a new timekeeper role assignment",
+    inputSchema: z.object({
+      timekeeperId: z.string().uuid().describe("The UUID of the timekeeper"),
+      matterId: z.string().uuid().describe("The UUID of the matter"),
+      role: z.string().describe("Role title (e.g. Associate, Partner)"),
+      billableRate: z.number().positive().describe("Hourly billable rate"),
+    }),
+    execute: async ({ timekeeperId, matterId, role, billableRate }) => {
+      return services.timekeeperRole.createTimekeeperRole({
+        timekeeperId,
+        matterId,
+        role,
+        billableRate,
+      });
+    },
+  };
+
+  const updateTimekeeperRole: SandboxFunction<
+    {
+      id: string;
+      timekeeperId?: string;
+      matterId?: string;
+      role?: string;
+      billableRate?: number;
+    },
+    unknown
+  > = {
+    description: "Update an existing timekeeper role",
+    inputSchema: z.object({
+      id: z
+        .string()
+        .uuid()
+        .describe("The UUID of the timekeeper role to update"),
+      timekeeperId: z.string().uuid().optional().describe("New timekeeper ID"),
+      matterId: z.string().uuid().optional().describe("New matter ID"),
+      role: z.string().optional().describe("New role title"),
+      billableRate: z
+        .number()
+        .positive()
+        .optional()
+        .describe("New hourly rate"),
+    }),
+    execute: async ({ id, ...data }) => {
+      return services.timekeeperRole.updateTimekeeperRole(id, data);
+    },
+  };
+
+  const listTimekeeperRolesByMatter: SandboxFunction<
+    { matterId: string },
+    unknown[]
+  > = {
+    description: "List all timekeeper roles for a specific matter",
+    inputSchema: z.object({
+      matterId: z.string().uuid().describe("The UUID of the matter"),
+    }),
+    execute: async ({ matterId }) => {
+      return services.timekeeperRole.listByMatter(matterId);
+    },
+  };
+
+  const listTimekeeperRolesByTimekeeper: SandboxFunction<
+    { timekeeperId: string },
+    unknown[]
+  > = {
+    description: "List all roles for a specific timekeeper",
+    inputSchema: z.object({
+      timekeeperId: z.string().uuid().describe("The UUID of the timekeeper"),
+    }),
+    execute: async ({ timekeeperId }) => {
+      return services.timekeeperRole.listByTimekeeper(timekeeperId);
+    },
+  };
+
   return {
     getMatter,
     createMatter,
@@ -379,6 +569,16 @@ function createTimesheetManagementFunctions(
     listPendingSuggestions,
     listWorkflows,
     getWorkflow,
+    getTimekeeper,
+    getTimekeeperByEmail,
+    createTimekeeper,
+    updateTimekeeper,
+    listAllTimekeepers,
+    getTimekeeperRole,
+    createTimekeeperRole,
+    updateTimekeeperRole,
+    listTimekeeperRolesByMatter,
+    listTimekeeperRolesByTimekeeper,
   } as Record<string, SandboxFunction<unknown, unknown>>;
 }
 
