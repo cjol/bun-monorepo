@@ -1,6 +1,10 @@
 import { describe, test, expect, beforeEach } from "bun:test";
 import { createGeneralPurposeAgent } from "./GeneralPurposeAgent";
-import { testDB } from "@ai-starter/db/test-utils";
+import {
+  testDB,
+  doSeedRoles,
+  createTestTimekeeper,
+} from "@ai-starter/db/test-utils";
 import { getRepos, type DB } from "@ai-starter/db";
 import {
   MatterService,
@@ -8,6 +12,8 @@ import {
   TimeEntryService,
   AiSuggestionService,
   WorkflowService,
+  TimekeeperService,
+  TimekeeperRoleService,
 } from "../core";
 import type { SandboxExecutionResult } from "./utils";
 
@@ -20,17 +26,22 @@ describe("createGeneralPurposeAgent", () => {
     timeEntry: ReturnType<typeof TimeEntryService>;
     aiSuggestion: ReturnType<typeof AiSuggestionService>;
     workflow: ReturnType<typeof WorkflowService>;
+    timekeeper: ReturnType<typeof TimekeeperService>;
+    timekeeperRole: ReturnType<typeof TimekeeperRoleService>;
   };
 
   beforeEach(async () => {
     db = await testDB({ seed: false });
     repos = getRepos(db);
+    const timeEntry = TimeEntryService({ repos });
     services = {
       matter: MatterService({ repos }),
       bill: BillService({ repos }),
-      timeEntry: TimeEntryService({ repos }),
-      aiSuggestion: AiSuggestionService({ repos }),
+      timeEntry,
+      aiSuggestion: AiSuggestionService({ repos, services: { timeEntry } }),
       workflow: WorkflowService({ repos }),
+      timekeeper: TimekeeperService({ repos }),
+      timekeeperRole: TimekeeperRoleService({ repos }),
     };
   });
 
@@ -69,17 +80,23 @@ describe("GeneralPurposeAgent sandbox functions", () => {
     timeEntry: ReturnType<typeof TimeEntryService>;
     aiSuggestion: ReturnType<typeof AiSuggestionService>;
     workflow: ReturnType<typeof WorkflowService>;
+    timekeeper: ReturnType<typeof TimekeeperService>;
+    timekeeperRole: ReturnType<typeof TimekeeperRoleService>;
   };
 
   beforeEach(async () => {
     db = await testDB({ seed: false });
     repos = getRepos(db);
+    await doSeedRoles(db);
+    const timeEntry = TimeEntryService({ repos });
     services = {
       matter: MatterService({ repos }),
       bill: BillService({ repos }),
-      timeEntry: TimeEntryService({ repos }),
-      aiSuggestion: AiSuggestionService({ repos }),
+      timeEntry,
+      aiSuggestion: AiSuggestionService({ repos, services: { timeEntry } }),
       workflow: WorkflowService({ repos }),
+      timekeeper: TimekeeperService({ repos }),
+      timekeeperRole: TimekeeperRoleService({ repos }),
     };
   });
 
@@ -132,6 +149,12 @@ describe("GeneralPurposeAgent sandbox functions", () => {
         description: null,
       });
 
+      // Create a timekeeper for the matter
+      const timekeeper = await createTestTimekeeper(db, matter.id);
+      if (!timekeeper) {
+        throw new Error("Failed to create timekeeper");
+      }
+
       // Execute code in sandbox to create time entry
       if (!agent.tools.runCode) {
         throw new Error("runCode tool not found");
@@ -141,6 +164,7 @@ describe("GeneralPurposeAgent sandbox functions", () => {
           code: `
         const entry = await createTimeEntry({
           matterId: "${matter.id}",
+          timekeeperId: "${timekeeper.id}",
           billId: null,
           date: "${new Date("2025-01-01").toISOString()}",
           hours: 2.5,
@@ -180,8 +204,14 @@ describe("GeneralPurposeAgent sandbox functions", () => {
         description: null,
       });
 
+      const timekeeper = await createTestTimekeeper(db, matter.id);
+      if (!timekeeper) {
+        throw new Error("Failed to create timekeeper");
+      }
+
       await services.timeEntry.createTimeEntry({
         matterId: matter.id,
+        timekeeperId: timekeeper.id,
         billId: null,
         date: new Date("2025-01-01"),
         hours: 2,
@@ -190,6 +220,7 @@ describe("GeneralPurposeAgent sandbox functions", () => {
 
       await services.timeEntry.createTimeEntry({
         matterId: matter.id,
+        timekeeperId: timekeeper.id,
         billId: null,
         date: new Date("2025-01-02"),
         hours: 3,
@@ -226,29 +257,25 @@ describe("GeneralPurposeAgent sandbox functions", () => {
     async () => {
       const agent = createGeneralPurposeAgent({ services });
 
-      // Setup: create matter, time entry, and a message
+      // Setup: create matter, timekeeper, and time entry
       const matter = await services.matter.createMatter({
         clientName: "Test Client",
         matterName: "Test Matter",
         description: null,
       });
 
+      const timekeeper = await createTestTimekeeper(db, matter.id);
+      if (!timekeeper) {
+        throw new Error("Failed to create timekeeper");
+      }
+
       const timeEntry = await services.timeEntry.createTimeEntry({
         matterId: matter.id,
+        timekeeperId: timekeeper.id,
         billId: null,
         date: new Date("2025-01-01"),
         hours: 2,
         description: "Original description",
-      });
-
-      // Create a dummy message for the suggestion
-      const conversation = await repos.conversation.create({
-        title: "Test conversation",
-      });
-      const message = await repos.message.create({
-        conversationId: conversation.id,
-        role: "assistant",
-        content: [{ type: "text", text: "Suggestion message" }],
       });
 
       // Execute code in sandbox to create suggestion
@@ -260,8 +287,13 @@ describe("GeneralPurposeAgent sandbox functions", () => {
           code: `
         const suggestion = await createAiSuggestion({
           timeEntryId: "${timeEntry.id}",
-          messageId: "${message.id}",
-          suggestedChanges: { description: "Updated description", hours: 2.5 }
+          suggestedChanges: {
+            matterId: "${matter.id}",
+            timekeeperId: "${timekeeper.id}",
+            date: "2025-01-01",
+            hours: 2.5,
+            description: "Updated description"
+          }
         });
         return suggestion.status;
       `,
@@ -292,12 +324,21 @@ describe("GeneralPurposeAgent sandbox functions", () => {
     async () => {
       const agent = createGeneralPurposeAgent({ services });
 
+      // Create matter for workflows
+      const matter = await services.matter.createMatter({
+        clientName: "Test Client",
+        matterName: "Test Matter",
+        description: null,
+      });
+
       // Create some workflows
       await services.workflow.createWorkflow({
+        matterId: matter.id,
         name: "Workflow 1",
         instructions: "Instructions 1",
       });
       await services.workflow.createWorkflow({
+        matterId: matter.id,
         name: "Workflow 2",
         instructions: "Instructions 2",
       });
@@ -309,7 +350,7 @@ describe("GeneralPurposeAgent sandbox functions", () => {
       const resultPromise = agent.tools.runCode.execute!(
         {
           code: `
-        const workflows = await listWorkflows({});
+        const workflows = await listWorkflows({ matterId: "${matter.id}" });
         return workflows.map(w => w.name);
       `,
         },

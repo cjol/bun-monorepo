@@ -15,3 +15,9 @@ export type { AiSuggestionService as AiSuggestionServiceType } from "./AiSuggest
 
 export { WorkflowService } from "./WorkflowService";
 export type { WorkflowService as WorkflowServiceType } from "./WorkflowService";
+
+export { TimekeeperService } from "./TimekeeperService";
+export type { TimekeeperService as TimekeeperServiceType } from "./TimekeeperService";
+
+export { TimekeeperRoleService } from "./TimekeeperRoleService";
+export type { TimekeeperRoleService as TimekeeperRoleServiceType } from "./TimekeeperRoleService";

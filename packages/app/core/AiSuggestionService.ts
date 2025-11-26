@@ -1,60 +1,27 @@
 import {
   type AiSuggestionRepository,
-  type TimeEntryRepository,
-  type TimeEntryChangeLogRepository,
   type AiSuggestion,
-  type NewAiSuggestion,
-  type NewTimeEntryChangeLog,
-  aiSuggestionValidator,
 } from "@ai-starter/core";
 import { notFound, badRequest } from "@hapi/boom";
+import type { TimeEntryService } from "./TimeEntryService";
 
 export interface Deps {
   repos: {
     aiSuggestion: AiSuggestionRepository;
-    timeEntry: TimeEntryRepository;
-    timeEntryChangeLog: TimeEntryChangeLogRepository;
+  };
+  services: {
+    timeEntry: TimeEntryService;
   };
 }
 
-const serializeTimeEntry = (
-  entry: Awaited<ReturnType<TimeEntryRepository["get"]>>
-): Record<string, unknown> => {
-  if (!entry) throw new Error("TimeEntry not found");
-  return {
-    id: entry.id,
-    matterId: entry.matterId,
-    billId: entry.billId,
-    date: entry.date.toISOString(),
-    hours: entry.hours,
-    description: entry.description,
-    createdAt: entry.createdAt.toISOString(),
-    updatedAt: entry.updatedAt.toISOString(),
-  };
-};
-
 export const AiSuggestionService = (deps: Deps) => {
-  const { repos } = deps;
+  const { repos, services } = deps;
 
   return {
-    createSuggestion: async (data: {
-      timeEntryId: string;
-      messageId: string;
-      suggestedChanges: Record<string, unknown>;
-    }): Promise<AiSuggestion> => {
-      const newSuggestion: NewAiSuggestion = {
-        id: crypto.randomUUID(),
-        timeEntryId: data.timeEntryId,
-        messageId: data.messageId,
-        suggestedChanges: data.suggestedChanges,
-        status: "pending",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      aiSuggestionValidator.parse(newSuggestion);
-      return repos.aiSuggestion.create(newSuggestion);
-    },
+    createSuggestion: repos.aiSuggestion.create,
+    listByTimeEntry: repos.aiSuggestion.listByTimeEntry,
+    listByStatus: repos.aiSuggestion.listByMatterAndStatus,
+    listByMatter: repos.aiSuggestion.listByMatter,
 
     approveSuggestion: async (id: string): Promise<AiSuggestion> => {
       const suggestion = await repos.aiSuggestion.get(id);
@@ -68,29 +35,11 @@ export const AiSuggestionService = (deps: Deps) => {
         );
       }
 
-      // Get the current time entry for change log
-      const existing = await repos.timeEntry.get(suggestion.timeEntryId);
-      if (!existing) {
-        throw notFound(`TimeEntry with id ${suggestion.timeEntryId} not found`);
-      }
+      await services.timeEntry.updateTimeEntry(
+        suggestion.timeEntryId,
+        suggestion.suggestedChanges
+      );
 
-      // Apply the suggested changes to the time entry
-      const updated = await repos.timeEntry.update(suggestion.timeEntryId, {
-        ...suggestion.suggestedChanges,
-        updatedAt: new Date(),
-      });
-
-      // Log the update
-      const changeLog: NewTimeEntryChangeLog = {
-        id: crypto.randomUUID(),
-        timeEntryId: updated.id,
-        beforeData: serializeTimeEntry(existing),
-        afterData: serializeTimeEntry(updated),
-        changedAt: new Date(),
-      };
-      await repos.timeEntryChangeLog.insert(changeLog);
-
-      // Update suggestion status
       return repos.aiSuggestion.updateStatus(id, "approved");
     },
 
@@ -100,17 +49,13 @@ export const AiSuggestionService = (deps: Deps) => {
         throw notFound(`AI suggestion with id ${id} not found`);
       }
 
+      if (suggestion.status !== "pending") {
+        throw badRequest(
+          `Cannot approve suggestion that is already ${suggestion.status}`
+        );
+      }
+
       return repos.aiSuggestion.updateStatus(id, "rejected");
-    },
-
-    listByTimeEntry: async (timeEntryId: string): Promise<AiSuggestion[]> => {
-      return repos.aiSuggestion.listByTimeEntry(timeEntryId);
-    },
-
-    listByStatus: async (
-      status: "pending" | "approved" | "rejected"
-    ): Promise<AiSuggestion[]> => {
-      return repos.aiSuggestion.listByStatus(status);
     },
   };
 };
