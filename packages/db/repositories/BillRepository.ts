@@ -14,11 +14,13 @@ export const DrizzleBillRepository = ({ db }: Deps): BillRepository => ({
     });
     return result ?? null;
   },
+
   async create(data) {
     const [result] = await db.insert(billSchema).values(data).returning();
     if (!result) throw badImplementation("Failed to create Bill");
     return result;
   },
+
   async update(id: string, data) {
     const [result] = await db
       .update(billSchema)
@@ -30,6 +32,7 @@ export const DrizzleBillRepository = ({ db }: Deps): BillRepository => ({
     }
     return result;
   },
+
   async delete(id: string) {
     const [result] = await db
       .delete(billSchema)
@@ -39,6 +42,7 @@ export const DrizzleBillRepository = ({ db }: Deps): BillRepository => ({
       throw notFound(`Bill with ID ${id} not found`, { id });
     }
   },
+
   async listByMatter(matterId: string) {
     const results = await db.query.billSchema.findMany({
       where: eq(billSchema.matterId, matterId),

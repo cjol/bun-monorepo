@@ -2,68 +2,22 @@
 
 ## Session Start
 
-Starting implementation of V3 functionality including matter/bill/time entry schemas, AI suggestions, workflows, and email services.
+Starting implementation of V3 functionality including matter/bill/time entry/time keeper/timekeeperRole schemas, AI suggestions, workflows, and email services.
 
 ## Database Schemas Complete
 
-Created 6 new schema files in packages/core/schema following Drizzle ORM patterns with proper foreign key relationships.
+Created 8 new schema files in packages/core/schema following Drizzle ORM patterns with proper foreign key relationships.
 All schemas include timestamps, UUID primary keys, and proper cascading delete/null behaviors.
 All tests pass and typecheck succeeds - schemas are ready for repository implementation.
 
 ## V3 Repositories Complete
 
-Implemented all 6 V3 repositories following TDD pattern with curried dependency injection.
+Implemented all 8 V3 repositories following TDD pattern with curried dependency injection.
 All 87 repository tests passing with full CRUD operations, query methods, and proper error handling.
 Repositories exported via getRepos() and test-utils updated for easy testing.
-
-## Core Domain Models Complete
-
-Created validators for all 6 V3 schemas (matter, bill, timeEntry, timeEntryChangeLog, aiSuggestion, workflow) following existing patterns.
-All validators include proper validation rules (UUID, string lengths, enums, numeric constraints) and are exported from packages/core.
-18 validator tests passing - core layer fully typed with no external dependencies except Zod.
 
 ## Application Services Complete
 
 Implemented 5 V3 application services (MatterService, BillService, TimeEntryService, AiSuggestionService, WorkflowService) following hexagonal architecture.
 All services use curried dependency injection, depend only on core repository interfaces, and include comprehensive test coverage.
 TimeEntryService automatically logs changes; AiSuggestionService applies suggestions to time entries on approval with change logging.
-
-## PR #3 Review - Matter Scoping Complete
-
-### Changes Implemented:
-
-1. Added `timekeeper` and `timekeeperRole` schemas with proper relationships
-2. Updated `workflow` schema to include `matterId` for matter scoping
-3. Updated all repository interfaces to use matter-scoped list methods:
-   - BillRepository: Removed `listAll()`, kept only `listByMatter()`
-   - TimeEntryRepository: Replaced `listByBill()` with `listByMatterAndBill()`
-   - AiSuggestionRepository: Added `listByMatter()` and `listByMatterAndStatus()`
-   - WorkflowRepository: Replaced `listAll()` with `listByMatter()`
-4. Implemented all repository changes with proper joins for matter scoping
-5. Added TimekeeperRepository and TimekeeperRoleRepository implementations
-6. Updated service layer to use new repository signatures
-7. Added all V3 validators (matter, bill, timeEntry, aiSuggestion, workflow, timekeeper, timekeeperRole)
-8. Fixed all repository tests to use matter-scoped query methods
-9. Fixed all service tests to pass matterId parameters to matter-scoped methods
-10. All 176 tests passing; CI checks (Type Check, Lint, Test) all passing
-
-### Remaining Work (for future PRs):
-
-- Update API endpoints to provide matterId parameters where needed
-- Update seed data to include matterId for workflows
-- Fix General Purpose Agent to use updated service methods
-
-## Critical Fields Added (Latest Update)
-
-### Completed:
-
-- Added `timekeeperId` foreign key to `timeEntry` schema - links each time entry to the person who did the work
-- Added `billableRate` field to `timekeeperRole` schema - stores the hourly rate for that timekeeper on that specific matter
-- Updated validators to match schema changes
-
-### Why These Are Critical:
-
-- **timekeeperId on TimeEntry**: Without this, we can't track WHO did the work, only what work was done
-- **billableRate on TimekeeperRole**: Without this, we can't calculate billing amounts - different timekeepers charge different rates, and the same timekeeper may charge different rates on different matters
-
-PR #3 now has the complete data model for proper time tracking and billing.

@@ -20,6 +20,7 @@ export const DrizzleAiSuggestionRepository = ({
     });
     return result ?? null;
   },
+
   async create(data) {
     const [result] = await db
       .insert(aiSuggestionSchema)
@@ -28,6 +29,7 @@ export const DrizzleAiSuggestionRepository = ({
     if (!result) throw badImplementation("Failed to create AiSuggestion");
     return result;
   },
+
   async updateStatus(id: string, status: "pending" | "approved" | "rejected") {
     const [result] = await db
       .update(aiSuggestionSchema)
@@ -39,6 +41,7 @@ export const DrizzleAiSuggestionRepository = ({
     }
     return result;
   },
+
   async delete(id: string) {
     const [result] = await db
       .delete(aiSuggestionSchema)
@@ -48,6 +51,7 @@ export const DrizzleAiSuggestionRepository = ({
       throw notFound(`AiSuggestion with ID ${id} not found`, { id });
     }
   },
+
   async listByMatter(matterId: string) {
     const results = await db
       .select()
@@ -59,12 +63,14 @@ export const DrizzleAiSuggestionRepository = ({
       .where(eq(timeEntrySchema.matterId, matterId));
     return results.map((r) => r.ai_suggestion);
   },
+
   async listByTimeEntry(timeEntryId: string) {
     const results = await db.query.aiSuggestionSchema.findMany({
       where: eq(aiSuggestionSchema.timeEntryId, timeEntryId),
     });
     return results;
   },
+
   async listByMatterAndStatus(
     matterId: string,
     status: "pending" | "approved" | "rejected"

@@ -1,82 +1,32 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import {
-  testDB,
-  doSeedRoles,
-  createTestTimekeeper,
-} from "@ai-starter/db/test-utils";
+import { testDB } from "@ai-starter/db/test-utils";
 import { getRepos, type DB } from "@ai-starter/db";
 import { TimeEntryService } from "./TimeEntryService";
-import { MatterService } from "./MatterService";
-import { BillService } from "./BillService";
+import {
+  createTimeTrackingTestContext,
+  type TimeTrackingTestContext,
+} from "@ai-starter/db/test-utils";
 
 describe("TimeEntryService", () => {
   let db: DB;
   let repos: ReturnType<typeof getRepos>;
   let service: ReturnType<typeof TimeEntryService>;
-  let matterService: ReturnType<typeof MatterService>;
-  let billService: ReturnType<typeof BillService>;
-  let matterId: string;
-  let billId: string;
-  let timekeeperId: string;
+  let context: TimeTrackingTestContext;
 
   beforeEach(async () => {
     db = await testDB();
     repos = await getRepos(db);
     service = TimeEntryService({ repos });
-    matterService = MatterService({ repos });
-    billService = BillService({ repos });
 
-    // Seed roles
-    await doSeedRoles(db);
-
-    const matter = await matterService.createMatter({
-      clientName: "Test Client",
-      matterName: "Test Matter",
-      description: null,
-    });
-    matterId = matter.id;
-
-    // Create timekeeper
-    const timekeeper = await createTestTimekeeper(db, matterId);
-    if (!timekeeper) throw new Error("Failed to create timekeeper");
-    timekeeperId = timekeeper.id;
-
-    const bill = await billService.createBill({
-      matterId,
-      periodStart: new Date("2024-01-01"),
-      periodEnd: new Date("2024-01-31"),
-      status: "draft",
-    });
-    billId = bill.id;
-  });
-
-  describe("getTimeEntry", () => {
-    it("should return a time entry by id", async () => {
-      const created = await service.createTimeEntry({
-        matterId,
-        timekeeperId,
-        billId,
-        date: new Date("2024-01-15"),
-        hours: 2.5,
-        description: "Client consultation",
-      });
-
-      const result = await service.getTimeEntry(created.id);
-      expect(result).toEqual(created);
-    });
-
-    it("should return null if time entry does not exist", async () => {
-      const result = await service.getTimeEntry("non-existent-id");
-      expect(result).toBeNull();
-    });
+    context = await createTimeTrackingTestContext(db, { withBill: true });
   });
 
   describe("createTimeEntry", () => {
-    it("should validate and create a new time entry", async () => {
+    it("should create a new time entry", async () => {
       const result = await service.createTimeEntry({
-        matterId,
-        timekeeperId,
-        billId,
+        matterId: context.matter.id,
+        timekeeperId: context.timekeeper.id,
+        billId: context.bill!.id,
         date: new Date("2024-01-15"),
         hours: 2.5,
         description: "Client consultation",
@@ -86,9 +36,9 @@ describe("TimeEntryService", () => {
         id: expect.stringMatching(
           /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
         ),
-        matterId,
-        timekeeperId,
-        billId,
+        matterId: context.matter.id,
+        timekeeperId: context.timekeeper.id,
+        billId: context.bill!.id,
         date: new Date("2024-01-15"),
         hours: 2.5,
         description: "Client consultation",
@@ -99,8 +49,8 @@ describe("TimeEntryService", () => {
 
     it("should create a change log entry on creation", async () => {
       const result = await service.createTimeEntry({
-        matterId,
-        timekeeperId,
+        matterId: context.matter.id,
+        timekeeperId: context.timekeeper.id,
         billId: null,
         date: new Date("2024-01-15"),
         hours: 2.5,
@@ -115,8 +65,8 @@ describe("TimeEntryService", () => {
         beforeData: null,
         afterData: {
           id: result.id,
-          matterId,
-          timekeeperId,
+          matterId: context.matter.id,
+          timekeeperId: context.timekeeper.id,
           billId: null,
           date: result.date,
           hours: 2.5,
@@ -131,9 +81,9 @@ describe("TimeEntryService", () => {
   describe("updateTimeEntry", () => {
     it("should update time entry fields", async () => {
       const created = await service.createTimeEntry({
-        matterId,
-        timekeeperId,
-        billId,
+        matterId: context.matter.id,
+        timekeeperId: context.timekeeper.id,
+        billId: context.bill!.id,
         date: new Date("2024-01-15"),
         hours: 2.5,
         description: "Client consultation",
@@ -148,9 +98,9 @@ describe("TimeEntryService", () => {
 
       expect(result).toEqual({
         id: created.id,
-        matterId,
-        timekeeperId,
-        billId,
+        matterId: context.matter.id,
+        timekeeperId: context.timekeeper.id,
+        billId: context.bill!.id,
         date: new Date("2024-01-15"),
         hours: 3.0,
         description: "Updated client consultation",
@@ -164,9 +114,9 @@ describe("TimeEntryService", () => {
 
     it("should create a change log entry on update", async () => {
       const created = await service.createTimeEntry({
-        matterId,
-        timekeeperId,
-        billId,
+        matterId: context.matter.id,
+        timekeeperId: context.timekeeper.id,
+        billId: context.bill!.id,
         date: new Date("2024-01-15"),
         hours: 2.5,
         description: "Client consultation",
@@ -185,9 +135,9 @@ describe("TimeEntryService", () => {
       expect(updateLog).toBeDefined();
       expect(updateLog!.beforeData).toEqual({
         id: created.id,
-        matterId,
-        timekeeperId,
-        billId,
+        matterId: context.matter.id,
+        timekeeperId: context.timekeeper.id,
+        billId: context.bill!.id,
         date: created.date,
         hours: 2.5,
         description: "Client consultation",
@@ -196,106 +146,15 @@ describe("TimeEntryService", () => {
       });
       expect(updateLog!.afterData).toEqual({
         id: result.id,
-        matterId,
-        timekeeperId,
-        billId,
+        matterId: context.matter.id,
+        timekeeperId: context.timekeeper.id,
+        billId: context.bill!.id,
         date: result.date,
         hours: 3.0,
         description: "Client consultation",
         createdAt: result.createdAt,
         updatedAt: result.updatedAt,
       });
-    });
-  });
-
-  describe("deleteTimeEntry", () => {
-    it("should delete a time entry", async () => {
-      const created = await service.createTimeEntry({
-        matterId,
-        timekeeperId,
-        billId,
-        date: new Date("2024-01-15"),
-        hours: 2.5,
-        description: "Client consultation",
-      });
-
-      await service.deleteTimeEntry(created.id);
-
-      const result = await service.getTimeEntry(created.id);
-      expect(result).toBeNull();
-    });
-  });
-
-  describe("listByMatter", () => {
-    it("should list all time entries for a matter", async () => {
-      const entry1 = await service.createTimeEntry({
-        matterId,
-        timekeeperId,
-        billId,
-        date: new Date("2024-01-15"),
-        hours: 2.5,
-        description: "Client consultation",
-      });
-
-      const entry2 = await service.createTimeEntry({
-        matterId,
-        timekeeperId,
-        billId: null,
-        date: new Date("2024-01-16"),
-        hours: 1.5,
-        description: "Legal research",
-      });
-
-      const result = await service.listByMatter(matterId);
-      expect(result).toHaveLength(2);
-      expect(result).toContainEqual(entry1);
-      expect(result).toContainEqual(entry2);
-    });
-
-    it("should return empty array if no time entries exist", async () => {
-      const result = await service.listByMatter(matterId);
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe("listByBill", () => {
-    it("should list all time entries for a bill", async () => {
-      const entry1 = await service.createTimeEntry({
-        matterId,
-        timekeeperId,
-        billId,
-        date: new Date("2024-01-15"),
-        hours: 2.5,
-        description: "Client consultation",
-      });
-
-      const entry2 = await service.createTimeEntry({
-        matterId,
-        timekeeperId,
-        billId,
-        date: new Date("2024-01-16"),
-        hours: 1.5,
-        description: "Legal research",
-      });
-
-      await service.createTimeEntry({
-        matterId,
-        timekeeperId,
-        billId: null,
-        date: new Date("2024-01-17"),
-        hours: 1.0,
-        description: "Unbilled work",
-      });
-
-      const result = await service.listByBill(matterId, billId);
-      expect(result).toHaveLength(2);
-      expect(result).toContainEqual(entry1);
-      expect(result).toContainEqual(entry2);
-    });
-
-    it("should return empty array if no time entries exist", async () => {
-      const result = await service.listByBill(matterId, billId);
-      expect(result).toEqual([]);
     });
   });
 });

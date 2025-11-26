@@ -16,9 +16,9 @@ export const TimeEntryService = (deps: Deps) => {
   const { repos } = deps;
 
   return {
-    getTimeEntry: async (id: string): Promise<TimeEntry | null> => {
-      return repos.timeEntry.get(id);
-    },
+    getTimeEntry: repos.timeEntry.get,
+    listByMatter: repos.timeEntry.listByMatter,
+    listByBill: repos.timeEntry.listByMatterAndBill,
 
     createTimeEntry: async (data: NewTimeEntry): Promise<TimeEntry> => {
       const created: TimeEntry = await repos.timeEntry.create(data);
@@ -50,7 +50,6 @@ export const TimeEntryService = (deps: Deps) => {
 
       const updated = await repos.timeEntry.update(id, {
         ...data,
-        updatedAt: new Date(),
       });
 
       // Log the update
@@ -61,21 +60,6 @@ export const TimeEntryService = (deps: Deps) => {
       });
 
       return updated;
-    },
-
-    deleteTimeEntry: async (id: string): Promise<void> => {
-      return repos.timeEntry.delete(id);
-    },
-
-    listByMatter: async (matterId: string): Promise<TimeEntry[]> => {
-      return repos.timeEntry.listByMatter(matterId);
-    },
-
-    listByBill: async (
-      matterId: string,
-      billId: string
-    ): Promise<TimeEntry[]> => {
-      return repos.timeEntry.listByMatterAndBill(matterId, billId);
     },
   };
 };
