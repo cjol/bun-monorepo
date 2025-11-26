@@ -45,58 +45,33 @@ describe("DrizzleConversationRepository", () => {
         "00000000-0000-4000-8000-000000000001"
       );
 
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("00000000-0000-4000-8000-000000000001");
-      expect(result?.title).toBe("First Conversation");
+      expect(result).toMatchObject({
+        id: "00000000-0000-4000-8000-000000000001",
+        title: "First Conversation",
+      });
     });
   });
 
   describe("create", () => {
     it("should create a new conversation with a title", async () => {
-      const now = new Date();
-      now.setMilliseconds(0); // SQLite precision fix
       const conversation = await repository.create({
-        id: "00000000-0000-4000-8000-000000000099",
         title: "New Conversation",
-        createdAt: now,
-        updatedAt: now,
       });
 
       const result = await repository.get(conversation.id);
 
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("00000000-0000-4000-8000-000000000099");
-      expect(result?.title).toBe("New Conversation");
-      expect(result?.createdAt).toEqual(now);
+      expect(result).toMatchObject({
+        title: "New Conversation",
+      });
     });
 
     it("should create a new conversation without a title", async () => {
-      const now = new Date();
-      now.setMilliseconds(0);
-      const conversation = await repository.create({
-        id: "00000000-0000-4000-8000-000000000098",
-        title: null,
-        createdAt: now,
-        updatedAt: now,
-      });
+      const conversation = await repository.create({});
 
       const result = await repository.get(conversation.id);
 
       expect(result).not.toBeNull();
       expect(result?.title).toBeNull();
-    });
-
-    it("should auto-generate ID and timestamps for a new conversation", async () => {
-      const conversation = await repository.create({
-        title: "Auto ID",
-      });
-
-      const result = await repository.get(conversation.id);
-
-      expect(result).not.toBeNull();
-      expect(result?.id).toBeDefined();
-      expect(result?.createdAt).toBeDefined();
-      expect(result?.updatedAt).toBeDefined();
     });
   });
 

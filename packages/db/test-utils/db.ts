@@ -3,6 +3,12 @@ import {
   DrizzleFooRepository,
   DrizzleConversationRepository,
   DrizzleMessageRepository,
+  DrizzleMatterRepository,
+  DrizzleBillRepository,
+  DrizzleTimeEntryRepository,
+  DrizzleTimeEntryChangeLogRepository,
+  DrizzleAiSuggestionRepository,
+  DrizzleWorkflowRepository,
 } from "../repositories";
 import { doSeedAll } from "./seed/all";
 
@@ -22,6 +28,12 @@ export const getRepos = async () => {
       foo: DrizzleFooRepository({ db }),
       conversation: DrizzleConversationRepository({ db }),
       message: DrizzleMessageRepository({ db }),
+      matter: DrizzleMatterRepository({ db }),
+      bill: DrizzleBillRepository({ db }),
+      timeEntry: DrizzleTimeEntryRepository({ db }),
+      timeEntryChangeLog: DrizzleTimeEntryChangeLogRepository({ db }),
+      aiSuggestion: DrizzleAiSuggestionRepository({ db }),
+      workflow: DrizzleWorkflowRepository({ db }),
     },
   };
 };
