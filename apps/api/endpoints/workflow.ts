@@ -7,18 +7,32 @@ const idParamsSchema = t.Object({
 });
 
 const workflowBodySchema = t.Object({
+  matterId: t.String({ minLength: 1 }),
   name: t.String({ minLength: 1 }),
   instructions: t.String({ minLength: 1 }),
+});
+
+const workflowQuerySchema = t.Object({
+  matterId: t.Optional(t.String()),
 });
 
 const workflowPatchSchema = t.Partial(workflowBodySchema);
 
 export const workflowRoutes = ({ app }: Context) =>
   new Elysia({ prefix: "/workflows" })
-    .get("/", async ({ status }) => {
-      const workflows = await app.workflow.listAll();
-      return status(200, workflows);
-    })
+    .get(
+      "/",
+      async ({ query, status }) => {
+        if (!query.matterId) {
+          return status(400, {
+            error: "matterId query parameter is required",
+          });
+        }
+        const workflows = await app.workflow.listByMatter(query.matterId);
+        return status(200, workflows);
+      },
+      { query: workflowQuerySchema }
+    )
     .get(
       "/:id",
       async ({ params, status }) => {
@@ -34,6 +48,7 @@ export const workflowRoutes = ({ app }: Context) =>
       "/",
       async ({ body, status }) => {
         const result = await app.workflow.createWorkflow({
+          matterId: body.matterId,
           name: body.name,
           instructions: body.instructions,
         });

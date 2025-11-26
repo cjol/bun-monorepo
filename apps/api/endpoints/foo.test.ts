@@ -71,8 +71,8 @@ describe("Foo API endpoints", () => {
         })
       );
 
-      expect(response.status).toBe(201);
       const body = await response.json();
+      expect(response.status).toBe(201);
       expect(body).toEqual({
         id: expect.stringMatching(
           /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/

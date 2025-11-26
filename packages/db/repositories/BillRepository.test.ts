@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import { billSchema, matterSchema } from "@ai-starter/core";
 import { DrizzleBillRepository } from "./BillRepository";
 import type { DB } from "../db";
 import { testDB } from "../test-utils/db";
+import { createBasicTestContext, createTestMatter } from "../test-utils/seed";
 
 describe("DrizzleBillRepository", () => {
   let db: DB;
@@ -13,15 +13,7 @@ describe("DrizzleBillRepository", () => {
     db = await testDB({ seed: false });
     repository = DrizzleBillRepository({ db });
 
-    // Create a matter for foreign key reference
-    const [matter] = await db
-      .insert(matterSchema)
-      .values({
-        clientName: "Test Client",
-        matterName: "Test Matter",
-      })
-      .returning();
-    if (!matter) throw new Error("Failed to create matter");
+    const { matter } = await createBasicTestContext(db);
     matterId = matter.id;
   });
 
@@ -32,65 +24,37 @@ describe("DrizzleBillRepository", () => {
     });
 
     it("should return bill when it exists", async () => {
-      await db.insert(billSchema).values({
-        id: "test-id",
+      const bill = await repository.create({
         matterId,
         periodStart: new Date("2024-01-01"),
         periodEnd: new Date("2024-01-31"),
-        status: "draft",
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
-      const result = await repository.get("test-id");
+      const result = await repository.get(bill.id);
 
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("test-id");
-      expect(result?.matterId).toBe(matterId);
-      expect(result?.status).toBe("draft");
+      expect(result).toEqual(bill);
     });
   });
 
   describe("create", () => {
     it("should create a new bill", async () => {
-      const now = new Date();
-      now.setMilliseconds(0); // SQLite precision fix
       const periodStart = new Date("2024-01-01");
       const periodEnd = new Date("2024-01-31");
 
       const bill = await repository.create({
-        id: "new-id",
         matterId,
         periodStart,
         periodEnd,
-        status: "draft",
-        createdAt: now,
-        updatedAt: now,
       });
 
       const result = await repository.get(bill.id);
 
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("new-id");
-      expect(result?.matterId).toBe(matterId);
-      expect(result?.status).toBe("draft");
-      expect(bill.createdAt).toEqual(now);
-    });
-
-    it("should assign an ID and timestamps for a new bill", async () => {
-      const bill = await repository.create({
+      expect(result).toMatchObject({
+        periodStart,
+        periodEnd,
         matterId,
-        periodStart: new Date("2024-01-01"),
-        periodEnd: new Date("2024-01-31"),
+        status: "draft",
       });
-
-      const result = await repository.get(bill.id);
-
-      expect(result).not.toBeNull();
-      expect(result?.id).toBeDefined();
-      expect(result?.createdAt).toBeDefined();
-      expect(result?.updatedAt).toBeDefined();
-      expect(result?.status).toBe("draft"); // default status
     });
   });
 
@@ -137,9 +101,9 @@ describe("DrizzleBillRepository", () => {
     });
   });
 
-  describe("listAll", () => {
+  describe("listByMatter", () => {
     it("should return empty array when no bills exist", async () => {
-      const results = await repository.listAll();
+      const results = await repository.listByMatter(matterId);
       expect(results).toEqual([]);
     });
 
@@ -155,7 +119,7 @@ describe("DrizzleBillRepository", () => {
         periodEnd: new Date("2024-02-29"),
       });
 
-      const results = await repository.listAll();
+      const results = await repository.listByMatter(matterId);
 
       expect(results).toHaveLength(2);
     });
@@ -169,13 +133,10 @@ describe("DrizzleBillRepository", () => {
 
     it("should return bills for specific matter", async () => {
       // Create another matter
-      const [matter2] = await db
-        .insert(matterSchema)
-        .values({
-          clientName: "Client 2",
-          matterName: "Matter 2",
-        })
-        .returning();
+      const matter2 = await createTestMatter(db, {
+        clientName: "Client 2",
+        matterName: "Matter 2",
+      });
       if (!matter2) throw new Error("Failed to create matter2");
 
       await repository.create({

@@ -41,8 +41,10 @@ export const DrizzleWorkflowRepository = ({
       throw notFound(`Workflow with ID ${id} not found`, { id });
     }
   },
-  async listAll() {
-    const results = await db.query.workflowSchema.findMany();
+  async listByMatter(matterId: string) {
+    const results = await db.query.workflowSchema.findMany({
+      where: eq(workflowSchema.matterId, matterId),
+    });
     return results;
   },
 });

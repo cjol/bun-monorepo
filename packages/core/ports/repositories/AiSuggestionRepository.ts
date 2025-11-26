@@ -2,9 +2,10 @@ import type { AiSuggestion, NewAiSuggestion } from "../../schema";
 
 export interface AiSuggestionRepository {
   get(id: string): Promise<AiSuggestion | null>;
-  listAll(): Promise<AiSuggestion[]>;
+  listByMatter(matterId: string): Promise<AiSuggestion[]>;
   listByTimeEntry(timeEntryId: string): Promise<AiSuggestion[]>;
-  listByStatus(
+  listByMatterAndStatus(
+    matterId: string,
     status: "pending" | "approved" | "rejected"
   ): Promise<AiSuggestion[]>;
   create(data: NewAiSuggestion): Promise<AiSuggestion>;

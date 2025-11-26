@@ -1,7 +1,6 @@
 import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { timestamps } from "./utils/timestamps";
-import { timeEntrySchema } from "./timeEntry";
-import { messageSchema } from "./message";
+import { jsonNewTimeEntry, timeEntrySchema } from "./timeEntry";
 
 export const aiSuggestionSchema = sqliteTable("ai_suggestion", {
   id: text("id")
@@ -10,12 +9,7 @@ export const aiSuggestionSchema = sqliteTable("ai_suggestion", {
   timeEntryId: text("time_entry_id")
     .notNull()
     .references(() => timeEntrySchema.id, { onDelete: "cascade" }),
-  messageId: text("message_id")
-    .notNull()
-    .references(() => messageSchema.id, { onDelete: "cascade" }),
-  suggestedChanges: text("suggested_changes", { mode: "json" })
-    .notNull()
-    .$type<Record<string, unknown>>(),
+  suggestedChanges: jsonNewTimeEntry("suggested_changes").notNull(),
   status: text("status", {
     enum: ["pending", "approved", "rejected"],
   })

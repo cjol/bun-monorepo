@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import { matterSchema } from "@ai-starter/core";
 import { DrizzleMatterRepository } from "./MatterRepository";
 import type { DB } from "../db";
 import { testDB } from "../test-utils/db";
@@ -20,58 +19,36 @@ describe("DrizzleMatterRepository", () => {
     });
 
     it("should return matter when it exists", async () => {
-      await db.insert(matterSchema).values({
-        id: "test-id",
-        clientName: "Test Client",
-        matterName: "Test Matter",
-        description: "Test Description",
-        createdAt: new Date(),
-        updatedAt: new Date(),
+      const matter = await repository.create({
+        clientName: "New Client",
+        matterName: "New Matter",
+        description: "New Description",
       });
 
-      const result = await repository.get("test-id");
+      const result = await repository.get(matter.id);
 
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("test-id");
-      expect(result?.clientName).toBe("Test Client");
-      expect(result?.matterName).toBe("Test Matter");
+      expect(result).toEqual(matter);
     });
   });
 
   describe("create", () => {
     it("should create a new matter", async () => {
-      const now = new Date();
-      now.setMilliseconds(0); // SQLite precision fix
       const matter = await repository.create({
-        id: "new-id",
         clientName: "New Client",
         matterName: "New Matter",
         description: "New Description",
-        createdAt: now,
-        updatedAt: now,
       });
 
       const result = await repository.get(matter.id);
 
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("new-id");
-      expect(result?.clientName).toBe("New Client");
-      expect(result?.matterName).toBe("New Matter");
-      expect(matter.createdAt).toEqual(now);
-    });
-
-    it("should assign an ID and timestamps for a new matter", async () => {
-      const matter = await repository.create({
-        clientName: "Auto Client",
-        matterName: "Auto Matter",
+      expect(result).toEqual({
+        id: expect.any(String),
+        clientName: "New Client",
+        matterName: "New Matter",
+        description: "New Description",
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
       });
-
-      const result = await repository.get(matter.id);
-
-      expect(result).not.toBeNull();
-      expect(result?.id).toBeDefined();
-      expect(result?.createdAt).toBeDefined();
-      expect(result?.updatedAt).toBeDefined();
     });
   });
 
@@ -87,9 +64,12 @@ describe("DrizzleMatterRepository", () => {
         description: "Updated Description",
       });
 
-      expect(updated.clientName).toBe("Updated Client");
-      expect(updated.matterName).toBe("Original Matter");
-      expect(updated.description).toBe("Updated Description");
+      expect(updated).toMatchObject({
+        id: matter.id,
+        clientName: "Updated Client",
+        matterName: "Original Matter",
+        description: "Updated Description",
+      });
     });
 
     it("should throw notFound when matter does not exist", async () => {

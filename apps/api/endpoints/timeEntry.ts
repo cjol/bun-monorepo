@@ -8,6 +8,7 @@ const idParamsSchema = t.Object({
 
 const timeEntryBodySchema = t.Object({
   matterId: t.String({ minLength: 1 }),
+  timekeeperId: t.String({ minLength: 1 }),
   billId: t.Union([t.String(), t.Null()]),
   date: t.String(),
   hours: t.Number({ minimum: 0 }),
@@ -26,16 +27,19 @@ export const timeEntryRoutes = ({ app }: Context) =>
     .get(
       "/",
       async ({ query, status }) => {
+        if (query.matterId && query.billId) {
+          const entries = await app.timeEntry.listByBill(
+            query.matterId,
+            query.billId
+          );
+          return status(200, entries);
+        }
         if (query.matterId) {
           const entries = await app.timeEntry.listByMatter(query.matterId);
           return status(200, entries);
         }
-        if (query.billId) {
-          const entries = await app.timeEntry.listByBill(query.billId);
-          return status(200, entries);
-        }
         return status(400, {
-          error: "matterId or billId query parameter is required",
+          error: "matterId query parameter is required (billId is optional)",
         });
       },
       { query: timeEntryQuerySchema }
@@ -56,6 +60,7 @@ export const timeEntryRoutes = ({ app }: Context) =>
       async ({ body, status }) => {
         const result = await app.timeEntry.createTimeEntry({
           matterId: body.matterId,
+          timekeeperId: body.timekeeperId,
           billId: body.billId,
           date: new Date(body.date),
           hours: body.hours,
@@ -71,6 +76,7 @@ export const timeEntryRoutes = ({ app }: Context) =>
         try {
           const result = await app.timeEntry.updateTimeEntry(params.id, {
             matterId: body.matterId,
+            timekeeperId: body.timekeeperId,
             billId: body.billId,
             date: body.date ? new Date(body.date) : undefined,
             hours: body.hours,
