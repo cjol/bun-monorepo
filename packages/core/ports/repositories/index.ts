@@ -7,3 +7,5 @@ export * from "./TimeEntryRepository";
 export * from "./TimeEntryChangeLogRepository";
 export * from "./AiSuggestionRepository";
 export * from "./WorkflowRepository";
+export * from "./TimekeeperRepository";
+export * from "./TimekeeperRoleRepository";

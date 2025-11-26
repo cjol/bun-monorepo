@@ -71,6 +71,11 @@
 
 - Use common test utilities from `@ai-starter/db/test-utils` for consistency.
 - Review coverage with `bun test --coverage` but don't stress about 100% coverage.
+- You should never manually create one-off mocks in tests. Always add reusable mocks in the test-utils/seed package. (TODO: this needs to be fixed in legacy code)
+
+**Data Storage**
+
+- When properties are automatically created by the database (e.g., `id`, `createdAt`, `updatedAt`), you should never specify them manually when creating new records. Always let the database handle them. (TODO: this needs to be fixed in legacy code)
 
 ## Current focus
 
@@ -103,13 +108,20 @@ The only thing we are carrying forward from V2 are some of the core ideas.
 
 ## TODO List:
 
-- [ ] Define the core matter schema in packages/db/schema/.
-- [ ] Define the core bill schema in packages/db/schema/.
-- [ ] Define the core timeEntry schema in packages/db/schema/.
-- [ ] Add a timeEntryChangeLog table to packages/db/schema/ to log before/after JSON blobs for time entry mutations.
-- [ ] Create an aiSuggestion table in packages/db/schema/, linking to timeEntry and message, with a status field (pending, approved, rejected).
-- [ ] Move all core business logic (e.g., "approve an AI suggestion") into dedicated service classes in packages/core/src/services/.
-- [ ] Create a new workflows table in packages/db/schema/ to store unstructured, natural-language instructions as text.
+- [x] Define the core matter schema in packages/db/schema/.
+- [x] Define the core bill schema in packages/db/schema/.
+- [x] Define the core timeEntry schema in packages/db/schema/.
+- [x] Add a timeEntryChangeLog table to packages/db/schema/ to log before/after JSON blobs for time entry mutations.
+- [x] Create an aiSuggestion table in packages/db/schema/, linking to timeEntry and message, with a status field (pending, approved, rejected).
+- [x] Create a new workflows table in packages/db/schema/ to store unstructured, natural-language instructions as text.
+- [x] Add an approveSuggestion method to the SuggestionService that applies the change to the associated timeEntry and updates the suggestion's status.
+- [x] Ensure the approveSuggestion method also creates a new record in the timeEntryChangeLog table with the 'before' and 'after' data.
+- [x] Add a rejectSuggestion method to the SuggestionService to update an aiSuggestion record's status to 'rejected'.
+- [x] Create a TimeEntryService in packages/core/src/services/ for handling manual (non-suggestion) creation and updates of time entries.
+- [x] Ensure all methods in TimeEntryService that modify an entry also create a corresponding record in the timeEntryChangeLog.
+- [x] Create a MatterService for handling CRUD (Create, Read, Update, Delete) operations for matters.
+- [x] Create a BillService for handling CRUD operations for bills.
+- [x] Create a WorkflowService for handling CRUD operations for the new unstructured, natural language workflows.
 - [ ] Build a new GeneralPurposeAgent (reference the current dataAnalysisAgent which will be quite similar) in packages/ai/agents/ with access to appropriate functions to manipulate matters, bills, time entries and workflows.
 - [ ] Include workflow context in the agent's prompt when executing tasks.
 - [ ] Build out the primary REST/RPC endpoints in apps/api/ using the new core services.

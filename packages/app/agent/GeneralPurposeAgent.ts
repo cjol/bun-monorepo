@@ -177,6 +177,7 @@ function createTimesheetManagementFunctions(
   const createTimeEntry: SandboxFunction<
     {
       matterId: string;
+      timekeeperId: string;
       billId: string | null;
       date: string;
       hours: number;
@@ -187,6 +188,7 @@ function createTimesheetManagementFunctions(
     description: "Create a new time entry",
     inputSchema: z.object({
       matterId: z.string().uuid().describe("The UUID of the matter"),
+      timekeeperId: z.string().uuid().describe("The UUID of the timekeeper"),
       billId: z
         .string()
         .uuid()
@@ -196,9 +198,17 @@ function createTimesheetManagementFunctions(
       hours: z.number().positive().describe("Number of hours worked"),
       description: z.string().describe("Description of the work performed"),
     }),
-    execute: async ({ matterId, billId, date, hours, description }) => {
+    execute: async ({
+      matterId,
+      timekeeperId,
+      billId,
+      date,
+      hours,
+      description,
+    }) => {
       return services.timeEntry.createTimeEntry({
         matterId,
+        timekeeperId,
         billId,
         date: new Date(date),
         hours,
@@ -249,23 +259,32 @@ function createTimesheetManagementFunctions(
     },
   };
 
-  const listTimeEntriesByBill: SandboxFunction<{ billId: string }, unknown[]> =
-    {
-      description: "List all time entries for a specific bill",
-      inputSchema: z.object({
-        billId: z.string().uuid().describe("The UUID of the bill"),
-      }),
-      execute: async ({ billId }) => {
-        return services.timeEntry.listByBill(billId);
-      },
-    };
+  const listTimeEntriesByBill: SandboxFunction<
+    { matterId: string; billId: string },
+    unknown[]
+  > = {
+    description: "List all time entries for a specific bill",
+    inputSchema: z.object({
+      matterId: z.string().uuid().describe("The UUID of the matter"),
+      billId: z.string().uuid().describe("The UUID of the bill"),
+    }),
+    execute: async ({ matterId, billId }) => {
+      return services.timeEntry.listByBill(matterId, billId);
+    },
+  };
 
   // AI suggestion functions
   const createAiSuggestion: SandboxFunction<
     {
       timeEntryId: string;
-      messageId: string;
-      suggestedChanges: Record<string, unknown>;
+      suggestedChanges: {
+        matterId: string;
+        timekeeperId: string;
+        date: string;
+        hours: number;
+        description: string;
+        billId?: string | null;
+      };
     },
     unknown
   > = {
@@ -276,39 +295,57 @@ function createTimesheetManagementFunctions(
         .string()
         .uuid()
         .describe("The UUID of the time entry to suggest changes for"),
-      messageId: z
-        .string()
-        .uuid()
-        .describe("The UUID of the message containing the suggestion"),
       suggestedChanges: z
-        .record(z.string(), z.unknown())
-        .describe(
-          "Object containing the suggested changes (e.g. { hours: 2.5, description: 'New text' })"
-        ),
+        .object({
+          matterId: z.string().uuid().describe("Matter ID for the suggestion"),
+          timekeeperId: z
+            .string()
+            .uuid()
+            .describe("Timekeeper ID for the suggestion"),
+          date: z.string().describe("ISO date string for the suggestion"),
+          hours: z.number().positive().describe("Suggested hours"),
+          description: z.string().describe("Suggested description"),
+          billId: z
+            .string()
+            .uuid()
+            .nullable()
+            .optional()
+            .describe("Optional bill ID"),
+        })
+        .describe("Object containing the suggested time entry changes"),
     }),
-    execute: async ({ timeEntryId, messageId, suggestedChanges }) => {
+    execute: async ({ timeEntryId, suggestedChanges }) => {
       return services.aiSuggestion.createSuggestion({
         timeEntryId,
-        messageId,
-        suggestedChanges,
+        suggestedChanges: {
+          ...suggestedChanges,
+          date: new Date(suggestedChanges.date),
+        },
       });
     },
   };
 
-  const listPendingSuggestions: SandboxFunction<unknown, unknown[]> = {
-    description: "List all pending AI suggestions",
-    inputSchema: z.object({}),
-    execute: async () => {
-      return services.aiSuggestion.listByStatus("pending");
+  const listPendingSuggestions: SandboxFunction<
+    { matterId: string },
+    unknown[]
+  > = {
+    description: "List all pending AI suggestions for a matter",
+    inputSchema: z.object({
+      matterId: z.string().uuid().describe("The UUID of the matter"),
+    }),
+    execute: async ({ matterId }) => {
+      return services.aiSuggestion.listByStatus(matterId, "pending");
     },
   };
 
   // Workflow functions
-  const listWorkflows: SandboxFunction<unknown, unknown[]> = {
-    description: "List all available workflows",
-    inputSchema: z.object({}),
-    execute: async () => {
-      return services.workflow.listAll();
+  const listWorkflows: SandboxFunction<{ matterId: string }, unknown[]> = {
+    description: "List all available workflows for a matter",
+    inputSchema: z.object({
+      matterId: z.string().uuid().describe("The UUID of the matter"),
+    }),
+    execute: async ({ matterId }) => {
+      return services.workflow.listByMatter(matterId);
     },
   };
 
