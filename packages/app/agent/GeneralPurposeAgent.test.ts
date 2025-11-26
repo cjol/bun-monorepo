@@ -15,63 +15,18 @@ import {
   TimekeeperService,
   TimekeeperRoleService,
 } from "../core";
-import type { SandboxExecutionResult } from "./utils";
 
-describe("createGeneralPurposeAgent", () => {
-  let db: DB;
-  let repos: ReturnType<typeof getRepos>;
-  let services: {
-    matter: ReturnType<typeof MatterService>;
-    bill: ReturnType<typeof BillService>;
-    timeEntry: ReturnType<typeof TimeEntryService>;
-    aiSuggestion: ReturnType<typeof AiSuggestionService>;
-    workflow: ReturnType<typeof WorkflowService>;
-    timekeeper: ReturnType<typeof TimekeeperService>;
-    timekeeperRole: ReturnType<typeof TimekeeperRoleService>;
-  };
-
-  beforeEach(async () => {
-    db = await testDB({ seed: false });
-    repos = getRepos(db);
-    const timeEntry = TimeEntryService({ repos });
-    services = {
-      matter: MatterService({ repos }),
-      bill: BillService({ repos }),
-      timeEntry,
-      aiSuggestion: AiSuggestionService({ repos, services: { timeEntry } }),
-      workflow: WorkflowService({ repos }),
-      timekeeper: TimekeeperService({ repos }),
-      timekeeperRole: TimekeeperRoleService({ repos }),
-    };
-  });
-
-  test("should create agent with sandbox tool", () => {
-    const agent = createGeneralPurposeAgent({ services });
-    expect(agent).toBeDefined();
-    expect(agent.tools).toHaveProperty("runCode");
-    expect(agent.tools.runCode).toBeDefined();
-  });
-
-  test("should include workflow context in system prompt when provided", () => {
-    const workflowInstructions = "Always validate time entries before updating";
-    const agent = createGeneralPurposeAgent({
-      services,
-      workflowInstructions,
-    });
-    expect(agent).toBeDefined();
-    expect(agent.tools).toHaveProperty("runCode");
-    // Note: system prompt is internal to Agent and not directly testable
-    // We verify it works through integration tests below
-  });
-
-  test("should create agent without workflow context", () => {
-    const agent = createGeneralPurposeAgent({ services });
-    expect(agent).toBeDefined();
-    expect(agent.tools).toHaveProperty("runCode");
-  });
-});
-
-describe("GeneralPurposeAgent sandbox functions", () => {
+/**
+ * Integration tests for GeneralPurposeAgent.
+ *
+ * These tests invoke the agent with natural language prompts and verify
+ * that it correctly performs the requested actions by checking the actual
+ * database state after execution.
+ *
+ * NOTE: These tests make real API calls to Anthropic Claude and require
+ * valid API credentials with sufficient credits.
+ */
+describe("GeneralPurposeAgent integration tests", () => {
   let db: DB;
   let repos: ReturnType<typeof getRepos>;
   let services: {
@@ -101,106 +56,92 @@ describe("GeneralPurposeAgent sandbox functions", () => {
   });
 
   test(
-    "should execute getMatter function in sandbox",
+    "should create a new matter when requested",
     async () => {
       const agent = createGeneralPurposeAgent({ services });
 
-      // Create a test matter
-      const matter = await services.matter.createMatter({
-        clientName: "Test Client",
-        matterName: "Test Matter",
-        description: "Test description",
+      // Ask the agent to create a new matter
+      const result = agent.stream({
+        messages: [
+          {
+            role: "user",
+            content:
+              "Create a new matter for Acme Corp with the name 'Patent Litigation' and description 'Patent infringement case'",
+          },
+        ],
       });
 
-      // Execute code in sandbox to fetch matter
-      if (!agent.tools.runCode) {
-        throw new Error("runCode tool not found");
+      // Wait for the agent to complete
+      for await (const _chunk of result.fullStream) {
+        // Consume all chunks
       }
-      const resultPromise = agent.tools.runCode.execute!(
-        {
-          code: `
-        const matter = await getMatter({ id: "${matter.id}" });
-        return matter.clientName;
-      `,
-        },
-        { toolCallId: "test-1", messages: [] }
-      );
-      const resultRaw = await resultPromise;
-      if (Symbol.asyncIterator in Object(resultRaw)) {
-        throw new Error("Unexpected async iterable result");
-      }
-      const result = resultRaw as SandboxExecutionResult;
 
-      expect(result.output).toBe("Test Client");
-      expect(result.error).toBeUndefined();
+      // Verify the matter was actually created in the database
+      const allMatters = await repos.matter.listAll();
+      expect(allMatters.length).toBe(1);
+      expect(allMatters[0]?.clientName).toBe("Acme Corp");
+      expect(allMatters[0]?.matterName).toBe("Patent Litigation");
+      expect(allMatters[0]?.description).toBe("Patent infringement case");
     },
-    { timeout: 10000 }
+    { timeout: 30000 }
   );
 
   test(
-    "should execute createTimeEntry function in sandbox",
+    "should create time entries when requested",
     async () => {
-      const agent = createGeneralPurposeAgent({ services });
-
-      // Create a matter first
+      // Setup: create a matter and timekeeper first
       const matter = await services.matter.createMatter({
-        clientName: "Test Client",
-        matterName: "Test Matter",
+        clientName: "Test Corp",
+        matterName: "Contract Review",
         description: null,
       });
 
-      // Create a timekeeper for the matter
       const timekeeper = await createTestTimekeeper(db, matter.id);
       if (!timekeeper) {
         throw new Error("Failed to create timekeeper");
       }
 
-      // Execute code in sandbox to create time entry
-      if (!agent.tools.runCode) {
-        throw new Error("runCode tool not found");
-      }
-      const resultPromise = agent.tools.runCode.execute!(
-        {
-          code: `
-        const entry = await createTimeEntry({
-          matterId: "${matter.id}",
-          timekeeperId: "${timekeeper.id}",
-          billId: null,
-          date: "${new Date("2025-01-01").toISOString()}",
-          hours: 2.5,
-          description: "Test work"
-        });
-        return entry.hours;
-      `,
-        },
-        { toolCallId: "test-2", messages: [] }
-      );
-      const resultRaw = await resultPromise;
-      if (Symbol.asyncIterator in Object(resultRaw)) {
-        throw new Error("Unexpected async iterable result");
-      }
-      const result = resultRaw as SandboxExecutionResult;
+      const agent = createGeneralPurposeAgent({ services });
 
-      expect(result.output).toBe(2.5);
-      expect(result.error).toBeUndefined();
+      // Ask the agent to create time entries
+      const result = agent.stream({
+        messages: [
+          {
+            role: "user",
+            content: `Create two time entries for matter ${matter.id} with timekeeper ${timekeeper.id}:
+            1. On 2025-01-15, 3 hours for "Reviewed contract terms"
+            2. On 2025-01-16, 2.5 hours for "Drafted amendments"`,
+          },
+        ],
+      });
 
-      // Verify entry was actually created
+      // Wait for completion
+      for await (const _chunk of result.fullStream) {
+        // Consume all chunks
+      }
+
+      // Verify the time entries were created
       const entries = await services.timeEntry.listByMatter(matter.id);
-      expect(entries.length).toBe(1);
-      expect(entries[0]?.description).toBe("Test work");
+      expect(entries.length).toBe(2);
+
+      // Sort by date to ensure consistent ordering
+      entries.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+      expect(entries[0]?.hours).toBe(3);
+      expect(entries[0]?.description).toContain("contract terms");
+      expect(entries[1]?.hours).toBe(2.5);
+      expect(entries[1]?.description).toContain("amendments");
     },
-    { timeout: 10000 }
+    { timeout: 30000 }
   );
 
   test(
-    "should execute listTimeEntriesByMatter function in sandbox",
+    "should calculate total hours for a matter",
     async () => {
-      const agent = createGeneralPurposeAgent({ services });
-
-      // Create matter and time entries
+      // Setup: create matter with time entries
       const matter = await services.matter.createMatter({
-        clientName: "Test Client",
-        matterName: "Test Matter",
+        clientName: "Test Corp",
+        matterName: "Tax Advisory",
         description: null,
       });
 
@@ -214,8 +155,8 @@ describe("GeneralPurposeAgent sandbox functions", () => {
         timekeeperId: timekeeper.id,
         billId: null,
         date: new Date("2025-01-01"),
-        hours: 2,
-        description: "Entry 1",
+        hours: 5,
+        description: "Initial consultation",
       });
 
       await services.timeEntry.createTimeEntry({
@@ -223,44 +164,52 @@ describe("GeneralPurposeAgent sandbox functions", () => {
         timekeeperId: timekeeper.id,
         billId: null,
         date: new Date("2025-01-02"),
-        hours: 3,
-        description: "Entry 2",
+        hours: 3.5,
+        description: "Research",
       });
 
-      // Execute code in sandbox to list entries
-      if (!agent.tools.runCode) {
-        throw new Error("runCode tool not found");
-      }
-      const resultPromise = agent.tools.runCode.execute!(
-        {
-          code: `
-        const entries = await listTimeEntriesByMatter({ matterId: "${matter.id}" });
-        return entries.length;
-      `,
-        },
-        { toolCallId: "test-3", messages: [] }
-      );
-      const resultRaw = await resultPromise;
-      if (Symbol.asyncIterator in Object(resultRaw)) {
-        throw new Error("Unexpected async iterable result");
-      }
-      const result = resultRaw as SandboxExecutionResult;
+      await services.timeEntry.createTimeEntry({
+        matterId: matter.id,
+        timekeeperId: timekeeper.id,
+        billId: null,
+        date: new Date("2025-01-03"),
+        hours: 2.5,
+        description: "Report writing",
+      });
 
-      expect(result.output).toBe(2);
-      expect(result.error).toBeUndefined();
+      const agent = createGeneralPurposeAgent({ services });
+
+      // Ask the agent to calculate total hours
+      const result = agent.stream({
+        messages: [
+          {
+            role: "user",
+            content: `What is the total number of hours recorded for matter ${matter.id}?`,
+          },
+        ],
+      });
+
+      // Collect the response text
+      let responseText = "";
+      for await (const chunk of result.fullStream) {
+        if (chunk.type === "text-delta") {
+          responseText += chunk.text;
+        }
+      }
+
+      // The agent should mention the correct total (11 hours)
+      expect(responseText).toMatch(/11/);
     },
-    { timeout: 10000 }
+    { timeout: 30000 }
   );
 
   test(
-    "should execute createAiSuggestion function in sandbox",
+    "should create AI suggestions for time entries",
     async () => {
-      const agent = createGeneralPurposeAgent({ services });
-
-      // Setup: create matter, timekeeper, and time entry
+      // Setup: create matter and time entry
       const matter = await services.matter.createMatter({
-        clientName: "Test Client",
-        matterName: "Test Matter",
+        clientName: "Test Corp",
+        matterName: "Merger Advisory",
         description: null,
       });
 
@@ -275,97 +224,214 @@ describe("GeneralPurposeAgent sandbox functions", () => {
         billId: null,
         date: new Date("2025-01-01"),
         hours: 2,
-        description: "Original description",
+        description: "Meeting with client",
       });
 
-      // Execute code in sandbox to create suggestion
-      if (!agent.tools.runCode) {
-        throw new Error("runCode tool not found");
-      }
-      const resultPromise = agent.tools.runCode.execute!(
-        {
-          code: `
-        const suggestion = await createAiSuggestion({
-          timeEntryId: "${timeEntry.id}",
-          suggestedChanges: {
-            matterId: "${matter.id}",
-            timekeeperId: "${timekeeper.id}",
-            billId: null,
-            date: "2025-01-01",
-            hours: 2.5,
-            description: "Updated description"
-          }
-        });
-        return suggestion.status;
-      `,
-        },
-        { toolCallId: "test-4", messages: [] }
-      );
-      const resultRaw = await resultPromise;
-      if (Symbol.asyncIterator in Object(resultRaw)) {
-        throw new Error("Unexpected async iterable result");
-      }
-      const result = resultRaw as SandboxExecutionResult;
+      const agent = createGeneralPurposeAgent({ services });
 
-      expect(result.output).toBe("pending");
-      expect(result.error).toBeUndefined();
+      // Ask the agent to create a suggestion
+      const result = agent.stream({
+        messages: [
+          {
+            role: "user",
+            content: `Create an AI suggestion for time entry ${timeEntry.id} that changes the description to "Initial client meeting - M&A discussion" and increases hours to 2.5`,
+          },
+        ],
+      });
 
-      // Verify suggestion was created
+      // Wait for completion
+      for await (const _chunk of result.fullStream) {
+        // Consume all chunks
+      }
+
+      // Verify the suggestion was created
       const suggestions = await services.aiSuggestion.listByTimeEntry(
         timeEntry.id
       );
       expect(suggestions.length).toBe(1);
       expect(suggestions[0]?.status).toBe("pending");
+      expect(suggestions[0]?.suggestedChanges.hours).toBe(2.5);
+      expect(suggestions[0]?.suggestedChanges.description).toContain("M&A");
     },
-    { timeout: 10000 }
+    { timeout: 30000 }
   );
 
   test(
-    "should list all workflows in sandbox",
+    "should respect workflow instructions",
     async () => {
-      const agent = createGeneralPurposeAgent({ services });
+      const workflowInstructions =
+        "When creating time entries, always round hours up to the nearest 0.5";
 
-      // Create matter for workflows
       const matter = await services.matter.createMatter({
-        clientName: "Test Client",
-        matterName: "Test Matter",
+        clientName: "Test Corp",
+        matterName: "General Advisory",
         description: null,
       });
 
-      // Create some workflows
-      await services.workflow.createWorkflow({
-        matterId: matter.id,
-        name: "Workflow 1",
-        instructions: "Instructions 1",
-      });
-      await services.workflow.createWorkflow({
-        matterId: matter.id,
-        name: "Workflow 2",
-        instructions: "Instructions 2",
+      const timekeeper = await createTestTimekeeper(db, matter.id);
+      if (!timekeeper) {
+        throw new Error("Failed to create timekeeper");
+      }
+
+      const agent = createGeneralPurposeAgent({
+        services,
+        workflowInstructions,
       });
 
-      // Execute code in sandbox to list workflows
-      if (!agent.tools.runCode) {
-        throw new Error("runCode tool not found");
-      }
-      const resultPromise = agent.tools.runCode.execute!(
-        {
-          code: `
-        const workflows = await listWorkflows({ matterId: "${matter.id}" });
-        return workflows.map(w => w.name);
-      `,
-        },
-        { toolCallId: "test-5", messages: [] }
-      );
-      const resultRaw = await resultPromise;
-      if (Symbol.asyncIterator in Object(resultRaw)) {
-        throw new Error("Unexpected async iterable result");
-      }
-      const result = resultRaw as SandboxExecutionResult;
+      // Ask the agent to create a time entry with an odd number like 2.3 hours
+      const result = agent.stream({
+        messages: [
+          {
+            role: "user",
+            content: `Create a time entry for matter ${matter.id} with timekeeper ${timekeeper.id}, on 2025-01-15, for 2.3 hours, description "Legal research"`,
+          },
+        ],
+      });
 
-      expect(result.output).toEqual(["Workflow 1", "Workflow 2"]);
-      expect(result.error).toBeUndefined();
+      // Wait for completion
+      for await (const _chunk of result.fullStream) {
+        // Consume all chunks
+      }
+
+      // Verify the time entry was created with rounded hours (should be 2.5)
+      const entries = await services.timeEntry.listByMatter(matter.id);
+      expect(entries.length).toBe(1);
+      // The agent should have rounded 2.3 to 2.5
+      expect(entries[0]?.hours).toBe(2.5);
     },
-    { timeout: 10000 }
+    { timeout: 30000 }
+  );
+
+  test(
+    "should automatically inject workflow instructions when reviewing timesheets",
+    async () => {
+      // Setup: create matter and timekeeper
+      const matter = await services.matter.createMatter({
+        clientName: "Test Corp",
+        matterName: "Large Project",
+        description: null,
+      });
+
+      const timekeeper = await createTestTimekeeper(db, matter.id);
+      if (!timekeeper) {
+        throw new Error("Failed to create timekeeper");
+      }
+
+      // Create a workflow with specific instruction about long entries
+      const workflow = await services.workflow.createWorkflow({
+        matterId: matter.id,
+        name: "Timesheet Review Policy",
+        instructions:
+          'All time entries with 6 hours or more must have their description prefixed with "SIMPLIFY: " to remind the timekeeper to break them down into smaller tasks.',
+      });
+
+      // Create several time entries with varying hours
+      const entry1 = await services.timeEntry.createTimeEntry({
+        matterId: matter.id,
+        timekeeperId: timekeeper.id,
+        billId: null,
+        date: new Date("2025-01-10"),
+        hours: 8,
+        description: "Drafted comprehensive legal brief",
+      });
+
+      const entry2 = await services.timeEntry.createTimeEntry({
+        matterId: matter.id,
+        timekeeperId: timekeeper.id,
+        billId: null,
+        date: new Date("2025-01-11"),
+        hours: 3,
+        description: "Client phone call",
+      });
+
+      const entry3 = await services.timeEntry.createTimeEntry({
+        matterId: matter.id,
+        timekeeperId: timekeeper.id,
+        billId: null,
+        date: new Date("2025-01-12"),
+        hours: 6,
+        description: "Research case law",
+      });
+
+      const entry4 = await services.timeEntry.createTimeEntry({
+        matterId: matter.id,
+        timekeeperId: timekeeper.id,
+        billId: null,
+        date: new Date("2025-01-13"),
+        hours: 2.5,
+        description: "Team meeting",
+      });
+
+      // Create agent with workflow instructions injected
+      const agent = createGeneralPurposeAgent({
+        services,
+        workflowInstructions: workflow.instructions,
+      });
+
+      // Ask the agent to review timesheets for compliance
+      const result = agent.stream({
+        messages: [
+          {
+            role: "user",
+            content: `Please review all time entries for matter ${matter.id} and create AI suggestions for any entries that don't comply with the workflow policy. Make sure to follow the workflow instructions carefully.`,
+          },
+        ],
+      });
+
+      // Collect response for debugging if needed
+      let responseText = "";
+      for await (const chunk of result.fullStream) {
+        if (chunk.type === "text-delta") {
+          responseText += chunk.text;
+        }
+      }
+
+      // Verify that suggestions were created for entries >= 6 hours
+      const suggestions1 = await services.aiSuggestion.listByTimeEntry(
+        entry1.id
+      );
+      const suggestions2 = await services.aiSuggestion.listByTimeEntry(
+        entry2.id
+      );
+      const suggestions3 = await services.aiSuggestion.listByTimeEntry(
+        entry3.id
+      );
+      const suggestions4 = await services.aiSuggestion.listByTimeEntry(
+        entry4.id
+      );
+
+      // Debug output if test fails
+      if (
+        suggestions1.length === 0 ||
+        suggestions3.length === 0 ||
+        suggestions2.length > 0 ||
+        suggestions4.length > 0
+      ) {
+        console.log("Agent response:", responseText);
+        console.log("Entry 1 (8h) suggestions:", suggestions1);
+        console.log("Entry 2 (3h) suggestions:", suggestions2);
+        console.log("Entry 3 (6h) suggestions:", suggestions3);
+        console.log("Entry 4 (2.5h) suggestions:", suggestions4);
+      }
+
+      // Entry 1 (8 hours) should have a suggestion
+      expect(suggestions1.length).toBe(1);
+      expect(suggestions1[0]?.suggestedChanges.description).toContain(
+        "SIMPLIFY:"
+      );
+
+      // Entry 2 (3 hours) should NOT have a suggestion
+      expect(suggestions2.length).toBe(0);
+
+      // Entry 3 (6 hours) should have a suggestion (>= 6)
+      expect(suggestions3.length).toBe(1);
+      expect(suggestions3[0]?.suggestedChanges.description).toContain(
+        "SIMPLIFY:"
+      );
+
+      // Entry 4 (2.5 hours) should NOT have a suggestion
+      expect(suggestions4.length).toBe(0);
+    },
+    { timeout: 30000 }
   );
 });
