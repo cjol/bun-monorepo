@@ -13,6 +13,25 @@ export interface SandboxFunction<INPUT = unknown, RESULT = unknown> {
 }
 
 /**
+ * Helper function to define a sandbox function with inferred types from the schema.
+ * This eliminates the need for explicit type annotations on SandboxFunction.
+ *
+ * @example
+ * const myFunction = defineSandboxFunction({
+ *   description: "Does something useful",
+ *   inputSchema: z.object({ id: z.string() }),
+ *   execute: async ({ id }) => { ... }
+ * });
+ */
+export function defineSandboxFunction<TInput, TResult = unknown>(config: {
+  description: string;
+  inputSchema: z.ZodType<TInput>;
+  execute: (input: TInput) => Promise<TResult> | TResult;
+}): SandboxFunction<TInput, TResult> {
+  return config;
+}
+
+/**
  * Options for creating a sandbox tool.
  */
 export interface CreateSandboxToolOptions {

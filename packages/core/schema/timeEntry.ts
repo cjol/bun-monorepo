@@ -5,7 +5,13 @@ import {
   real,
   customType,
 } from "drizzle-orm/sqlite-core";
+import { z } from "zod";
 import { timestamps } from "./utils/timestamps";
+import {
+  uuidSchema,
+  isoDateSchema,
+  positiveNumberSchema,
+} from "./utils/validation";
 import { matterSchema } from "./matter";
 import { billSchema } from "./bill";
 import { timekeeperSchema } from "./timekeeper";
@@ -31,6 +37,29 @@ export const timeEntrySchema = sqliteTable("time_entry", {
 
 export type TimeEntry = typeof timeEntrySchema.$inferSelect;
 export type NewTimeEntry = typeof timeEntrySchema.$inferInsert;
+
+/**
+ * Zod validation schemas for TimeEntry entity.
+ * Used for API input validation and sandbox function parameters.
+ */
+
+export const newTimeEntryInputSchema = z.object({
+  matterId: uuidSchema.describe("The UUID of the matter"),
+  timekeeperId: uuidSchema.describe("The UUID of the timekeeper"),
+  billId: uuidSchema
+    .nullable()
+    .optional()
+    .describe("The UUID of the bill (if assigned)"),
+  date: isoDateSchema,
+  hours: positiveNumberSchema.describe("Number of hours worked"),
+  description: z.string().describe("Description of the work performed"),
+});
+
+export const updateTimeEntryInputSchema = newTimeEntryInputSchema
+  .partial()
+  .extend({
+    id: uuidSchema.describe("The UUID of the time entry to update"),
+  });
 
 /** Use as a custom column in other tables */
 export const jsonTimeEntry = customType<{

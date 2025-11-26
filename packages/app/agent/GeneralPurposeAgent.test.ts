@@ -290,6 +290,7 @@ describe("GeneralPurposeAgent sandbox functions", () => {
           suggestedChanges: {
             matterId: "${matter.id}",
             timekeeperId: "${timekeeper.id}",
+            billId: null,
             date: "2025-01-01",
             hours: 2.5,
             description: "Updated description"
