@@ -12,7 +12,7 @@
     "db:studio": "bunx drizzle-kit studio",
     "db:push": "bunx drizzle-kit push",
     "cli": "bun apps/cli/index.ts",
-    "api": "bun apps/api/src/index.ts",
+    "api": "bun apps/api/index.ts",
     "test": "bun test",
     "eval:dev": "evalite watch",
     "eval": "evalite",

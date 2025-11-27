@@ -16,3 +16,23 @@ export const workflowSchema = sqliteTable("workflow", {
 
 export type Workflow = typeof workflowSchema.$inferSelect;
 export type NewWorkflow = typeof workflowSchema.$inferInsert;
+
+/**
+ * Zod validation schemas for Workflow entity.
+ * Used for API input validation and sandbox function parameters.
+ */
+
+import { z } from "zod";
+import { uuidSchema } from "./utils/validation";
+
+export const newWorkflowInputSchema = z.object({
+  matterId: uuidSchema.describe("The UUID of the matter"),
+  name: z.string().describe("Name of the workflow"),
+  instructions: z.string().describe("Natural language workflow instructions"),
+});
+
+export const updateWorkflowInputSchema = newWorkflowInputSchema
+  .partial()
+  .extend({
+    id: uuidSchema.describe("The UUID of the workflow to update"),
+  });

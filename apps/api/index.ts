@@ -1,6 +1,13 @@
 import { Elysia } from "elysia";
 import { getContext, type Context } from "./context";
 import { fooRoutes } from "./endpoints/foo";
+import { matterRoutes } from "./endpoints/matters";
+import { timekeeperRoutes } from "./endpoints/timekeepers";
+import { matterBillRoutes } from "./endpoints/matters/bills";
+import { matterTimeEntryRoutes } from "./endpoints/matters/time-entries";
+import { matterAiSuggestionRoutes } from "./endpoints/matters/ai-suggestions";
+import { matterWorkflowRoutes } from "./endpoints/matters/workflows";
+import { matterTimekeeperRoleRoutes } from "./endpoints/matters/timekeeper-roles";
 import { env } from "./utils/env";
 import { Boom, isBoom } from "@hapi/boom";
 
@@ -18,7 +25,14 @@ export const getApp = (ctx: Context) =>
     })
     .get("/", () => ({ message: "AI Starter API" }))
     .get("/health", () => ({ status: "ok" }))
-    .use(fooRoutes(ctx));
+    .use(fooRoutes(ctx))
+    .use(matterRoutes(ctx))
+    .use(timekeeperRoutes(ctx))
+    .use(matterBillRoutes(ctx))
+    .use(matterTimeEntryRoutes(ctx))
+    .use(matterAiSuggestionRoutes(ctx))
+    .use(matterWorkflowRoutes(ctx))
+    .use(matterTimekeeperRoleRoutes(ctx));
 
 export type App = ReturnType<typeof getApp>;
 
