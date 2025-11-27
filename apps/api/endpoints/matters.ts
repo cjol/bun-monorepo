@@ -12,7 +12,20 @@ const matterIdParamsSchema = t.Object({
 });
 
 export const matterRoutes = ({ app }: Context) =>
-  new Elysia({ prefix: "/matters" })
+  new Elysia({ prefix: "/matters", tags: ["matter"] })
+    .get(
+      "/",
+      async ({ status }) => {
+        const result = await app.matter.listMatters();
+        return status(200, result);
+      },
+      {
+        detail: {
+          summary: "List Matters",
+          description: "Retrieve a list of all matters.",
+        },
+      }
+    )
     .get(
       "/:matterId",
       async ({ params, status }) => {
@@ -22,7 +35,13 @@ export const matterRoutes = ({ app }: Context) =>
         }
         return status(200, result);
       },
-      { params: matterIdParamsSchema }
+      {
+        params: matterIdParamsSchema,
+        detail: {
+          summary: "Get Matter",
+          description: "Retrieve a single matter by ID.",
+        },
+      }
     )
     .post(
       "/",
@@ -30,7 +49,13 @@ export const matterRoutes = ({ app }: Context) =>
         const result = await app.matter.createMatter(body);
         return status(201, result);
       },
-      { body: newMatterInputSchema }
+      {
+        body: newMatterInputSchema,
+        detail: {
+          summary: "Create Matter",
+          description: "Create a new matter.",
+        },
+      }
     )
     .patch(
       "/:matterId",
@@ -41,6 +66,10 @@ export const matterRoutes = ({ app }: Context) =>
       {
         params: matterIdParamsSchema,
         body: updateMatterInputSchema.omit({ id: true }),
+        detail: {
+          summary: "Update Matter",
+          description: "Update an existing matter.",
+        },
       }
     )
     .delete(
@@ -49,5 +78,11 @@ export const matterRoutes = ({ app }: Context) =>
         await app.matter.deleteMatter(params.matterId);
         return status(204);
       },
-      { params: matterIdParamsSchema }
+      {
+        params: matterIdParamsSchema,
+        detail: {
+          summary: "Delete Matter",
+          description: "Delete a matter.",
+        },
+      }
     );

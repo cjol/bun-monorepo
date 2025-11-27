@@ -24,9 +24,12 @@ const suggestionQuerySchema = t.Object({
 });
 
 export const matterAiSuggestionRoutes = ({ app }: Context) =>
-  new Elysia()
+  new Elysia({
+    prefix: "/matters/:matterId/suggestions",
+    tags: ["suggestion"],
+  })
     .get(
-      "/matters/:matterId/ai-suggestions/:suggestionId",
+      "/:suggestionId",
       async ({ params, status }) => {
         const suggestion = await app.aiSuggestion.listByMatter(params.matterId);
         const result = suggestion.find((s) => s.id === params.suggestionId);
@@ -37,10 +40,16 @@ export const matterAiSuggestionRoutes = ({ app }: Context) =>
         }
         return status(200, result);
       },
-      { params: matterSuggestionParamsSchema }
+      {
+        params: matterSuggestionParamsSchema,
+        detail: {
+          summary: "Get AI Suggestion",
+          description: "Retrieve a single AI suggestion by ID within a matter.",
+        },
+      }
     )
     .get(
-      "/matters/:matterId/ai-suggestions",
+      "/",
       async ({ params, query, status }) => {
         if (query.status) {
           const result = await app.aiSuggestion.listByStatus(
@@ -52,10 +61,18 @@ export const matterAiSuggestionRoutes = ({ app }: Context) =>
         const result = await app.aiSuggestion.listByMatter(params.matterId);
         return status(200, result);
       },
-      { params: matterIdParamsSchema, query: suggestionQuerySchema }
+      {
+        params: matterIdParamsSchema,
+        query: suggestionQuerySchema,
+        detail: {
+          summary: "List AI Suggestions",
+          description:
+            "Retrieve a list of all AI suggestions for a matter, optionally filtered by status.",
+        },
+      }
     )
     .post(
-      "/matters/:matterId/ai-suggestions",
+      "/",
       async ({ params, body, status }) => {
         // Verify the time entry belongs to the matter
         const timeEntry = await app.timeEntry.getTimeEntry(body.timeEntryId);
@@ -73,10 +90,18 @@ export const matterAiSuggestionRoutes = ({ app }: Context) =>
         });
         return status(201, result);
       },
-      { params: matterIdParamsSchema, body: newAiSuggestionInputSchema }
+      {
+        params: matterIdParamsSchema,
+        body: newAiSuggestionInputSchema,
+        detail: {
+          summary: "Create AI Suggestion",
+          description:
+            "Create a new AI suggestion for a time entry within a matter.",
+        },
+      }
     )
     .post(
-      "/matters/:matterId/ai-suggestions/:suggestionId/approve",
+      "/:suggestionId/approve",
       async ({ params, status }) => {
         const result = await app.aiSuggestion.approveSuggestion(
           params.suggestionId
@@ -90,10 +115,17 @@ export const matterAiSuggestionRoutes = ({ app }: Context) =>
         }
         return status(200, result);
       },
-      { params: matterSuggestionParamsSchema }
+      {
+        params: matterSuggestionParamsSchema,
+        detail: {
+          summary: "Approve AI Suggestion",
+          description:
+            "Approve an AI suggestion, applying its changes to the associated time entry.",
+        },
+      }
     )
     .post(
-      "/matters/:matterId/ai-suggestions/:suggestionId/reject",
+      "/:suggestionId/reject",
       async ({ params, status }) => {
         const result = await app.aiSuggestion.rejectSuggestion(
           params.suggestionId
@@ -107,5 +139,12 @@ export const matterAiSuggestionRoutes = ({ app }: Context) =>
         }
         return status(200, result);
       },
-      { params: matterSuggestionParamsSchema }
+      {
+        params: matterSuggestionParamsSchema,
+        detail: {
+          summary: "Reject AI Suggestion",
+          description:
+            "Reject an AI suggestion, marking it as rejected without applying changes.",
+        },
+      }
     );

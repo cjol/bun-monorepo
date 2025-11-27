@@ -21,9 +21,12 @@ const timekeeperRoleQuerySchema = t.Object({
 });
 
 export const matterTimekeeperRoleRoutes = ({ app }: Context) =>
-  new Elysia()
+  new Elysia({
+    prefix: "/matters/:matterId/timekeeper-roles",
+    tags: ["timekeeper-role"],
+  })
     .get(
-      "/matters/:matterId/timekeeper-roles/:roleId",
+      "/:roleId",
       async ({ params, status }) => {
         const result = await app.timekeeperRole.getTimekeeperRole(
           params.roleId
@@ -35,10 +38,17 @@ export const matterTimekeeperRoleRoutes = ({ app }: Context) =>
         }
         return status(200, result);
       },
-      { params: matterRoleParamsSchema }
+      {
+        params: matterRoleParamsSchema,
+        detail: {
+          summary: "Get Timekeeper Role",
+          description:
+            "Retrieve a single timekeeper role by ID within a matter.",
+        },
+      }
     )
     .get(
-      "/matters/:matterId/timekeeper-roles",
+      "/",
       async ({ params, query, status }) => {
         if (query.timekeeperId) {
           // Get all roles for a specific timekeeper, filtered by matter
@@ -53,10 +63,18 @@ export const matterTimekeeperRoleRoutes = ({ app }: Context) =>
         const result = await app.timekeeperRole.listByMatter(params.matterId);
         return status(200, result);
       },
-      { params: matterIdParamsSchema, query: timekeeperRoleQuerySchema }
+      {
+        params: matterIdParamsSchema,
+        query: timekeeperRoleQuerySchema,
+        detail: {
+          summary: "List Timekeeper Roles",
+          description:
+            "Retrieve a list of all timekeeper roles for a matter, optionally filtered by timekeeper.",
+        },
+      }
     )
     .post(
-      "/matters/:matterId/timekeeper-roles",
+      "/",
       async ({ params, body, status }) => {
         // Ensure the matterId in the body matches the URL
         const result = await app.timekeeperRole.createTimekeeperRole({
@@ -68,10 +86,14 @@ export const matterTimekeeperRoleRoutes = ({ app }: Context) =>
       {
         params: matterIdParamsSchema,
         body: newTimekeeperRoleInputSchema.omit({ matterId: true }),
+        detail: {
+          summary: "Create Timekeeper Role",
+          description: "Create a new timekeeper role for a matter.",
+        },
       }
     )
     .patch(
-      "/matters/:matterId/timekeeper-roles/:roleId",
+      "/:roleId",
       async ({ params, body, status }) => {
         // Verify the role belongs to the matter before updating
         const existing = await app.timekeeperRole.getTimekeeperRole(
@@ -94,5 +116,9 @@ export const matterTimekeeperRoleRoutes = ({ app }: Context) =>
           id: true,
           matterId: true,
         }),
+        detail: {
+          summary: "Update Timekeeper Role",
+          description: "Update an existing timekeeper role within a matter.",
+        },
       }
     );

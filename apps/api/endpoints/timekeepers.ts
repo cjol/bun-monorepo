@@ -16,7 +16,7 @@ const emailQuerySchema = t.Object({
 });
 
 export const timekeeperRoutes = ({ app }: Context) =>
-  new Elysia({ prefix: "/timekeepers" })
+  new Elysia({ prefix: "/timekeepers", tags: ["timekeeper"] })
     .get(
       "/",
       async ({ query, status }) => {
@@ -30,7 +30,14 @@ export const timekeeperRoutes = ({ app }: Context) =>
         const result = await app.timekeeper.listAllTimekeepers();
         return status(200, result);
       },
-      { query: emailQuerySchema }
+      {
+        query: emailQuerySchema,
+        detail: {
+          summary: "List Timekeepers",
+          description:
+            "Retrieve a list of all timekeepers or search for timekeepers by email.",
+        },
+      }
     )
     .get(
       "/:timekeeperId",
@@ -41,7 +48,13 @@ export const timekeeperRoutes = ({ app }: Context) =>
         }
         return status(200, result);
       },
-      { params: timekeeperIdParamsSchema }
+      {
+        params: timekeeperIdParamsSchema,
+        detail: {
+          summary: "Get Timekeeper",
+          description: "Retrieve a single timekeeper by ID.",
+        },
+      }
     )
     .post(
       "/",
@@ -49,7 +62,13 @@ export const timekeeperRoutes = ({ app }: Context) =>
         const result = await app.timekeeper.createTimekeeper(body);
         return status(201, result);
       },
-      { body: newTimekeeperInputSchema }
+      {
+        body: newTimekeeperInputSchema,
+        detail: {
+          summary: "Create Timekeeper",
+          description: "Create a new timekeeper.",
+        },
+      }
     )
     .patch(
       "/:timekeeperId",
@@ -63,5 +82,9 @@ export const timekeeperRoutes = ({ app }: Context) =>
       {
         params: timekeeperIdParamsSchema,
         body: updateTimekeeperInputSchema.omit({ id: true }),
+        detail: {
+          summary: "Update Timekeeper",
+          description: "Update an existing timekeeper.",
+        },
       }
     );

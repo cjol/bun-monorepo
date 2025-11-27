@@ -17,9 +17,9 @@ const matterIdParamsSchema = t.Object({
 });
 
 export const matterWorkflowRoutes = ({ app }: Context) =>
-  new Elysia()
+  new Elysia({ prefix: "/matters/:matterId/workflows", tags: ["workflow"] })
     .get(
-      "/matters/:matterId/workflows/:workflowId",
+      "/:workflowId",
       async ({ params, status }) => {
         const result = await app.workflow.getWorkflow(params.workflowId);
         if (!result || result.matterId !== params.matterId) {
@@ -29,18 +29,30 @@ export const matterWorkflowRoutes = ({ app }: Context) =>
         }
         return status(200, result);
       },
-      { params: matterWorkflowParamsSchema }
+      {
+        params: matterWorkflowParamsSchema,
+        detail: {
+          summary: "Get Workflow",
+          description: "Retrieve a single workflow by ID within a matter.",
+        },
+      }
     )
     .get(
-      "/matters/:matterId/workflows",
+      "/",
       async ({ params, status }) => {
         const result = await app.workflow.listByMatter(params.matterId);
         return status(200, result);
       },
-      { params: matterIdParamsSchema }
+      {
+        params: matterIdParamsSchema,
+        detail: {
+          summary: "List Workflows",
+          description: "Retrieve a list of all workflows for a matter.",
+        },
+      }
     )
     .post(
-      "/matters/:matterId/workflows",
+      "/",
       async ({ params, body, status }) => {
         // Ensure the matterId in the body matches the URL
         const result = await app.workflow.createWorkflow({
@@ -52,10 +64,14 @@ export const matterWorkflowRoutes = ({ app }: Context) =>
       {
         params: matterIdParamsSchema,
         body: newWorkflowInputSchema.omit({ matterId: true }),
+        detail: {
+          summary: "Create Workflow",
+          description: "Create a new workflow for a matter.",
+        },
       }
     )
     .patch(
-      "/matters/:matterId/workflows/:workflowId",
+      "/:workflowId",
       async ({ params, body, status }) => {
         // Verify the workflow belongs to the matter before updating
         const existing = await app.workflow.getWorkflow(params.workflowId);
@@ -73,10 +89,14 @@ export const matterWorkflowRoutes = ({ app }: Context) =>
       {
         params: matterWorkflowParamsSchema,
         body: updateWorkflowInputSchema.omit({ id: true, matterId: true }),
+        detail: {
+          summary: "Update Workflow",
+          description: "Update an existing workflow within a matter.",
+        },
       }
     )
     .delete(
-      "/matters/:matterId/workflows/:workflowId",
+      "/:workflowId",
       async ({ params, status }) => {
         // Verify the workflow belongs to the matter before deleting
         const existing = await app.workflow.getWorkflow(params.workflowId);
@@ -88,5 +108,11 @@ export const matterWorkflowRoutes = ({ app }: Context) =>
         await app.workflow.deleteWorkflow(params.workflowId);
         return status(204);
       },
-      { params: matterWorkflowParamsSchema }
+      {
+        params: matterWorkflowParamsSchema,
+        detail: {
+          summary: "Delete Workflow",
+          description: "Delete a workflow within a matter.",
+        },
+      }
     );

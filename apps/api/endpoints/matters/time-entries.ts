@@ -21,9 +21,12 @@ const timeEntryQuerySchema = t.Object({
 });
 
 export const matterTimeEntryRoutes = ({ app }: Context) =>
-  new Elysia()
+  new Elysia({
+    prefix: "/matters/:matterId/time-entries",
+    tags: ["time-entry"],
+  })
     .get(
-      "/matters/:matterId/time-entries/:timeEntryId",
+      "/:timeEntryId",
       async ({ params, status }) => {
         const result = await app.timeEntry.getTimeEntry(params.timeEntryId);
         if (!result || result.matterId !== params.matterId) {
@@ -33,10 +36,16 @@ export const matterTimeEntryRoutes = ({ app }: Context) =>
         }
         return status(200, result);
       },
-      { params: matterTimeEntryParamsSchema }
+      {
+        params: matterTimeEntryParamsSchema,
+        detail: {
+          summary: "Get Time Entry",
+          description: "Retrieve a single time entry by ID within a matter.",
+        },
+      }
     )
     .get(
-      "/matters/:matterId/time-entries",
+      "/",
       async ({ params, query, status }) => {
         if (query.billId) {
           const result = await app.timeEntry.listByBill(
@@ -48,10 +57,18 @@ export const matterTimeEntryRoutes = ({ app }: Context) =>
         const result = await app.timeEntry.listByMatter(params.matterId);
         return status(200, result);
       },
-      { params: matterIdParamsSchema, query: timeEntryQuerySchema }
+      {
+        params: matterIdParamsSchema,
+        query: timeEntryQuerySchema,
+        detail: {
+          summary: "List Time Entries",
+          description:
+            "Retrieve a list of all time entries for a matter, optionally filtered by bill.",
+        },
+      }
     )
     .post(
-      "/matters/:matterId/time-entries",
+      "/",
       async ({ params, body, status }) => {
         // Ensure the matterId in the body matches the URL
         const result = await app.timeEntry.createTimeEntry({
@@ -64,10 +81,14 @@ export const matterTimeEntryRoutes = ({ app }: Context) =>
       {
         params: matterIdParamsSchema,
         body: newTimeEntryInputSchema.omit({ matterId: true }),
+        detail: {
+          summary: "Create Time Entry",
+          description: "Create a new time entry for a matter.",
+        },
       }
     )
     .patch(
-      "/matters/:matterId/time-entries/:timeEntryId",
+      "/:timeEntryId",
       async ({ params, body, status }) => {
         // Verify the time entry belongs to the matter before updating
         const existing = await app.timeEntry.getTimeEntry(params.timeEntryId);
@@ -86,5 +107,9 @@ export const matterTimeEntryRoutes = ({ app }: Context) =>
       {
         params: matterTimeEntryParamsSchema,
         body: updateTimeEntryInputSchema.omit({ id: true, matterId: true }),
+        detail: {
+          summary: "Update Time Entry",
+          description: "Update an existing time entry within a matter.",
+        },
       }
     );

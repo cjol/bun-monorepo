@@ -11,6 +11,7 @@ export const MatterService = (deps: Deps) => {
 
   return {
     getMatter: repos.matter.get,
+    listMatters: repos.matter.listAll,
     createMatter: repos.matter.create,
     updateMatter: repos.matter.update,
     deleteMatter: repos.matter.delete,
