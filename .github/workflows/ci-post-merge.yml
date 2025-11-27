@@ -29,6 +29,34 @@ jobs:
       - name: Lint
         run: bun run lint
 
+  eval:
+    name: Eval
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun environment
+        uses: ./.github/actions/setup-bun
+
+      - name: Restore evalite database
+        uses: actions/cache/restore@v4
+        with:
+          path: evalite.db
+          key: evalite-results-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            evalite-results-${{ runner.os }}-
+
+      - name: Run evals
+        run: bun run eval --no-cache
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Save evalite database
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: evalite.db
+          key: evalite-results-${{ runner.os }}-${{ github.sha }}
+
   test:
     name: Test
     runs-on: ubuntu-latest

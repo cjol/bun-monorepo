@@ -1,6 +1,12 @@
 import { sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { z } from "zod";
 import { timestamps } from "./utils/timestamps";
-import { jsonNewTimeEntry, timeEntrySchema } from "./timeEntry";
+import { uuidSchema } from "./utils/validation";
+import {
+  jsonNewTimeEntry,
+  timeEntrySchema,
+  newTimeEntryInputSchema,
+} from "./timeEntry";
 
 export const aiSuggestionSchema = sqliteTable("ai_suggestion", {
   id: text("id")
@@ -20,3 +26,17 @@ export const aiSuggestionSchema = sqliteTable("ai_suggestion", {
 
 export type AiSuggestion = typeof aiSuggestionSchema.$inferSelect;
 export type NewAiSuggestion = typeof aiSuggestionSchema.$inferInsert;
+
+/**
+ * Zod validation schemas for AiSuggestion entity.
+ * Used for API input validation and sandbox function parameters.
+ */
+
+export const newAiSuggestionInputSchema = z.object({
+  timeEntryId: uuidSchema.describe(
+    "The UUID of the time entry to suggest changes for"
+  ),
+  suggestedChanges: newTimeEntryInputSchema.describe(
+    "Object containing the suggested time entry changes"
+  ),
+});

@@ -1,5 +1,7 @@
 import { sqliteTable, text, real } from "drizzle-orm/sqlite-core";
+import { z } from "zod";
 import { timestamps } from "./utils/timestamps";
+import { uuidSchema, positiveNumberSchema } from "./utils/validation";
 import { timekeeperSchema } from "./timekeeper";
 import { matterSchema } from "./matter";
 
@@ -20,3 +22,21 @@ export const timekeeperRoleSchema = sqliteTable("timekeeper_role", {
 
 export type TimekeeperRole = typeof timekeeperRoleSchema.$inferSelect;
 export type NewTimekeeperRole = typeof timekeeperRoleSchema.$inferInsert;
+
+/**
+ * Zod validation schemas for TimekeeperRole entity.
+ * Used for API input validation and sandbox function parameters.
+ */
+
+export const newTimekeeperRoleInputSchema = z.object({
+  timekeeperId: uuidSchema.describe("The UUID of the timekeeper"),
+  matterId: uuidSchema.describe("The UUID of the matter"),
+  role: z.string().describe("Role title (e.g. Associate, Partner)"),
+  billableRate: positiveNumberSchema.describe("Hourly billable rate"),
+});
+
+export const updateTimekeeperRoleInputSchema = newTimekeeperRoleInputSchema
+  .partial()
+  .extend({
+    id: uuidSchema.describe("The UUID of the timekeeper role to update"),
+  });
