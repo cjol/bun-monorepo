@@ -4,14 +4,14 @@ import { seedNow } from "./foo";
 
 export const mockRoles = [
   {
-    id: "role-associate",
+    id: "550e8400-e29b-41d4-a716-446655440001", // Associate role UUID
     name: "Associate",
     description: "Associate lawyer",
     createdAt: seedNow,
     updatedAt: seedNow,
   },
   {
-    id: "role-partner",
+    id: "550e8400-e29b-41d4-a716-446655440002", // Partner role UUID
     name: "Partner",
     description: "Partner lawyer",
     createdAt: seedNow,
@@ -35,7 +35,7 @@ export async function createTestTimekeeper(
     .insert(timekeeperSchema)
     .values({
       matterId,
-      roleId: overrides?.roleId ?? "role-associate",
+      roleId: overrides?.roleId ?? "550e8400-e29b-41d4-a716-446655440001",
       id: overrides?.id,
       name: overrides?.name ?? "Test Timekeeper",
       email: overrides?.email ?? "test@example.com",
