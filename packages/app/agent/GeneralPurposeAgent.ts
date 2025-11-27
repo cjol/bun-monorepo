@@ -1,5 +1,9 @@
-import { Experimental_Agent as Agent, stepCountIs } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
+import {
+  Experimental_Agent as Agent,
+  stepCountIs,
+  type LanguageModel,
+} from "ai";
+
 import type {
   MatterService as MatterServiceType,
   BillService as BillServiceType,
@@ -44,6 +48,8 @@ export interface CreateGeneralPurposeAgentOptions {
    * These provide context and guidelines for the agent's behavior.
    */
   workflowInstructions?: string;
+
+  model: LanguageModel;
 }
 
 /**
@@ -139,7 +145,7 @@ ${workflowInstructions ? `\n## Workflow Instructions\n\n${workflowInstructions}\
 ${generateFunctionDocs(sandboxFunctions)}`;
 
   return new Agent({
-    model: anthropic("claude-haiku-4-5"),
+    model: options.model,
     system: systemPrompt,
     tools: {
       runCode: createSandboxTool({

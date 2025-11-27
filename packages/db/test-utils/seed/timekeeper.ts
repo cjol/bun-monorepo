@@ -29,14 +29,14 @@ export const doSeedRoles = (db: DB) => {
 export async function createTestTimekeeper(
   db: DB,
   matterId: string,
-  roleId = "role-associate",
-  overrides?: { name?: string; email?: string }
+  overrides?: { roleId?: string; name?: string; email?: string; id?: string }
 ) {
   const [timekeeper] = await db
     .insert(timekeeperSchema)
     .values({
       matterId,
-      roleId,
+      roleId: overrides?.roleId ?? "role-associate",
+      id: overrides?.id,
       name: overrides?.name ?? "Test Timekeeper",
       email: overrides?.email ?? "test@example.com",
     })

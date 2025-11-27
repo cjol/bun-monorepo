@@ -27,6 +27,25 @@ jobs:
       - name: Lint
         run: bun run lint
 
+  eval:
+    name: Eval
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun environment
+        uses: ./.github/actions/setup-bun
+
+      - name: Restore evalite cache
+        uses: actions/cache@v4
+        with:
+          path: evalite.db
+          key: evalite-cache-${{ runner.os }}-${{ github.ref }}
+          restore-keys: |
+            evalite-cache-${{ runner.os }}-
+
+      - name: Run evals
+        run: bun run eval
+
   test:
     name: Test
     runs-on: ubuntu-latest

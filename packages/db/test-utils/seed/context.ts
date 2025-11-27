@@ -83,12 +83,10 @@ export async function createTimeTrackingTestContext(
     matterOverrides: options?.matterOverrides,
   });
 
-  const timekeeper = await createTestTimekeeper(
-    db,
-    matter.id,
-    "role-associate",
-    options?.timekeeperOverrides
-  );
+  const timekeeper = await createTestTimekeeper(db, matter.id, {
+    roleId: "role-associate",
+    ...options?.timekeeperOverrides,
+  });
   if (!timekeeper) throw new Error("Failed to create timekeeper");
 
   let bill: Bill | undefined;
