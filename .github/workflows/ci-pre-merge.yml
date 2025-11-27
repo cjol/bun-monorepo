@@ -45,6 +45,8 @@ jobs:
 
       - name: Run evals
         run: bun run eval
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
   test:
     name: Test
