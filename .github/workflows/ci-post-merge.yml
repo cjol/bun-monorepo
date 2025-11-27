@@ -41,7 +41,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: evalite.db
-          key: evalite-results-${{ runner.os }}-main
+          key: evalite-results-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            evalite-results-${{ runner.os }}-
 
       - name: Run evals
         run: bun run eval --no-cache
@@ -53,7 +55,7 @@ jobs:
         if: always()
         with:
           path: evalite.db
-          key: evalite-results-${{ runner.os }}-main
+          key: evalite-results-${{ runner.os }}-${{ github.sha }}
 
   test:
     name: Test
