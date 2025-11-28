@@ -23,6 +23,7 @@ import { notifications } from "@mantine/notifications";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconPlus, IconEye } from "@tabler/icons-react";
 import { api } from "../../lib/api";
+import { useMatterId } from "../../lib/useMatterId";
 
 interface BillFormValues {
   matterId: string;
@@ -40,18 +41,18 @@ const statusColors = {
 
 export default function BillsPage() {
   const [opened, setOpened] = useState(false);
-  const [selectedMatterId, setSelectedMatterId] = useState<string | null>(null);
+  const { matterId } = useMatterId();
   const queryClient = useQueryClient();
 
   const form = useForm<BillFormValues>({
     initialValues: {
-      matterId: "",
+      matterId: matterId || "",
       periodStart: new Date(),
       periodEnd: new Date(),
       status: "draft",
     },
     validate: {
-      matterId: (value) => (!value ? "Matter is required" : null),
+      matterId: (value) => (!matterId && !value ? "Matter is required" : null),
       periodStart: (value) => (!value ? "Start date is required" : null),
       periodEnd: (value) => (!value ? "End date is required" : null),
     },
@@ -67,22 +68,21 @@ export default function BillsPage() {
   });
 
   const { data: bills, isLoading } = useQuery({
-    queryKey: ["bills", selectedMatterId],
+    queryKey: ["bills", matterId],
     queryFn: async () => {
-      if (!selectedMatterId) return [];
-      const response = await api
-        .matters({ matterId: selectedMatterId })
-        .bills.get();
+      if (!matterId) return [];
+      const response = await api.matters({ matterId }).bills.get();
       if (response.error) throw new Error("Failed to fetch bills");
       return response.data;
     },
-    enabled: !!selectedMatterId,
+    enabled: !!matterId,
   });
 
   const createBillMutation = useMutation({
     mutationFn: async (values: BillFormValues) => {
+      const billMatterId = matterId || values.matterId;
       const response = await api
-        .matters({ matterId: values.matterId })
+        .matters({ matterId: billMatterId })
         .bills.post({
           periodStart: values.periodStart.toISOString(),
           periodEnd: values.periodEnd.toISOString(),
@@ -132,26 +132,14 @@ export default function BillsPage() {
           </Button>
         </Group>
 
-        <Paper shadow="sm" p="md" radius="md" withBorder mb="lg">
-          <Select
-            label="Filter by Matter"
-            placeholder="Select a matter"
-            data={matterOptions}
-            value={selectedMatterId}
-            onChange={setSelectedMatterId}
-            searchable
-            clearable
-          />
-        </Paper>
-
         <Paper shadow="sm" p="md" radius="md" withBorder>
           {isLoading ? (
             <Group justify="center" p="xl">
               <Loader />
             </Group>
-          ) : !selectedMatterId ? (
+          ) : !matterId ? (
             <Text c="dimmed" ta="center" py="xl">
-              Select a matter to view bills.
+              Select a matter from the switcher above to view bills.
             </Text>
           ) : !bills || bills.length === 0 ? (
             <Text c="dimmed" ta="center" py="xl">
@@ -214,14 +202,16 @@ export default function BillsPage() {
           )}
         >
           <Stack>
-            <Select
-              label="Matter"
-              placeholder="Select matter"
-              data={matterOptions}
-              required
-              searchable
-              {...form.getInputProps("matterId")}
-            />
+            {!matterId && (
+              <Select
+                label="Matter"
+                placeholder="Select matter"
+                data={matterOptions}
+                required
+                searchable
+                {...form.getInputProps("matterId")}
+              />
+            )}
             <DatePickerInput
               label="Period Start"
               placeholder="Select date"

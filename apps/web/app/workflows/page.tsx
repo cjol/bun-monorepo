@@ -24,6 +24,7 @@ import { modals } from "@mantine/modals";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconPlus, IconEdit, IconTrash } from "@tabler/icons-react";
 import { api } from "../../lib/api";
+import { useMatterId } from "../../lib/useMatterId";
 
 interface WorkflowFormValues {
   matterId: string;
@@ -34,17 +35,17 @@ interface WorkflowFormValues {
 export default function WorkflowsPage() {
   const [editingWorkflow, setEditingWorkflow] = useState<string | null>(null);
   const [opened, setOpened] = useState(false);
-  const [selectedMatterId, setSelectedMatterId] = useState<string | null>(null);
+  const { matterId } = useMatterId();
   const queryClient = useQueryClient();
 
   const form = useForm<WorkflowFormValues>({
     initialValues: {
-      matterId: "",
+      matterId: matterId || "",
       name: "",
       instructions: "",
     },
     validate: {
-      matterId: (value) => (!value ? "Matter is required" : null),
+      matterId: (value) => (!matterId && !value ? "Matter is required" : null),
       name: (value) => (!value ? "Name is required" : null),
       instructions: (value) => (!value ? "Instructions are required" : null),
     },
@@ -60,22 +61,21 @@ export default function WorkflowsPage() {
   });
 
   const { data: workflows, isLoading } = useQuery({
-    queryKey: ["workflows", selectedMatterId],
+    queryKey: ["workflows", matterId],
     queryFn: async () => {
-      if (!selectedMatterId) return [];
-      const response = await api
-        .matters({ matterId: selectedMatterId })
-        .workflows.get();
+      if (!matterId) return [];
+      const response = await api.matters({ matterId }).workflows.get();
       if (response.error) throw new Error("Failed to fetch workflows");
       return response.data;
     },
-    enabled: !!selectedMatterId,
+    enabled: !!matterId,
   });
 
   const createWorkflowMutation = useMutation({
     mutationFn: async (values: WorkflowFormValues) => {
+      const workflowMatterId = matterId || values.matterId;
       const response = await api
-        .matters({ matterId: values.matterId })
+        .matters({ matterId: workflowMatterId })
         .workflows.post({
           name: values.name,
           instructions: values.instructions,
@@ -201,9 +201,9 @@ export default function WorkflowsPage() {
   };
 
   const handleSubmit = (values: WorkflowFormValues) => {
-    if (editingWorkflow && selectedMatterId) {
+    if (editingWorkflow && matterId) {
       updateWorkflowMutation.mutate({
-        matterId: selectedMatterId,
+        matterId,
         id: editingWorkflow,
         values,
       });
@@ -229,26 +229,14 @@ export default function WorkflowsPage() {
           </Button>
         </Group>
 
-        <Paper shadow="sm" p="md" radius="md" withBorder mb="lg">
-          <Select
-            label="Filter by Matter"
-            placeholder="Select a matter"
-            data={matterOptions}
-            value={selectedMatterId}
-            onChange={setSelectedMatterId}
-            searchable
-            clearable
-          />
-        </Paper>
-
         <Paper shadow="sm" p="md" radius="md" withBorder>
           {isLoading ? (
             <Group justify="center" p="xl">
               <Loader />
             </Group>
-          ) : !selectedMatterId ? (
+          ) : !matterId ? (
             <Text c="dimmed" ta="center" py="xl">
-              Select a matter to view workflows.
+              Select a matter from the switcher above to view workflows.
             </Text>
           ) : !workflows || workflows.length === 0 ? (
             <Text c="dimmed" ta="center" py="xl">
@@ -321,18 +309,16 @@ export default function WorkflowsPage() {
       >
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack>
-            <Select
-              label="Matter"
-              placeholder="Select matter"
-              data={matterOptions}
-              required
-              searchable
-              {...form.getInputProps("matterId")}
-              onChange={(value) => {
-                form.setFieldValue("matterId", value || "");
-                setSelectedMatterId(value);
-              }}
-            />
+            {!matterId && (
+              <Select
+                label="Matter"
+                placeholder="Select matter"
+                data={matterOptions}
+                required
+                searchable
+                {...form.getInputProps("matterId")}
+              />
+            )}
             <TextInput
               label="Name"
               placeholder="Time Entry Review Process"

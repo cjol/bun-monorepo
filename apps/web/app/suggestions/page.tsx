@@ -19,6 +19,7 @@ import { notifications } from "@mantine/notifications";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { api } from "../../lib/api";
+import { useMatterId } from "../../lib/useMatterId";
 
 const statusColors = {
   pending: "yellow",
@@ -27,34 +28,25 @@ const statusColors = {
 };
 
 export default function SuggestionsPage() {
-  const [selectedMatterId, setSelectedMatterId] = useState<string | null>(null);
+  const { matterId } = useMatterId();
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  const { data: matters } = useQuery({
-    queryKey: ["matters"],
-    queryFn: async () => {
-      const response = await api.matters.get();
-      if (response.error) throw new Error("Failed to fetch matters");
-      return response.data;
-    },
-  });
-
   const { data: suggestions, isLoading } = useQuery({
-    queryKey: ["suggestions", selectedMatterId, statusFilter],
+    queryKey: ["suggestions", matterId, statusFilter],
     queryFn: async () => {
-      if (!selectedMatterId) return [];
+      if (!matterId) return [];
       const response = statusFilter
-        ? await api.matters({ matterId: selectedMatterId }).suggestions.get({
+        ? await api.matters({ matterId }).suggestions.get({
             query: {
               status: statusFilter as "pending" | "approved" | "rejected",
             },
           })
-        : await api.matters({ matterId: selectedMatterId }).suggestions.get();
+        : await api.matters({ matterId }).suggestions.get();
       if (response.error) throw new Error("Failed to fetch suggestions");
       return response.data;
     },
-    enabled: !!selectedMatterId,
+    enabled: !!matterId,
   });
 
   const approveSuggestionMutation = useMutation({
@@ -110,12 +102,6 @@ export default function SuggestionsPage() {
     },
   });
 
-  const matterOptions =
-    matters?.map((matter) => ({
-      value: matter.id,
-      label: `${matter.clientName} - ${matter.matterName}`,
-    })) || [];
-
   return (
     <AppShell>
       <Container size="xl">
@@ -124,29 +110,18 @@ export default function SuggestionsPage() {
         </Title>
 
         <Paper shadow="sm" p="md" radius="md" withBorder mb="lg">
-          <Group grow>
-            <Select
-              label="Filter by Matter"
-              placeholder="Select a matter"
-              data={matterOptions}
-              value={selectedMatterId}
-              onChange={setSelectedMatterId}
-              searchable
-              clearable
-            />
-            <Select
-              label="Filter by Status"
-              placeholder="All statuses"
-              data={[
-                { value: "pending", label: "Pending" },
-                { value: "approved", label: "Approved" },
-                { value: "rejected", label: "Rejected" },
-              ]}
-              value={statusFilter}
-              onChange={setStatusFilter}
-              clearable
-            />
-          </Group>
+          <Select
+            label="Filter by Status"
+            placeholder="All statuses"
+            data={[
+              { value: "pending", label: "Pending" },
+              { value: "approved", label: "Approved" },
+              { value: "rejected", label: "Rejected" },
+            ]}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            clearable
+          />
         </Paper>
 
         <Paper shadow="sm" p="md" radius="md" withBorder>
@@ -154,9 +129,9 @@ export default function SuggestionsPage() {
             <Group justify="center" p="xl">
               <Loader />
             </Group>
-          ) : !selectedMatterId ? (
+          ) : !matterId ? (
             <Text c="dimmed" ta="center" py="xl">
-              Select a matter to view AI suggestions.
+              Select a matter from the switcher above to view AI suggestions.
             </Text>
           ) : !suggestions || suggestions.length === 0 ? (
             <Text c="dimmed" ta="center" py="xl">
@@ -189,7 +164,7 @@ export default function SuggestionsPage() {
                     </Text>
                   </Card>
 
-                  {suggestion.status === "pending" && selectedMatterId && (
+                  {suggestion.status === "pending" && matterId && (
                     <Group gap="xs">
                       <Button
                         size="xs"
@@ -197,7 +172,7 @@ export default function SuggestionsPage() {
                         leftSection={<IconCheck size={14} />}
                         onClick={() =>
                           approveSuggestionMutation.mutate({
-                            matterId: selectedMatterId,
+                            matterId: matterId,
                             id: suggestion.id,
                           })
                         }
@@ -212,7 +187,7 @@ export default function SuggestionsPage() {
                         leftSection={<IconX size={14} />}
                         onClick={() =>
                           rejectSuggestionMutation.mutate({
-                            matterId: selectedMatterId,
+                            matterId: matterId,
                             id: suggestion.id,
                           })
                         }

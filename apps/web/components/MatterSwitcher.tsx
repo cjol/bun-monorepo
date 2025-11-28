@@ -15,6 +15,7 @@ import { notifications } from "@mantine/notifications";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconPlus } from "@tabler/icons-react";
 import { api } from "../lib/api";
+import { useMatterId } from "../lib/useMatterId";
 
 interface NewMatterFormValues {
   clientName: string;
@@ -24,7 +25,7 @@ interface NewMatterFormValues {
 
 export function MatterSwitcher() {
   const [opened, setOpened] = useState(false);
-  const [selectedMatterId, setSelectedMatterId] = useState<string | null>(null);
+  const { matterId, setMatterId } = useMatterId();
   const queryClient = useQueryClient();
 
   const form = useForm<NewMatterFormValues>({
@@ -61,7 +62,7 @@ export function MatterSwitcher() {
         message: "Matter created successfully",
         color: "green",
       });
-      setSelectedMatterId(data.id);
+      setMatterId(data.id);
       setOpened(false);
       form.reset();
     },
@@ -86,8 +87,8 @@ export function MatterSwitcher() {
         <Select
           placeholder="Select a matter"
           data={matterOptions}
-          value={selectedMatterId}
-          onChange={setSelectedMatterId}
+          value={matterId}
+          onChange={setMatterId}
           searchable
           clearable
           disabled={isLoading}

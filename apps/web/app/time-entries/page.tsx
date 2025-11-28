@@ -24,6 +24,7 @@ import { notifications } from "@mantine/notifications";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconPlus, IconEdit, IconTrash } from "@tabler/icons-react";
 import { api } from "../../lib/api";
+import { useMatterId } from "../../lib/useMatterId";
 
 interface TimeEntryFormValues {
   matterId: string;
@@ -37,12 +38,12 @@ interface TimeEntryFormValues {
 export default function TimeEntriesPage() {
   const [editingEntry, setEditingEntry] = useState<string | null>(null);
   const [opened, setOpened] = useState(false);
-  const [selectedMatterId, setSelectedMatterId] = useState<string | null>(null);
+  const { matterId } = useMatterId();
   const queryClient = useQueryClient();
 
   const form = useForm<TimeEntryFormValues>({
     initialValues: {
-      matterId: "",
+      matterId: matterId || "",
       timekeeperId: "",
       billId: "",
       date: new Date(),
@@ -50,7 +51,7 @@ export default function TimeEntriesPage() {
       description: "",
     },
     validate: {
-      matterId: (value) => (!value ? "Matter is required" : null),
+      matterId: (value) => (!matterId && !value ? "Matter is required" : null),
       timekeeperId: (value) => (!value ? "Timekeeper is required" : null),
       hours: (value) => (value <= 0 ? "Hours must be greater than 0" : null),
       description: (value) => (!value ? "Description is required" : null),
@@ -76,33 +77,32 @@ export default function TimeEntriesPage() {
   });
 
   const { data: bills } = useQuery({
-    queryKey: ["bills", selectedMatterId],
+    queryKey: ["bills", matterId],
     queryFn: async () => {
-      if (!selectedMatterId) return [];
-      const response = await api
-        .matters({ matterId: selectedMatterId })
-        .bills.get();
+      if (!matterId) return [];
+      const response = await api.matters({ matterId }).bills.get();
       if (response.error) return [];
       return response.data;
     },
-    enabled: !!selectedMatterId,
+    enabled: !!matterId,
   });
 
   const { data: timeEntries, isLoading } = useQuery({
-    queryKey: ["time-entries", selectedMatterId],
+    queryKey: ["time-entries", matterId],
     queryFn: async () => {
-      if (!selectedMatterId) return [];
-      const matterApi = api.matters({ matterId: selectedMatterId });
+      if (!matterId) return [];
+      const matterApi = api.matters({ matterId });
       const response = await matterApi["time-entries"].get();
       if (response.error) throw new Error("Failed to fetch time entries");
       return response.data;
     },
-    enabled: !!selectedMatterId,
+    enabled: !!matterId,
   });
 
   const createTimeEntryMutation = useMutation({
     mutationFn: async (values: TimeEntryFormValues) => {
-      const matterApi = api.matters({ matterId: values.matterId });
+      const entryMatterId = matterId || values.matterId;
+      const matterApi = api.matters({ matterId: entryMatterId });
       const response = await matterApi["time-entries"].post({
         timekeeperId: values.timekeeperId,
         billId: values.billId || undefined,
@@ -192,9 +192,9 @@ export default function TimeEntriesPage() {
     })) || [];
 
   const handleSubmit = (values: TimeEntryFormValues) => {
-    if (editingEntry && selectedMatterId) {
+    if (editingEntry && matterId) {
       updateTimeEntryMutation.mutate({
-        matterId: selectedMatterId,
+        matterId,
         id: editingEntry,
         values,
       });
@@ -220,26 +220,14 @@ export default function TimeEntriesPage() {
           </Button>
         </Group>
 
-        <Paper shadow="sm" p="md" radius="md" withBorder mb="lg">
-          <Select
-            label="Filter by Matter"
-            placeholder="Select a matter"
-            data={matterOptions}
-            value={selectedMatterId}
-            onChange={setSelectedMatterId}
-            searchable
-            clearable
-          />
-        </Paper>
-
         <Paper shadow="sm" p="md" radius="md" withBorder>
           {isLoading ? (
             <Group justify="center" p="xl">
               <Loader />
             </Group>
-          ) : !selectedMatterId ? (
+          ) : !matterId ? (
             <Text c="dimmed" ta="center" py="xl">
-              Select a matter to view time entries.
+              Select a matter from the switcher above to view time entries.
             </Text>
           ) : !timeEntries || timeEntries.length === 0 ? (
             <Text c="dimmed" ta="center" py="xl">
@@ -296,18 +284,16 @@ export default function TimeEntriesPage() {
       >
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack>
-            <Select
-              label="Matter"
-              placeholder="Select matter"
-              data={matterOptions}
-              required
-              searchable
-              {...form.getInputProps("matterId")}
-              onChange={(value) => {
-                form.setFieldValue("matterId", value || "");
-                setSelectedMatterId(value);
-              }}
-            />
+            {!matterId && (
+              <Select
+                label="Matter"
+                placeholder="Select matter"
+                data={matterOptions}
+                required
+                searchable
+                {...form.getInputProps("matterId")}
+              />
+            )}
             <Select
               label="Timekeeper"
               placeholder="Select timekeeper"
