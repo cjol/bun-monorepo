@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AppShell } from "../../components/AppShell";
+import { useParams } from "next/navigation";
 import {
   Title,
   Container,
@@ -16,18 +16,16 @@ import {
   Stack,
   Loader,
   Paper,
-  Select,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { modals } from "@mantine/modals";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconPlus, IconEdit, IconTrash } from "@tabler/icons-react";
-import { api } from "../../lib/api";
-import { useMatterId } from "../../lib/useMatterId";
+import { api } from "../../../../lib/api";
+import type { Workflow } from "@ai-starter/core";
 
 interface WorkflowFormValues {
-  matterId: string;
   name: string;
   instructions: string;
 }
@@ -35,51 +33,36 @@ interface WorkflowFormValues {
 export default function WorkflowsPage() {
   const [editingWorkflow, setEditingWorkflow] = useState<string | null>(null);
   const [opened, setOpened] = useState(false);
-  const { matterId } = useMatterId();
+  const params = useParams<{ matterId: string }>();
+  const matterId = params.matterId;
   const queryClient = useQueryClient();
 
   const form = useForm<WorkflowFormValues>({
     initialValues: {
-      matterId: matterId || "",
       name: "",
       instructions: "",
     },
     validate: {
-      matterId: (value) => (!matterId && !value ? "Matter is required" : null),
       name: (value) => (!value ? "Name is required" : null),
       instructions: (value) => (!value ? "Instructions are required" : null),
-    },
-  });
-
-  const { data: matters } = useQuery({
-    queryKey: ["matters"],
-    queryFn: async () => {
-      const response = await api.matters.get();
-      if (response.error) throw new Error("Failed to fetch matters");
-      return response.data;
     },
   });
 
   const { data: workflows, isLoading } = useQuery({
     queryKey: ["workflows", matterId],
     queryFn: async () => {
-      if (!matterId) return [];
       const response = await api.matters({ matterId }).workflows.get();
       if (response.error) throw new Error("Failed to fetch workflows");
       return response.data;
     },
-    enabled: !!matterId,
   });
 
   const createWorkflowMutation = useMutation({
     mutationFn: async (values: WorkflowFormValues) => {
-      const workflowMatterId = matterId || values.matterId;
-      const response = await api
-        .matters({ matterId: workflowMatterId })
-        .workflows.post({
-          name: values.name,
-          instructions: values.instructions,
-        });
+      const response = await api.matters({ matterId }).workflows.post({
+        name: values.name,
+        instructions: values.instructions,
+      });
       if (response.error) throw new Error("Failed to create workflow");
       return response.data;
     },
@@ -164,12 +147,6 @@ export default function WorkflowsPage() {
     },
   });
 
-  const matterOptions =
-    matters?.map((matter) => ({
-      value: matter.id,
-      label: `${matter.clientName} - ${matter.matterName}`,
-    })) || [];
-
   const handleEdit = (workflow: {
     id: string;
     matterId: string;
@@ -178,7 +155,6 @@ export default function WorkflowsPage() {
   }) => {
     setEditingWorkflow(workflow.id);
     form.setValues({
-      matterId: workflow.matterId,
       name: workflow.name,
       instructions: workflow.instructions,
     });
@@ -201,7 +177,7 @@ export default function WorkflowsPage() {
   };
 
   const handleSubmit = (values: WorkflowFormValues) => {
-    if (editingWorkflow && matterId) {
+    if (editingWorkflow) {
       updateWorkflowMutation.mutate({
         matterId,
         id: editingWorkflow,
@@ -213,89 +189,83 @@ export default function WorkflowsPage() {
   };
 
   return (
-    <AppShell>
-      <Container size="xl">
-        <Group justify="space-between" mb="xl">
-          <Title order={1}>Workflows</Title>
-          <Button
-            leftSection={<IconPlus size={16} />}
-            onClick={() => {
-              setEditingWorkflow(null);
-              form.reset();
-              setOpened(true);
-            }}
-          >
-            New Workflow
-          </Button>
-        </Group>
+    <Container size="xl">
+      <Group justify="space-between" mb="xl">
+        <Title order={1}>Workflows</Title>
+        <Button
+          leftSection={<IconPlus size={16} />}
+          onClick={() => {
+            setEditingWorkflow(null);
+            form.reset();
+            setOpened(true);
+          }}
+        >
+          New Workflow
+        </Button>
+      </Group>
 
-        <Paper shadow="sm" p="md" radius="md" withBorder>
-          {isLoading ? (
-            <Group justify="center" p="xl">
-              <Loader />
-            </Group>
-          ) : !matterId ? (
-            <Text c="dimmed" ta="center" py="xl">
-              Select a matter from the switcher above to view workflows.
-            </Text>
-          ) : !workflows || workflows.length === 0 ? (
-            <Text c="dimmed" ta="center" py="xl">
-              No workflows found for this matter.
-            </Text>
-          ) : (
-            <Table striped highlightOnHover>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Name</Table.Th>
-                  <Table.Th>Instructions</Table.Th>
-                  <Table.Th>Created</Table.Th>
-                  <Table.Th>Actions</Table.Th>
+      <Paper shadow="sm" p="md" radius="md" withBorder>
+        {isLoading ? (
+          <Group justify="center" p="xl">
+            <Loader />
+          </Group>
+        ) : !workflows || workflows.length === 0 ? (
+          <Text c="dimmed" ta="center" py="xl">
+            No workflows found for this matter.
+          </Text>
+        ) : (
+          <Table striped highlightOnHover>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Name</Table.Th>
+                <Table.Th>Instructions</Table.Th>
+                <Table.Th>Created</Table.Th>
+                <Table.Th>Actions</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {workflows.map((workflow: Workflow) => (
+                <Table.Tr key={workflow.id}>
+                  <Table.Td>
+                    <Text fw={500}>{workflow.name}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text lineClamp={2} size="sm" c="dimmed">
+                      {workflow.instructions}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    {new Date(workflow.createdAt).toLocaleDateString()}
+                  </Table.Td>
+                  <Table.Td>
+                    <Group gap="xs">
+                      <ActionIcon
+                        variant="subtle"
+                        onClick={() => handleEdit(workflow)}
+                      >
+                        <IconEdit size={16} />
+                      </ActionIcon>
+                      <ActionIcon
+                        variant="subtle"
+                        color="red"
+                        onClick={() =>
+                          handleDelete(
+                            workflow.matterId,
+                            workflow.id,
+                            workflow.name
+                          )
+                        }
+                      >
+                        <IconTrash size={16} />
+                      </ActionIcon>
+                    </Group>
+                  </Table.Td>
                 </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {workflows.map((workflow) => (
-                  <Table.Tr key={workflow.id}>
-                    <Table.Td>
-                      <Text fw={500}>{workflow.name}</Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text lineClamp={2} size="sm" c="dimmed">
-                        {workflow.instructions}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      {new Date(workflow.createdAt).toLocaleDateString()}
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap="xs">
-                        <ActionIcon
-                          variant="subtle"
-                          onClick={() => handleEdit(workflow)}
-                        >
-                          <IconEdit size={16} />
-                        </ActionIcon>
-                        <ActionIcon
-                          variant="subtle"
-                          color="red"
-                          onClick={() =>
-                            handleDelete(
-                              workflow.matterId,
-                              workflow.id,
-                              workflow.name
-                            )
-                          }
-                        >
-                          <IconTrash size={16} />
-                        </ActionIcon>
-                      </Group>
-                    </Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          )}
-        </Paper>
-      </Container>
+              ))}
+            </Table.Tbody>
+          </Table>
+        )}
+      </Paper>
 
       <Modal
         opened={opened}
@@ -309,16 +279,6 @@ export default function WorkflowsPage() {
       >
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack>
-            {!matterId && (
-              <Select
-                label="Matter"
-                placeholder="Select matter"
-                data={matterOptions}
-                required
-                searchable
-                {...form.getInputProps("matterId")}
-              />
-            )}
             <TextInput
               label="Name"
               placeholder="Time Entry Review Process"
@@ -356,6 +316,6 @@ export default function WorkflowsPage() {
           </Stack>
         </form>
       </Modal>
-    </AppShell>
+    </Container>
   );
 }

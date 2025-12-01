@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import * as fs from "node:fs";
 import { createClient } from "@ai-starter/api/client";
-import { getApp, type App } from "@ai-starter/api";
+import { getApp, type App as _App } from "@ai-starter/api";
 import { getContext } from "@ai-starter/api/context";
 import { setupDB } from "./utils/db";
 import { doSeedRoles } from "@ai-starter/db/test-utils/seed/timekeeper";

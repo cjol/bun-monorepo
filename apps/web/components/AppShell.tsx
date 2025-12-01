@@ -19,28 +19,43 @@ import {
   IconNote,
   IconHome,
 } from "@tabler/icons-react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { MatterSwitcher } from "./MatterSwitcher";
 
 interface AppShellProps {
   children: ReactNode;
+  matterId?: string;
 }
 
-const navigationItems = [
-  { icon: IconHome, label: "Dashboard", href: "/" },
-  { icon: IconBriefcase, label: "Matters", href: "/matters" },
-  { icon: IconFileInvoice, label: "Bills", href: "/bills" },
-  { icon: IconClock, label: "Time Entries", href: "/time-entries" },
-  { icon: IconSparkles, label: "AI Suggestions", href: "/suggestions" },
-  { icon: IconUsers, label: "Timekeepers", href: "/timekeepers" },
-  { icon: IconNote, label: "Workflows", href: "/workflows" },
-];
+function getNavigationItems(matterId?: string) {
+  if (!matterId) {
+    return [
+      { icon: IconHome, label: "Dashboard", href: "/" },
+      { icon: IconBriefcase, label: "Matters", href: "/matters" },
+    ];
+  }
 
-export function AppShell({ children }: AppShellProps) {
+  const base = `/matters/${matterId}`;
+  return [
+    { icon: IconHome, label: "Dashboard", href: base },
+    { icon: IconFileInvoice, label: "Bills", href: `${base}/bills` },
+    { icon: IconClock, label: "Time Entries", href: `${base}/time-entries` },
+    {
+      icon: IconSparkles,
+      label: "AI Suggestions",
+      href: `${base}/suggestions`,
+    },
+    { icon: IconNote, label: "Workflows", href: `${base}/workflows` },
+    { icon: IconUsers, label: "Timekeepers", href: "/timekeepers" },
+  ];
+}
+
+export function AppShell({ children, matterId }: AppShellProps) {
   const [opened, { toggle }] = useDisclosure();
   const pathname = usePathname();
   const router = useRouter();
+  const navigationItems = getNavigationItems(matterId);
 
   return (
     <MantineAppShell
@@ -61,7 +76,6 @@ export function AppShell({ children }: AppShellProps) {
               <Title order={3}>FixMyTime Admin</Title>
             </UnstyledButton>
           </Group>
-          <MatterSwitcher />
         </Group>
       </MantineAppShell.Header>
 
@@ -70,14 +84,11 @@ export function AppShell({ children }: AppShellProps) {
           {navigationItems.map((item) => (
             <NavLink
               key={item.href}
+              component={Link}
               href={item.href}
               label={item.label}
               leftSection={<item.icon size={20} stroke={1.5} />}
               active={pathname === item.href}
-              onClick={() => {
-                router.push(item.href);
-                if (opened) toggle();
-              }}
             />
           ))}
         </MantineAppShell.Section>
