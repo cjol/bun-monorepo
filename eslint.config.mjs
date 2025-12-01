@@ -4,12 +4,7 @@ import tseslint from "typescript-eslint";
 
 export default defineConfig(
   {
-    ignores: [
-      "apps/web/.next/**",
-      "apps/web/.yarn/**",
-      "apps/web/yarn.lock",
-      "**/next-env.d.ts",
-    ],
+    ignores: ["apps/web/.next/**", "**/next-env.d.ts"],
   },
   eslint.configs.recommended,
   tseslint.configs.strict,

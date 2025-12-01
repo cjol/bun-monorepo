@@ -4,14 +4,14 @@ import { seedNow } from "./foo";
 
 export const mockRoles = [
   {
-    id: "550e8400-e29b-41d4-a716-446655440001", // Associate role UUID
+    id: "01HT0000000000000000000001", // Associate role ULID
     name: "Associate",
     description: "Associate lawyer",
     createdAt: seedNow,
     updatedAt: seedNow,
   },
   {
-    id: "550e8400-e29b-41d4-a716-446655440002", // Partner role UUID
+    id: "01HT0000000000000000000002", // Partner role ULID
     name: "Partner",
     description: "Partner lawyer",
     createdAt: seedNow,

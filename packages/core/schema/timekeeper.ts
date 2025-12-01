@@ -2,11 +2,12 @@ import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { z } from "zod";
 import { timestamps } from "./utils/timestamps";
 import { uuidSchema, emailSchema } from "./utils/validation";
+import { generateId } from "./utils/generateId";
 
 export const timekeeperSchema = sqliteTable("timekeeper", {
   id: text("id")
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => generateId()),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   ...timestamps,
@@ -28,5 +29,5 @@ export const newTimekeeperInputSchema = z.object({
 export const updateTimekeeperInputSchema = newTimekeeperInputSchema
   .partial()
   .extend({
-    id: uuidSchema.describe("The UUID of the timekeeper to update"),
+    id: uuidSchema.describe("The ULID of the timekeeper to update"),
   });

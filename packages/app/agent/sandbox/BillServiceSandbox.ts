@@ -12,7 +12,7 @@ export function createBillSandboxFunctions(service: BillService) {
   const getBill = defineSandboxFunction({
     description: "Fetch a specific bill by ID",
     inputSchema: z.object({
-      id: uuidSchema.describe("The UUID of the bill to fetch"),
+      id: uuidSchema.describe("The ULID of the bill to fetch"),
     }),
     execute: async ({ id }) => {
       const bill = await service.getBill(id);
@@ -39,7 +39,7 @@ export function createBillSandboxFunctions(service: BillService) {
   const listBillsByMatter = defineSandboxFunction({
     description: "List all bills for a specific matter",
     inputSchema: z.object({
-      matterId: uuidSchema.describe("The UUID of the matter"),
+      matterId: uuidSchema.describe("The ULID of the matter"),
     }),
     execute: async ({ matterId }) => {
       return service.listByMatter(matterId);

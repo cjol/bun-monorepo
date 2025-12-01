@@ -15,7 +15,7 @@ export function createMatterSandboxFunctions(service: MatterService) {
   const getMatter = defineSandboxFunction({
     description: "Fetch a specific matter by ID",
     inputSchema: z.object({
-      id: uuidSchema.describe("The UUID of the matter to fetch"),
+      id: uuidSchema.describe("The ULID of the matter to fetch"),
     }),
     execute: async ({ id }) => {
       const matter = await service.getMatter(id);

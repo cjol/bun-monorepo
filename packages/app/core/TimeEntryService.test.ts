@@ -33,9 +33,7 @@ describe("TimeEntryService", () => {
       });
 
       expect(result).toEqual({
-        id: expect.stringMatching(
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
-        ),
+        id: expect.stringMatching(/^[0-9A-HJKMNP-TV-Z]{26}$/),
         matterId: context.matter.id,
         timekeeperId: context.timekeeper.id,
         billId: context.bill!.id,

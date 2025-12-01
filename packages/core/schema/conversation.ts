@@ -1,10 +1,11 @@
 import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { timestamps } from "./utils/timestamps";
+import { generateId } from "./utils/generateId";
 
 export const conversationSchema = sqliteTable("conversation", {
   id: text("id")
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => generateId()),
   title: text("title"),
   ...timestamps,
 });

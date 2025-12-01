@@ -18,7 +18,7 @@ export function createTimekeeperSandboxFunctions(service: TimekeeperService) {
   const getTimekeeper = defineSandboxFunction({
     description: "Fetch a specific timekeeper by ID",
     inputSchema: z.object({
-      id: uuidSchema.describe("The UUID of the timekeeper to fetch"),
+      id: uuidSchema.describe("The ULID of the timekeeper to fetch"),
     }),
     execute: async ({ id }) => {
       const timekeeper = await service.getTimekeeper(id);

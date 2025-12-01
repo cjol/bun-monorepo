@@ -3,11 +3,12 @@ import { z } from "zod";
 import { timestamps } from "./utils/timestamps";
 import { uuidSchema, isoDateSchema } from "./utils/validation";
 import { matterSchema } from "./matter";
+import { generateId } from "./utils/generateId";
 
 export const billSchema = sqliteTable("bill", {
   id: text("id")
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => generateId()),
   matterId: text("matter_id")
     .notNull()
     .references(() => matterSchema.id, { onDelete: "cascade" }),
@@ -32,7 +33,7 @@ export type NewBill = typeof billSchema.$inferInsert;
 export const billStatusSchema = z.enum(["draft", "finalized", "sent", "paid"]);
 
 export const newBillInputSchema = z.object({
-  matterId: uuidSchema.describe("The UUID of the matter"),
+  matterId: uuidSchema.describe("The ULID of the matter"),
   periodStart: isoDateSchema.describe("Period start date"),
   periodEnd: isoDateSchema.describe("Period end date"),
   status: billStatusSchema.describe("Status of the bill"),

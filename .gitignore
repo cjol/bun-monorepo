@@ -34,4 +34,7 @@ node_modules/.evalite
 # Finder (MacOS) folder config
 .DS_Store
 
+# Database files
 *.db
+*.db-shm
+*.db-wal
