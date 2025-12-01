@@ -4,11 +4,12 @@ import { timestamps } from "./utils/timestamps";
 import { uuidSchema, emailSchema } from "./utils/validation";
 import { matterSchema } from "./matter";
 import { roleSchema } from "./role";
+import { generateId } from "./utils/generateId";
 
 export const timekeeperSchema = sqliteTable("timekeeper", {
   id: text("id")
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => generateId()),
   matterId: text("matter_id")
     .notNull()
     .references(() => matterSchema.id, { onDelete: "cascade" }),
@@ -29,8 +30,8 @@ export type NewTimekeeper = typeof timekeeperSchema.$inferInsert;
  */
 
 export const newTimekeeperInputSchema = z.object({
-  matterId: uuidSchema.describe("The UUID of the matter"),
-  roleId: uuidSchema.describe("The UUID of the role"),
+  matterId: uuidSchema.describe("The ULID of the matter"),
+  roleId: uuidSchema.describe("The ULID of the role"),
   name: z.string().describe("Name of the timekeeper"),
   email: emailSchema.describe("Email address of the timekeeper"),
 });
@@ -38,5 +39,5 @@ export const newTimekeeperInputSchema = z.object({
 export const updateTimekeeperInputSchema = newTimekeeperInputSchema
   .partial()
   .extend({
-    id: uuidSchema.describe("The UUID of the timekeeper to update"),
+    id: uuidSchema.describe("The ULID of the timekeeper to update"),
   });

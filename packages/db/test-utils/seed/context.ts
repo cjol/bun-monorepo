@@ -84,7 +84,7 @@ export async function createTimeTrackingTestContext(
   });
 
   const timekeeper = await createTestTimekeeper(db, matter.id, {
-    roleId: "550e8400-e29b-41d4-a716-446655440001", // role-associate
+    roleId: "01HT0000000000000000000001", // role-associate
     ...options?.timekeeperOverrides,
   });
   if (!timekeeper) throw new Error("Failed to create timekeeper");

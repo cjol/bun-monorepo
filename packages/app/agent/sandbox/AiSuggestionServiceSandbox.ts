@@ -29,7 +29,7 @@ export function createAiSuggestionSandboxFunctions(
   const listPendingSuggestions = defineSandboxFunction({
     description: "List all pending AI suggestions for a matter",
     inputSchema: z.object({
-      matterId: uuidSchema.describe("The UUID of the matter"),
+      matterId: uuidSchema.describe("The ULID of the matter"),
     }),
     execute: async ({ matterId }) => {
       return service.listByStatus(matterId, "pending");

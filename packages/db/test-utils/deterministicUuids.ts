@@ -1,28 +1,21 @@
-import { createHash } from "node:crypto";
-
-let uuidCounter = 0;
 let timeCounter = 0;
 const baseTime = new Date("2025-01-01T00:00:00.000Z").getTime();
 
 /**
- * Sets up deterministic UUID and timestamp generation for tests.
- * Overrides crypto.randomUUID() to return deterministic UUIDs based on a counter.
+ * Sets up deterministic ID and timestamp generation for tests.
+ * Seeds Math.random to make ULID generation deterministic.
  * Overrides Date constructor and Date.now() to return deterministic timestamps.
- * This ensures that the same sequence of operations always generates the same UUIDs and timestamps,
+ * This ensures that the same sequence of operations always generates the same IDs and timestamps,
  * which is crucial for prompt caching in evals.
  */
-export function setupDeterministicUUIDs() {
-  uuidCounter = 0; // Reset counter
+export function setupDeterministicIds() {
   timeCounter = 0; // Reset time counter
 
-  // Override crypto.randomUUID for deterministic UUIDs
-  crypto.randomUUID = () => {
-    const hash = createHash("sha256")
-      .update(`test-seed-${uuidCounter++}`)
-      .digest("hex");
-
-    // Format as valid UUID v4
-    return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-4${hash.slice(13, 16)}-8${hash.slice(17, 20)}-${hash.slice(20, 32)}`;
+  // Seed Math.random for deterministic ULID generation
+  let randomSeed = 12345;
+  Math.random = () => {
+    randomSeed = (randomSeed * 9301 + 49297) % 233280;
+    return randomSeed / 233280;
   };
 
   // Save original Date
@@ -55,4 +48,7 @@ export function setupDeterministicUUIDs() {
   Object.setPrototypeOf(globalThis.Date, OriginalDate);
 }
 
-setupDeterministicUUIDs();
+/** @deprecated Use setupDeterministicIds instead */
+export const setupDeterministicUUIDs = setupDeterministicIds;
+
+setupDeterministicIds();

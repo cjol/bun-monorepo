@@ -2,11 +2,12 @@ import { sqliteTable, text, real } from "drizzle-orm/sqlite-core";
 import { timestamps } from "./utils/timestamps";
 import { matterSchema } from "./matter";
 import { roleSchema } from "./role";
+import { generateId } from "./utils/generateId";
 
 export const rateSchema = sqliteTable("rate", {
   id: text("id")
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => generateId()),
   matterId: text("matter_id")
     .notNull()
     .references(() => matterSchema.id, { onDelete: "cascade" }),

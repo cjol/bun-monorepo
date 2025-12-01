@@ -2,11 +2,12 @@ import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { z } from "zod";
 import { timestamps } from "./utils/timestamps";
 import { uuidSchema } from "./utils/validation";
+import { generateId } from "./utils/generateId";
 
 export const matterSchema = sqliteTable("matter", {
   id: text("id")
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => generateId()),
   clientName: text("client_name").notNull(),
   matterName: text("matter_name").notNull(),
   description: text("description"),
@@ -31,5 +32,5 @@ export const newMatterInputSchema = z.object({
 });
 
 export const updateMatterInputSchema = newMatterInputSchema.partial().extend({
-  id: uuidSchema.describe("The UUID of the matter to update"),
+  id: uuidSchema.describe("The ULID of the matter to update"),
 });

@@ -1,11 +1,12 @@
 import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { timestamps } from "./utils/timestamps";
 import { matterSchema } from "./matter";
+import { generateId } from "./utils/generateId";
 
 export const workflowSchema = sqliteTable("workflow", {
   id: text("id")
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => generateId()),
   matterId: text("matter_id")
     .notNull()
     .references(() => matterSchema.id, { onDelete: "cascade" }),
@@ -26,7 +27,7 @@ import { z } from "zod";
 import { uuidSchema } from "./utils/validation";
 
 export const newWorkflowInputSchema = z.object({
-  matterId: uuidSchema.describe("The UUID of the matter"),
+  matterId: uuidSchema.describe("The ULID of the matter"),
   name: z.string().describe("Name of the workflow"),
   instructions: z.string().describe("Natural language workflow instructions"),
 });
@@ -34,5 +35,5 @@ export const newWorkflowInputSchema = z.object({
 export const updateWorkflowInputSchema = newWorkflowInputSchema
   .partial()
   .extend({
-    id: uuidSchema.describe("The UUID of the workflow to update"),
+    id: uuidSchema.describe("The ULID of the workflow to update"),
   });

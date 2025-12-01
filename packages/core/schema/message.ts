@@ -1,11 +1,12 @@
 import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { timestamps } from "./utils/timestamps";
 import { conversationSchema } from "./conversation";
+import { generateId } from "./utils/generateId";
 
 export const messageSchema = sqliteTable("message", {
   id: text("id")
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => generateId()),
   conversationId: text("conversation_id")
     .notNull()
     .references(() => conversationSchema.id, { onDelete: "cascade" }),

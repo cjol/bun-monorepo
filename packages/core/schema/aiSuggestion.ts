@@ -7,11 +7,12 @@ import {
   timeEntrySchema,
   newTimeEntryInputSchema,
 } from "./timeEntry";
+import { generateId } from "./utils/generateId";
 
 export const aiSuggestionSchema = sqliteTable("ai_suggestion", {
   id: text("id")
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => generateId()),
   timeEntryId: text("time_entry_id")
     .notNull()
     .references(() => timeEntrySchema.id, { onDelete: "cascade" }),
@@ -34,7 +35,7 @@ export type NewAiSuggestion = typeof aiSuggestionSchema.$inferInsert;
 
 export const newAiSuggestionInputSchema = z.object({
   timeEntryId: uuidSchema.describe(
-    "The UUID of the time entry to suggest changes for"
+    "The ULID of the time entry to suggest changes for"
   ),
   suggestedChanges: newTimeEntryInputSchema.describe(
     "Object containing the suggested time entry changes"

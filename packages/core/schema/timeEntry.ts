@@ -15,11 +15,12 @@ import {
 import { matterSchema } from "./matter";
 import { billSchema } from "./bill";
 import { timekeeperSchema } from "./timekeeper";
+import { generateId } from "./utils/generateId";
 
 export const timeEntrySchema = sqliteTable("time_entry", {
   id: text("id")
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => generateId()),
   matterId: text("matter_id")
     .notNull()
     .references(() => matterSchema.id, { onDelete: "cascade" }),
@@ -44,12 +45,12 @@ export type NewTimeEntry = typeof timeEntrySchema.$inferInsert;
  */
 
 export const newTimeEntryInputSchema = z.object({
-  matterId: uuidSchema.describe("The UUID of the matter"),
-  timekeeperId: uuidSchema.describe("The UUID of the timekeeper"),
+  matterId: uuidSchema.describe("The ULID of the matter"),
+  timekeeperId: uuidSchema.describe("The ULID of the timekeeper"),
   billId: uuidSchema
     .nullable()
     .optional()
-    .describe("The UUID of the bill (if assigned)"),
+    .describe("The ULID of the bill (if assigned)"),
   date: isoDateSchema,
   hours: positiveNumberSchema.describe("Number of hours worked"),
   description: z.string().describe("Description of the work performed"),
@@ -58,7 +59,7 @@ export const newTimeEntryInputSchema = z.object({
 export const updateTimeEntryInputSchema = newTimeEntryInputSchema
   .partial()
   .extend({
-    id: uuidSchema.describe("The UUID of the time entry to update"),
+    id: uuidSchema.describe("The ULID of the time entry to update"),
   });
 
 /** Use as a custom column in other tables */

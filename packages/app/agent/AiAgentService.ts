@@ -52,7 +52,7 @@ export const AiAgentService = (deps: AiAgentServiceDeps) => {
 
     /**
      * Gets all messages for a specific conversation, ordered chronologically.
-     * @param conversationId The UUID of the conversation
+     * @param conversationId The ULID of the conversation
      * @returns Array of messages in the conversation
      */
     getConversationMessages: async (
@@ -79,7 +79,7 @@ export const AiAgentService = (deps: AiAgentServiceDeps) => {
      * Returns a stream that yields text deltas and complete messages (tool calls/results)
      * as they're generated, and a promise that resolves to all new messages once complete.
      *
-     * @param conversationId The UUID of the conversation
+     * @param conversationId The ULID of the conversation
      * @param message The user's message content
      * @returns Object containing an async generator for streaming and a promise for all new messages
      */

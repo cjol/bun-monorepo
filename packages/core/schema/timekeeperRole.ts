@@ -4,11 +4,12 @@ import { timestamps } from "./utils/timestamps";
 import { uuidSchema, positiveNumberSchema } from "./utils/validation";
 import { timekeeperSchema } from "./timekeeper";
 import { matterSchema } from "./matter";
+import { generateId } from "./utils/generateId";
 
 export const timekeeperRoleSchema = sqliteTable("timekeeper_role", {
   id: text("id")
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => generateId()),
   timekeeperId: text("timekeeper_id")
     .notNull()
     .references(() => timekeeperSchema.id, { onDelete: "cascade" }),
@@ -29,8 +30,8 @@ export type NewTimekeeperRole = typeof timekeeperRoleSchema.$inferInsert;
  */
 
 export const newTimekeeperRoleInputSchema = z.object({
-  timekeeperId: uuidSchema.describe("The UUID of the timekeeper"),
-  matterId: uuidSchema.describe("The UUID of the matter"),
+  timekeeperId: uuidSchema.describe("The ULID of the timekeeper"),
+  matterId: uuidSchema.describe("The ULID of the matter"),
   role: z.string().describe("Role title (e.g. Associate, Partner)"),
   billableRate: positiveNumberSchema.describe("Hourly billable rate"),
 });
@@ -38,5 +39,5 @@ export const newTimekeeperRoleInputSchema = z.object({
 export const updateTimekeeperRoleInputSchema = newTimekeeperRoleInputSchema
   .partial()
   .extend({
-    id: uuidSchema.describe("The UUID of the timekeeper role to update"),
+    id: uuidSchema.describe("The ULID of the timekeeper role to update"),
   });
