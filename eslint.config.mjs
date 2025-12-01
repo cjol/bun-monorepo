@@ -6,8 +6,6 @@ export default defineConfig(
   {
     ignores: [
       "apps/web/.next/**",
-      "apps/web/.yarn/**",
-      "apps/web/yarn.lock",
       "**/next-env.d.ts",
     ],
   },

@@ -9,8 +9,6 @@ build
 .next
 out
 apps/web/.next
-apps/web/.yarn
-apps/web/yarn.lock
 
 # Generated files
 *.generated.*
