@@ -2,22 +2,14 @@ import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { z } from "zod";
 import { timestamps } from "./utils/timestamps";
 import { uuidSchema, emailSchema } from "./utils/validation";
-import { matterSchema } from "./matter";
-import { roleSchema } from "./role";
 import { generateId } from "./utils/generateId";
 
 export const timekeeperSchema = sqliteTable("timekeeper", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => generateId()),
-  matterId: text("matter_id")
-    .notNull()
-    .references(() => matterSchema.id, { onDelete: "cascade" }),
-  roleId: text("role_id")
-    .notNull()
-    .references(() => roleSchema.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
-  email: text("email").notNull(),
+  email: text("email").notNull().unique(),
   ...timestamps,
 });
 
@@ -30,8 +22,6 @@ export type NewTimekeeper = typeof timekeeperSchema.$inferInsert;
  */
 
 export const newTimekeeperInputSchema = z.object({
-  matterId: uuidSchema.describe("The ULID of the matter"),
-  roleId: uuidSchema.describe("The ULID of the role"),
   name: z.string().describe("Name of the timekeeper"),
   email: emailSchema.describe("Email address of the timekeeper"),
 });

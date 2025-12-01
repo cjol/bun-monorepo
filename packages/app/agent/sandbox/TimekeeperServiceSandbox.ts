@@ -46,10 +46,8 @@ export function createTimekeeperSandboxFunctions(service: TimekeeperService) {
   const createTimekeeper = defineSandboxFunction({
     description: "Create a new timekeeper",
     inputSchema: newTimekeeperInputSchema,
-    execute: async ({ matterId, roleId, name, email }) => {
+    execute: async ({ name, email }) => {
       return service.createTimekeeper({
-        matterId,
-        roleId,
         name,
         email,
       });
