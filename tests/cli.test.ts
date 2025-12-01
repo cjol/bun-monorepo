@@ -28,8 +28,8 @@ describe("CLI e2e", () => {
     expect(addResult).toContain("Created:");
 
     // Extract the ID from the output (strip ANSI codes)
-    // ULIDs are 26 characters using Crockford's Base32
-    const idMatch = addResult.match(/ID:[^\n]*?([0-9A-HJKMNP-TV-Z]{26})/i);
+    // ULIDs are 26 characters using Crockford's Base32 (uppercase only)
+    const idMatch = addResult.match(/ID:[^\n]*?([0-9A-HJKMNP-TV-Z]{26})/);
     expect(idMatch).not.toBeNull();
     const fooId = idMatch![1];
     if (!fooId) throw new Error("Failed to extract foo ID");
