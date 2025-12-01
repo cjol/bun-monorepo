@@ -22,6 +22,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import { MatterSwitcher } from "./MatterSwitcher";
 
 interface AppShellProps {
   children: ReactNode;
@@ -29,11 +30,14 @@ interface AppShellProps {
 }
 
 function getNavigationItems(matterId?: string) {
+  const topLevelItems = [
+    { icon: IconHome, label: "Dashboard", href: "/" },
+    { icon: IconBriefcase, label: "Matters", href: "/matters" },
+    { icon: IconUsers, label: "Timekeepers", href: "/timekeepers" },
+  ];
+
   if (!matterId) {
-    return [
-      { icon: IconHome, label: "Dashboard", href: "/" },
-      { icon: IconBriefcase, label: "Matters", href: "/matters" },
-    ];
+    return topLevelItems;
   }
 
   const base = `/matters/${matterId}`;
@@ -47,7 +51,7 @@ function getNavigationItems(matterId?: string) {
       href: `${base}/suggestions`,
     },
     { icon: IconNote, label: "Workflows", href: `${base}/workflows` },
-    { icon: IconUsers, label: "Timekeepers", href: "/timekeepers" },
+    ...topLevelItems.slice(1), // Add Matters and Timekeepers at the end
   ];
 }
 
@@ -76,6 +80,7 @@ export function AppShell({ children, matterId }: AppShellProps) {
               <Title order={3}>FixMyTime Admin</Title>
             </UnstyledButton>
           </Group>
+          <MatterSwitcher />
         </Group>
       </MantineAppShell.Header>
 
