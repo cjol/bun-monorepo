@@ -1,4 +1,5 @@
 import { Elysia } from "elysia";
+import { cors } from "@elysiajs/cors";
 import { getContext, type Context } from "./context";
 import { matterRoutes } from "./endpoints/matters";
 import { timekeeperRoutes } from "./endpoints/timekeepers";
@@ -14,6 +15,7 @@ import z from "zod";
 
 export const getApp = (ctx: Context) =>
   new Elysia()
+    .use(cors())
     .use(
       openapi({
         references: fromTypes("index.ts", {

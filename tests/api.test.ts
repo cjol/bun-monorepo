@@ -1,15 +1,15 @@
 /* eslint-disable no-unexpected-multiline */
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import * as fs from "node:fs";
-import { treaty } from "@elysiajs/eden";
-import { getApp, type App } from "@ai-starter/api";
+import { createClient } from "@ai-starter/api/client";
+import { getApp, type App as _App } from "@ai-starter/api";
 import { getContext } from "@ai-starter/api/context";
 import { setupDB } from "./utils/db";
 import { doSeedRoles } from "@ai-starter/db/test-utils/seed/timekeeper";
 
 describe("API e2e", () => {
   let tmpDir: string;
-  let client: ReturnType<typeof treaty<App>>;
+  let client: ReturnType<typeof createClient>;
 
   beforeEach(async () => {
     const { db, tmpDir: dir, dbPath } = await setupDB("api-test-");
@@ -20,7 +20,7 @@ describe("API e2e", () => {
 
     const ctx = getContext(`file:${dbPath}`);
     const app = getApp(ctx);
-    client = treaty<App>(app);
+    client = createClient(app);
   });
 
   afterEach(() => {

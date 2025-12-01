@@ -5,9 +5,7 @@
   "dependencies": {
     "@ai-starter/api": "workspace:*",
     "@ai-starter/core": "workspace:*",
-    "@ai-starter/db": "workspace:*",
-    "@elysiajs/eden": "^1.4.4",
-    "elysia": "^1.4.16"
+    "@ai-starter/db": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest"
