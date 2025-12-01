@@ -43,6 +43,7 @@ function getNavigationItems(matterId?: string) {
   const base = `/matters/${matterId}`;
   return [
     { icon: IconHome, label: "Dashboard", href: base },
+    { icon: IconUsers, label: "Team", href: `${base}/timekeeper-roles` },
     { icon: IconFileInvoice, label: "Bills", href: `${base}/bills` },
     { icon: IconClock, label: "Time Entries", href: `${base}/time-entries` },
     {

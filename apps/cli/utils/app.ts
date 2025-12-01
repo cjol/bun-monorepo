@@ -1,5 +1,8 @@
-import { CoreAppService, AiAgentService } from "@ai-starter/app";
-import { createDataAnalysisAgent } from "@ai-starter/app/agent/examples";
+import {
+  CoreAppService,
+  AiAgentService,
+  createGeneralPurposeAgent,
+} from "@ai-starter/app";
 import { getDB, getRepos } from "@ai-starter/db";
 
 export const getApp = async (repos: ReturnType<typeof getRepos>) => {
@@ -11,7 +14,9 @@ export const getAgent = async (repos: ReturnType<typeof getRepos>) => {
   return AiAgentService({
     coreService: app,
     repos,
-    agent: createDataAnalysisAgent(repos.foo),
+    agent: createGeneralPurposeAgent({
+      services: app,
+    }),
   });
 };
 
