@@ -24,18 +24,15 @@ export const doSeedRoles = (db: DB) => {
 };
 
 /**
- * Helper to create a timekeeper for a matter with a default role
+ * Helper to create a timekeeper
  */
 export async function createTestTimekeeper(
   db: DB,
-  matterId: string,
-  overrides?: { roleId?: string; name?: string; email?: string; id?: string }
+  overrides?: { name?: string; email?: string; id?: string }
 ) {
   const [timekeeper] = await db
     .insert(timekeeperSchema)
     .values({
-      matterId,
-      roleId: overrides?.roleId ?? "550e8400-e29b-41d4-a716-446655440001",
       id: overrides?.id,
       name: overrides?.name ?? "Test Timekeeper",
       email: overrides?.email ?? "test@example.com",

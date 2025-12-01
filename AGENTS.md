@@ -128,4 +128,4 @@ The only thing we are carrying forward from V2 are some of the core ideas.
 - [ ] Add a list matters endpoint
 - [ ] Create an EmailIngestionService (e.g., via webhook) that parses inbound emails and creates new Conversation and Message records.
 - [ ] Create an EmailSendingService that agents can call via a tool, which sends a Message as an outbound email.
-- [ ] Make sure Timekeeper is appropriately and consistently scoped to a matter (or not, but then add a join table)
+- [x] Make sure Timekeeper is appropriately and consistently scoped to a matter (or not, but then add a join table)

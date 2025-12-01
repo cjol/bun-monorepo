@@ -122,7 +122,7 @@ evalite("Create Time Entries", {
     });
     console.log("MATTER: ", matter.id);
 
-    const timekeeper = await createTestTimekeeper(db, matter.id);
+    const timekeeper = await createTestTimekeeper(db);
     if (!timekeeper) {
       throw new Error("Failed to create timekeeper");
     }
@@ -185,7 +185,7 @@ evalite("Calculation Request", {
       description: null,
     });
 
-    const timekeeper = await createTestTimekeeper(db, matter.id);
+    const timekeeper = await createTestTimekeeper(db);
     if (!timekeeper) {
       throw new Error("Failed to create timekeeper");
     }
@@ -249,7 +249,7 @@ evalite("Review Workflow", {
       description: null,
     });
 
-    const timekeeper = await createTestTimekeeper(db, matter.id);
+    const timekeeper = await createTestTimekeeper(db);
     if (!timekeeper) {
       throw new Error("Failed to create timekeeper");
     }

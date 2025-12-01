@@ -25,8 +25,6 @@ import { api } from "../../lib/api";
 interface TimekeeperFormValues {
   name: string;
   email: string;
-  matterId: string;
-  roleId: string;
 }
 
 export default function TimekeepersPage() {
@@ -40,8 +38,6 @@ export default function TimekeepersPage() {
     initialValues: {
       name: "",
       email: "",
-      matterId: "",
-      roleId: "550e8400-e29b-41d4-a716-446655440001", // Associate role UUID
     },
     validate: {
       name: (value) => (!value ? "Name is required" : null),
@@ -50,7 +46,6 @@ export default function TimekeepersPage() {
         if (!/^\S+@\S+$/.test(value)) return "Invalid email";
         return null;
       },
-      matterId: (value) => (!value ? "Matter is required" : null),
     },
   });
 
@@ -126,15 +121,11 @@ export default function TimekeepersPage() {
     id: string;
     name: string;
     email: string;
-    matterId: string;
-    roleId: string;
   }) => {
     setEditingTimekeeper(timekeeper.id);
     form.setValues({
       name: timekeeper.name,
       email: timekeeper.email,
-      matterId: timekeeper.matterId,
-      roleId: timekeeper.roleId,
     });
     setOpened(true);
   };

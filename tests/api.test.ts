@@ -45,8 +45,6 @@ describe("API e2e", () => {
     expect(listMattersResponse.data!.length).toBeGreaterThan(0);
 
     const createTimekeeperResponse = await client.timekeepers.post({
-      matterId: matter.id,
-      roleId: "550e8400-e29b-41d4-a716-446655440001", // Associate role UUID
       name: "Jane Smith",
       email: "jane.smith@firm.com",
     });
