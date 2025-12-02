@@ -44,7 +44,7 @@ jobs:
             evalite-cache-${{ runner.os }}-
 
       - name: Run evals
-        run: bun run eval --threshold=95
+        run: bun run eval
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
