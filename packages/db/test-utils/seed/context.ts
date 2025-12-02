@@ -1,8 +1,14 @@
-import type { Bill, Matter, TimeEntry, Timekeeper } from "@ai-starter/core";
+import type {
+  Bill,
+  Matter,
+  TimeEntry,
+  Timekeeper,
+  TimekeeperRole,
+} from "@ai-starter/core";
 import type { DB } from "../../db";
 import { doSeedRoles } from "./timekeeper";
 import { createTestMatter } from "./matter";
-import { createTestTimekeeper } from "./timekeeper";
+import { createTestTimekeeper, createTestTimekeeperRole } from "./timekeeper";
 import { createTestBill } from "./bill";
 import { createTestTimeEntry } from "./timeEntry";
 
@@ -19,6 +25,7 @@ export interface BasicTestContext {
  */
 export interface TimeTrackingTestContext extends BasicTestContext {
   timekeeper: Timekeeper;
+  timekeeperRole: TimekeeperRole;
   bill?: Bill;
 }
 
@@ -89,6 +96,13 @@ export async function createTimeTrackingTestContext(
   );
   if (!timekeeper) throw new Error("Failed to create timekeeper");
 
+  const timekeeperRole = await createTestTimekeeperRole(
+    db,
+    timekeeper.id,
+    matter.id
+  );
+  if (!timekeeperRole) throw new Error("Failed to create timekeeper role");
+
   let bill: Bill | undefined;
   if (options?.withBill) {
     const createdBill = await createTestBill(
@@ -100,7 +114,7 @@ export async function createTimeTrackingTestContext(
     bill = createdBill;
   }
 
-  return { db, matter, timekeeper, bill };
+  return { db, matter, timekeeper, timekeeperRole, bill };
 }
 
 /**
@@ -130,13 +144,14 @@ export async function createFullTestContext(
     };
   }
 ): Promise<FullTestContext> {
-  const { matter, timekeeper, bill } = await createTimeTrackingTestContext(db, {
-    seedRoles: options?.seedRoles,
-    withBill: true,
-    matterOverrides: options?.matterOverrides,
-    timekeeperOverrides: options?.timekeeperOverrides,
-    billOverrides: options?.billOverrides,
-  });
+  const { matter, timekeeper, timekeeperRole, bill } =
+    await createTimeTrackingTestContext(db, {
+      seedRoles: options?.seedRoles,
+      withBill: true,
+      matterOverrides: options?.matterOverrides,
+      timekeeperOverrides: options?.timekeeperOverrides,
+      billOverrides: options?.billOverrides,
+    });
 
   if (!bill) throw new Error("Failed to create bill");
 
@@ -148,5 +163,5 @@ export async function createFullTestContext(
   );
   if (!timeEntry) throw new Error("Failed to create time entry");
 
-  return { db, matter, timekeeper, bill, timeEntry };
+  return { db, matter, timekeeper, timekeeperRole, bill, timeEntry };
 }

@@ -1,4 +1,5 @@
 import { evalite } from "evalite";
+import { createTestTimekeeperRole } from "@ai-starter/db/test-utils";
 import { anthropic } from "@ai-sdk/anthropic";
 import { wrapAISDKModel } from "evalite/ai-sdk";
 import { Experimental_Agent as Agent, type ToolSet } from "ai";
@@ -126,6 +127,14 @@ evalite("Create Time Entries", {
       throw new Error("Failed to create timekeeper");
     }
 
+    const timekeeperRole = await createTestTimekeeperRole(
+      db,
+      timekeeper.id,
+      matter.id
+    );
+    if (!timekeeperRole) {
+      throw new Error("Failed to create timekeeper role");
+    }
     const agent = createGeneralPurposeAgent({ services, model });
 
     // Ask agent to create time entries
@@ -186,6 +195,15 @@ evalite("Calculation Request", {
     const timekeeper = await createTestTimekeeper(db);
     if (!timekeeper) {
       throw new Error("Failed to create timekeeper");
+    }
+
+    const timekeeperRole = await createTestTimekeeperRole(
+      db,
+      timekeeper.id,
+      matter.id
+    );
+    if (!timekeeperRole) {
+      throw new Error("Failed to create timekeeper role");
     }
 
     // Create the time entries
@@ -250,6 +268,15 @@ evalite("Review Workflow", {
     const timekeeper = await createTestTimekeeper(db);
     if (!timekeeper) {
       throw new Error("Failed to create timekeeper");
+    }
+
+    const timekeeperRole = await createTestTimekeeperRole(
+      db,
+      timekeeper.id,
+      matter.id
+    );
+    if (!timekeeperRole) {
+      throw new Error("Failed to create timekeeper role");
     }
 
     const workflow = await services.workflow.createWorkflow({

@@ -1,4 +1,8 @@
-import { roleSchema, timekeeperSchema } from "@ai-starter/core";
+import {
+  roleSchema,
+  timekeeperSchema,
+  timekeeperRoleSchema,
+} from "@ai-starter/core";
 import type { DB } from "../../db";
 import { seedNow } from "./foo";
 
@@ -39,4 +43,25 @@ export async function createTestTimekeeper(
     })
     .returning();
   return timekeeper;
+}
+
+/**
+ * Helper to create a timekeeper role
+ */
+export async function createTestTimekeeperRole(
+  db: DB,
+  timekeeperId: string,
+  matterId: string,
+  overrides?: { role?: string; billableRate?: number }
+) {
+  const [timekeeperRole] = await db
+    .insert(timekeeperRoleSchema)
+    .values({
+      timekeeperId,
+      matterId,
+      role: overrides?.role ?? "Associate",
+      billableRate: overrides?.billableRate ?? 250.0,
+    })
+    .returning();
+  return timekeeperRole;
 }

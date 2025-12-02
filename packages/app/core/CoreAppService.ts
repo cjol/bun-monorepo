@@ -39,6 +39,7 @@ export const CoreAppService = (deps: Deps) => {
     repos: {
       timeEntry: repos.timeEntry,
       timeEntryChangeLog: repos.timeEntryChangeLog,
+      timekeeperRole: repos.timekeeperRole,
     },
   });
 
