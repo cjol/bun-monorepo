@@ -9,6 +9,13 @@ export const getDB = (location: ":memory:" | (string & {}) = ":memory:") => {
 export type DB = ReturnType<typeof getDB>;
 
 export const migrateDB = async (db: DB) => {
-  const { apply } = await pushSQLiteSchema(schema, db);
-  await apply();
+  const originalWrite = process.stdout.write.bind(process.stdout);
+  process.stdout.write = () => true;
+
+  try {
+    const { apply } = await pushSQLiteSchema(schema, db);
+    await apply();
+  } finally {
+    process.stdout.write = originalWrite;
+  }
 };
