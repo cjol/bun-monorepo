@@ -1,2 +1,2 @@
 [test]
-preload = ["./packages/db/test-utils/deterministicUuids.ts"]
+preload = ["./packages/db/test-utils/setup.ts"]

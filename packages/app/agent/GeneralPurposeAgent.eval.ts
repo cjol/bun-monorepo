@@ -86,12 +86,11 @@ evalite("Create Matter", {
     {
       name: "Matter Created Correctly",
       scorer: ({ output, expected }) => {
-        return 0;
-        // if (!output) return 0;
-        // const clientMatch = output.clientName === expected.clientName;
-        // const matterMatch = output.matterName === expected.matterName;
-        // const descMatch = output.description === expected.description;
-        // return clientMatch && matterMatch && descMatch ? 1 : 0;
+        if (!output) return 0;
+        const clientMatch = output.clientName === expected.clientName;
+        const matterMatch = output.matterName === expected.matterName;
+        const descMatch = output.description === expected.description;
+        return clientMatch && matterMatch && descMatch ? 1 : 0;
       },
     },
   ],
@@ -215,10 +214,9 @@ evalite("Calculation Request", {
     {
       name: "Response Contains Correct Total",
       scorer: ({ output, expected }) => {
-        return 0;
-        // return output.responseText.includes(expected.totalHours.toString())
-        //   ? 1
-        //   : 0;
+        return output.responseText.includes(expected.totalHours.toString())
+          ? 1
+          : 0;
       },
     },
   ],
@@ -295,44 +293,41 @@ evalite("Review Workflow", {
     {
       name: "True Negatives (No Suggestion for < 6 hours)",
       scorer: ({ output: { entries, suggestions } }) => {
-        return 0;
-        // const entriesUnder6 = entries.filter((e) => e.hours < 6);
-        // if (entriesUnder6.length === 0) return 1;
+        const entriesUnder6 = entries.filter((e) => e.hours < 6);
+        if (entriesUnder6.length === 0) return 1;
 
-        // const correctNegatives = entriesUnder6.filter(
-        //   (entry) =>
-        //     suggestions.find((s) => s.timeEntryId === entry.id) === undefined
-        // );
+        const correctNegatives = entriesUnder6.filter(
+          (entry) =>
+            suggestions.find((s) => s.timeEntryId === entry.id) === undefined
+        );
 
-        // return correctNegatives.length / entriesUnder6.length;
+        return correctNegatives.length / entriesUnder6.length;
       },
     },
     {
       name: "True Positives (Suggestion for >= 6 hours)",
       scorer: ({ output: { entries, suggestions } }) => {
-        return 0;
-        // const entries6OrMore = entries.filter((e) => e.hours >= 6);
-        // if (entries6OrMore.length === 0) return 1;
+        const entries6OrMore = entries.filter((e) => e.hours >= 6);
+        if (entries6OrMore.length === 0) return 1;
 
-        // const correctPositives = entries6OrMore.filter(
-        //   (entry) =>
-        //     suggestions.find((s) => s.timeEntryId === entry.id) !== undefined
-        // );
+        const correctPositives = entries6OrMore.filter(
+          (entry) =>
+            suggestions.find((s) => s.timeEntryId === entry.id) !== undefined
+        );
 
-        // return correctPositives.length / entries6OrMore.length;
+        return correctPositives.length / entries6OrMore.length;
       },
     },
     {
       name: "SIMPLIFY Prefix Applied",
       scorer: ({ output: { suggestions } }) => {
-        return 0;
-        // if (suggestions.length === 0) return 0;
+        if (suggestions.length === 0) return 0;
 
-        // const withPrefix = suggestions.filter((s) =>
-        //   s.suggestedChanges.description?.startsWith("SIMPLIFY: ")
-        // );
+        const withPrefix = suggestions.filter((s) =>
+          s.suggestedChanges.description?.startsWith("SIMPLIFY: ")
+        );
 
-        // return withPrefix.length / suggestions.length;
+        return withPrefix.length / suggestions.length;
       },
     },
   ],
