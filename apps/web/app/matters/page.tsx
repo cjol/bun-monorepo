@@ -21,6 +21,7 @@ import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { modals } from "@mantine/modals";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { IconPlus, IconEdit, IconTrash } from "@tabler/icons-react";
 import { api } from "../../lib/api";
 
@@ -34,6 +35,7 @@ export default function MattersPage() {
   const [editingMatter, setEditingMatter] = useState<string | null>(null);
   const [opened, setOpened] = useState(false);
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const form = useForm<MatterFormValues>({
     initialValues: {
@@ -212,7 +214,11 @@ export default function MattersPage() {
               </Table.Thead>
               <Table.Tbody>
                 {matters.map((matter) => (
-                  <Table.Tr key={matter.id}>
+                  <Table.Tr
+                    key={matter.id}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => router.push(`/matters/${matter.id}`)}
+                  >
                     <Table.Td>{matter.clientName}</Table.Td>
                     <Table.Td>
                       <Text fw={500}>{matter.matterName}</Text>
@@ -231,16 +237,20 @@ export default function MattersPage() {
                       <Group gap="xs">
                         <ActionIcon
                           variant="subtle"
-                          onClick={() => handleEdit(matter)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(matter);
+                          }}
                         >
                           <IconEdit size={16} />
                         </ActionIcon>
                         <ActionIcon
                           variant="subtle"
                           color="red"
-                          onClick={() =>
-                            handleDelete(matter.id, matter.matterName)
-                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(matter.id, matter.matterName);
+                          }}
                         >
                           <IconTrash size={16} />
                         </ActionIcon>
