@@ -9,10 +9,12 @@
     "tests"
   ],
   "scripts": {
+    "dev": "bun --filter './apps/*' dev",
     "db:studio": "bunx drizzle-kit studio",
     "db:push": "bunx drizzle-kit push",
     "cli": "bun apps/cli/index.ts",
     "api": "bun apps/api/index.ts",
+    "web": "bun --watch apps/api/index.ts",
     "test": "bun test",
     "eval:dev": "evalite watch",
     "eval": "evalite",

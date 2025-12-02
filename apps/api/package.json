@@ -21,6 +21,7 @@
     "zod": "^4.1.12"
   },
   "scripts": {
-    "start": "bun run index.ts"
+    "start": "bun run index.ts",
+    "dev": "bun --watch index.ts"
   }
 }

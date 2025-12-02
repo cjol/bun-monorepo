@@ -25,6 +25,7 @@ import {
   generateFunctionDocs,
   type SandboxFunction,
 } from "./utils";
+import { anthropic } from "@ai-sdk/anthropic";
 
 /**
  * Options for creating a general-purpose agent.
@@ -49,7 +50,7 @@ export interface CreateGeneralPurposeAgentOptions {
    */
   workflowInstructions?: string;
 
-  model: LanguageModel;
+  model?: LanguageModel;
 }
 
 /**
@@ -145,7 +146,7 @@ ${workflowInstructions ? `\n## Workflow Instructions\n\n${workflowInstructions}\
 ${generateFunctionDocs(sandboxFunctions)}`;
 
   return new Agent({
-    model: options.model,
+    model: options.model || anthropic("claude-haiku-4-5"),
     system: systemPrompt,
     tools: {
       runCode: createSandboxTool({

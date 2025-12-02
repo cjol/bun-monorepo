@@ -121,4 +121,27 @@ export const matterTimekeeperRoleRoutes = ({ app }: Context) =>
           description: "Update an existing timekeeper role within a matter.",
         },
       }
+    )
+    .delete(
+      "/:roleId",
+      async ({ params, status }) => {
+        // Verify the role belongs to the matter before deleting
+        const existing = await app.timekeeperRole.getTimekeeperRole(
+          params.roleId
+        );
+        if (!existing || existing.matterId !== params.matterId) {
+          throw notFound(
+            `Timekeeper role with ID ${params.roleId} not found in matter ${params.matterId}`
+          );
+        }
+        await app.timekeeperRole.deleteTimekeeperRole(params.roleId);
+        return status(204);
+      },
+      {
+        params: matterRoleParamsSchema,
+        detail: {
+          summary: "Delete Timekeeper Role",
+          description: "Remove a timekeeper role from a matter.",
+        },
+      }
     );

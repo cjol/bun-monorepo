@@ -12,6 +12,14 @@ import { uuidSchema } from "@ai-starter/core/schema/utils/validation";
  * These functions are used by the general-purpose agent to interact with matters.
  */
 export function createMatterSandboxFunctions(service: MatterService) {
+  const listMatters = defineSandboxFunction({
+    description: "List all matters",
+    inputSchema: z.object({}),
+    execute: async () => {
+      return service.listMatters();
+    },
+  });
+
   const getMatter = defineSandboxFunction({
     description: "Fetch a specific matter by ID",
     inputSchema: z.object({
@@ -47,6 +55,7 @@ export function createMatterSandboxFunctions(service: MatterService) {
   });
 
   return {
+    listMatters,
     getMatter,
     createMatter,
     updateMatter,
