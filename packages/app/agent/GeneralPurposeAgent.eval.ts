@@ -17,6 +17,7 @@ import {
   WorkflowService,
   TimekeeperService,
   TimekeeperRoleService,
+  RoleService,
 } from "../core";
 import { createGeneralPurposeAgent } from "./GeneralPurposeAgent";
 import type { TimeEntry } from "@ai-starter/core";
@@ -37,6 +38,7 @@ async function setupTest() {
     workflow: WorkflowService({ repos }),
     timekeeper: TimekeeperService({ repos }),
     timekeeperRole: TimekeeperRoleService({ repos }),
+    role: RoleService({ repos }),
   };
   const model = wrapAISDKModel(anthropic("claude-haiku-4-5"));
   return { db, repos, services, model };

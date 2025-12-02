@@ -4,6 +4,7 @@ import { timestamps } from "./utils/timestamps";
 import { ulidSchema, positiveNumberSchema } from "./utils/validation";
 import { timekeeperSchema } from "./timekeeper";
 import { matterSchema } from "./matter";
+import { roleSchema } from "./role";
 import { generateId } from "./utils/generateId";
 
 export const timekeeperRoleSchema = sqliteTable("timekeeper_role", {
@@ -16,7 +17,9 @@ export const timekeeperRoleSchema = sqliteTable("timekeeper_role", {
   matterId: text("matter_id")
     .notNull()
     .references(() => matterSchema.id, { onDelete: "cascade" }),
-  role: text("role").notNull(),
+  roleId: text("role_id")
+    .notNull()
+    .references(() => roleSchema.id, { onDelete: "cascade" }),
   billableRate: real("billable_rate").notNull(),
   ...timestamps,
 });
@@ -32,7 +35,7 @@ export type NewTimekeeperRole = typeof timekeeperRoleSchema.$inferInsert;
 export const newTimekeeperRoleInputSchema = z.object({
   timekeeperId: ulidSchema.describe("The ULID of the timekeeper"),
   matterId: ulidSchema.describe("The ULID of the matter"),
-  role: z.string().describe("Role title (e.g. Associate, Partner)"),
+  roleId: ulidSchema.describe("The ULID of the role"),
   billableRate: positiveNumberSchema.describe("Hourly billable rate"),
 });
 

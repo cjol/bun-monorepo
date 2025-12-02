@@ -52,14 +52,17 @@ export async function createTestTimekeeperRole(
   db: DB,
   timekeeperId: string,
   matterId: string,
-  overrides?: { role?: string; billableRate?: number }
+  overrides?: { roleId?: string; billableRate?: number }
 ) {
+  // Use the Associate role by default (first mock role)
+  const defaultRoleId = overrides?.roleId ?? mockRoles[0].id;
+
   const [timekeeperRole] = await db
     .insert(timekeeperRoleSchema)
     .values({
       timekeeperId,
       matterId,
-      role: overrides?.role ?? "Associate",
+      roleId: defaultRoleId,
       billableRate: overrides?.billableRate ?? 250.0,
     })
     .returning();

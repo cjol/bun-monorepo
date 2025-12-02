@@ -10,6 +10,7 @@ import { DrizzleAiSuggestionRepository } from "./AiSuggestionRepository";
 import { DrizzleWorkflowRepository } from "./WorkflowRepository";
 import { DrizzleTimekeeperRepository } from "./TimekeeperRepository";
 import { DrizzleTimekeeperRoleRepository } from "./TimekeeperRoleRepository";
+import { DrizzleRoleRepository } from "./RoleRepository";
 
 export * from "./FooRepository";
 export * from "./ConversationRepository";
@@ -22,6 +23,7 @@ export * from "./AiSuggestionRepository";
 export * from "./WorkflowRepository";
 export * from "./TimekeeperRepository";
 export * from "./TimekeeperRoleRepository";
+export * from "./RoleRepository";
 
 export const getRepos = (db: DB) => {
   return {
@@ -36,5 +38,6 @@ export const getRepos = (db: DB) => {
     workflow: DrizzleWorkflowRepository({ db }),
     timekeeper: DrizzleTimekeeperRepository({ db }),
     timekeeperRole: DrizzleTimekeeperRoleRepository({ db }),
+    role: DrizzleRoleRepository({ db }),
   };
 };

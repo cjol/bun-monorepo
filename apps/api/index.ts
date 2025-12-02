@@ -3,6 +3,7 @@ import { cors } from "@elysiajs/cors";
 import { getContext, type Context } from "./context";
 import { matterRoutes } from "./endpoints/matters";
 import { timekeeperRoutes } from "./endpoints/timekeepers";
+import { roleRoutes } from "./endpoints/roles";
 import { matterBillRoutes } from "./endpoints/matters/bills";
 import { matterTimeEntryRoutes } from "./endpoints/matters/time-entries";
 import { matterAiSuggestionRoutes } from "./endpoints/matters/ai-suggestions";
@@ -33,6 +34,7 @@ export const getApp = (ctx: Context) =>
           tags: [
             { name: "matter", description: "Matter related endpoints" },
             { name: "timekeeper", description: "Timekeeper related endpoints" },
+            { name: "role", description: "Role related endpoints" },
             { name: "bill", description: "Bill related endpoints" },
             { name: "time-entry", description: "Time entry related endpoints" },
             {
@@ -62,6 +64,7 @@ export const getApp = (ctx: Context) =>
     .get("/health", () => ({ status: "ok" }))
     .use(matterRoutes(ctx))
     .use(timekeeperRoutes(ctx))
+    .use(roleRoutes(ctx))
     .use(matterBillRoutes(ctx))
     .use(matterTimeEntryRoutes(ctx))
     .use(matterAiSuggestionRoutes(ctx))
