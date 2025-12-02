@@ -24,7 +24,14 @@ import { notifications } from "@mantine/notifications";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconPlus, IconEdit, IconTrash } from "@tabler/icons-react";
 import { api } from "../../../../lib/api";
-import type { Bill, TimeEntry } from "@ai-starter/core";
+import type { Bill } from "@ai-starter/core";
+import { useTimeEntryData } from "../../../../hooks/useTimeEntryData";
+import {
+  useEnrichedTimeEntries,
+  formatCurrency,
+  type EnrichedTimeEntry,
+} from "../../../../hooks/useEnrichedTimeEntries";
+import { useMetadataFields } from "../../../../hooks/useMetadataFields";
 
 interface TimeEntryFormValues {
   timekeeperId: string;
@@ -56,15 +63,17 @@ export default function TimeEntriesPage() {
     },
   });
 
-  const { data: timekeepers } = useQuery({
-    queryKey: ["timekeepers"],
-    queryFn: async () => {
-      const response = await api.timekeepers.get();
-      if (response.error) throw new Error("Failed to fetch timekeepers");
-      return response.data;
-    },
-  });
+  // Fetch all required data
+  const {
+    timekeepers,
+    roles,
+    timekeeperRoles,
+    matter,
+    timeEntries,
+    isLoading,
+  } = useTimeEntryData(matterId);
 
+  // Fetch bills separately (not part of the time entry enrichment)
   const { data: bills } = useQuery({
     queryKey: ["bills", matterId],
     queryFn: async () => {
@@ -74,15 +83,17 @@ export default function TimeEntriesPage() {
     },
   });
 
-  const { data: timeEntries, isLoading } = useQuery({
-    queryKey: ["time-entries", matterId],
-    queryFn: async () => {
-      const matterApi = api.matters({ matterId });
-      const response = await matterApi["time-entries"].get();
-      if (response.error) throw new Error("Failed to fetch time entries");
-      return response.data;
-    },
+  // Enrich time entries with timekeeper, role, and rate information
+  const enrichedTimeEntries = useEnrichedTimeEntries({
+    timeEntries,
+    timekeepers,
+    roles,
+    timekeeperRoles,
+    matterId,
   });
+
+  // Extract metadata fields from the matter schema
+  const metadataFields = useMetadataFields(matter);
 
   const createTimeEntryMutation = useMutation({
     mutationFn: async (values: TimeEntryFormValues) => {
@@ -202,7 +213,7 @@ export default function TimeEntriesPage() {
           <Group justify="center" p="xl">
             <Loader />
           </Group>
-        ) : !timeEntries || timeEntries.length === 0 ? (
+        ) : !enrichedTimeEntries || enrichedTimeEntries.length === 0 ? (
           <Text c="dimmed" ta="center" py="xl">
             No time entries found for this matter.
           </Text>
@@ -211,16 +222,31 @@ export default function TimeEntriesPage() {
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Date</Table.Th>
+                <Table.Th>Timekeeper</Table.Th>
+                <Table.Th>Role</Table.Th>
+                <Table.Th>Rate</Table.Th>
                 <Table.Th>Hours</Table.Th>
                 <Table.Th>Description</Table.Th>
+                {metadataFields.map((field) => (
+                  <Table.Th key={field.key}>{field.label}</Table.Th>
+                ))}
                 <Table.Th>Actions</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {timeEntries.map((entry: TimeEntry) => (
+              {enrichedTimeEntries.map((entry: EnrichedTimeEntry) => (
                 <Table.Tr key={entry.id}>
                   <Table.Td>
                     {new Date(entry.date).toLocaleDateString()}
+                  </Table.Td>
+                  <Table.Td>
+                    <Text fw={500}>{entry.timekeeperName}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text>{entry.roleName}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text>{formatCurrency(entry.billableRate)}</Text>
                   </Table.Td>
                   <Table.Td>
                     <Text fw={500}>{entry.hours}</Text>
@@ -228,6 +254,11 @@ export default function TimeEntriesPage() {
                   <Table.Td>
                     <Text lineClamp={2}>{entry.description}</Text>
                   </Table.Td>
+                  {metadataFields.map((field) => (
+                    <Table.Td key={field.key}>
+                      <Text>{entry.metadata?.[field.key] || "-"}</Text>
+                    </Table.Td>
+                  ))}
                   <Table.Td>
                     <Group gap="xs">
                       <ActionIcon variant="subtle">
