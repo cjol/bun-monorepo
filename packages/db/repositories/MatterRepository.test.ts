@@ -125,7 +125,15 @@ describe("DrizzleMatterRepository", () => {
       // Create a test schema using the simple format
       const testSchema = {
         category: { type: "string" as const, name: "Category" },
-        urgency: { type: "string" as const, name: "Urgency" },
+        priority: {
+          type: "enum" as const,
+          name: "Priority",
+          values: [
+            { name: "Low", value: "low" },
+            { name: "Medium", value: "medium" },
+            { name: "High", value: "high" },
+          ],
+        },
         hours_estimate: { type: "number" as const, name: "Hours Estimate" },
       };
 
@@ -149,9 +157,14 @@ describe("DrizzleMatterRepository", () => {
         type: "string",
         name: "Category",
       });
-      expect(retrieved!.timeEntryMetadataSchema!.urgency).toEqual({
-        type: "string",
-        name: "Urgency",
+      expect(retrieved!.timeEntryMetadataSchema!.priority).toEqual({
+        type: "enum",
+        name: "Priority",
+        values: [
+          { name: "Low", value: "low" },
+          { name: "Medium", value: "medium" },
+          { name: "High", value: "high" },
+        ],
       });
       expect(retrieved!.timeEntryMetadataSchema!.hours_estimate).toEqual({
         type: "number",

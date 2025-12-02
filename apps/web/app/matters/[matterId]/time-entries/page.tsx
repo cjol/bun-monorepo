@@ -254,11 +254,24 @@ export default function TimeEntriesPage() {
                   <Table.Td>
                     <Text lineClamp={2}>{entry.description}</Text>
                   </Table.Td>
-                  {metadataFields.map((field) => (
-                    <Table.Td key={field.key}>
-                      <Text>{entry.metadata?.[field.key] || "-"}</Text>
-                    </Table.Td>
-                  ))}
+                  {metadataFields.map((field) => {
+                    const value = entry.metadata?.[field.key];
+                    let displayValue = value || "-";
+
+                    // For enum fields, show the readable name instead of the raw value
+                    if (field.type === "enum" && value) {
+                      const enumOption = field.values.find(
+                        (v) => v.value === value
+                      );
+                      displayValue = enumOption?.name || value;
+                    }
+
+                    return (
+                      <Table.Td key={field.key}>
+                        <Text>{displayValue}</Text>
+                      </Table.Td>
+                    );
+                  })}
                   <Table.Td>
                     <Group gap="xs">
                       <ActionIcon variant="subtle">
