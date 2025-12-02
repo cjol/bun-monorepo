@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "bun:test";
 import { DrizzleMatterRepository } from "./MatterRepository";
 import type { DB } from "../db";
 import { testDB } from "../test-utils/db";
+import { z } from "zod";
 
 describe("DrizzleMatterRepository", () => {
   let db: DB;
@@ -46,6 +47,7 @@ describe("DrizzleMatterRepository", () => {
         clientName: "New Client",
         matterName: "New Matter",
         description: "New Description",
+        timeEntryMetadataSchema: null,
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
@@ -116,6 +118,55 @@ describe("DrizzleMatterRepository", () => {
       const results = await repository.listAll();
 
       expect(results).toHaveLength(2);
+    });
+  });
+
+  describe("timeEntryMetadataSchema", () => {
+    it("should round-trip Zod schema using zodex", async () => {
+      // Create a test Zod schema
+      const testSchema = z.object({
+        category: z.enum(["research", "drafting", "meeting"]),
+        urgency: z.enum(["low", "medium", "high"]).optional(),
+        notes: z.string().optional(),
+      });
+
+      // Create a matter with the schema
+      const matter = await repository.create({
+        clientName: "Test Client",
+        matterName: "Test Matter",
+        timeEntryMetadataSchema: testSchema,
+      });
+
+      // Retrieve the matter
+      const retrieved = await repository.get(matter.id);
+
+      // The schema should be reconstructed properly
+      expect(retrieved).not.toBeNull();
+      expect(retrieved!.timeEntryMetadataSchema).not.toBeNull();
+
+      // Test that the reconstructed schema can validate data
+      const validData = {
+        category: "research" as const,
+        urgency: "high" as const,
+      };
+      const result = retrieved!.timeEntryMetadataSchema!.parse(validData);
+      expect(result).toEqual(validData);
+
+      // Test that invalid data is rejected
+      expect(() =>
+        retrieved!.timeEntryMetadataSchema!.parse({ category: "invalid" })
+      ).toThrow();
+    });
+
+    it("should handle null timeEntryMetadataSchema", async () => {
+      const matter = await repository.create({
+        clientName: "Test Client",
+        matterName: "Test Matter",
+        timeEntryMetadataSchema: null,
+      });
+
+      const retrieved = await repository.get(matter.id);
+      expect(retrieved!.timeEntryMetadataSchema).toBeNull();
     });
   });
 });

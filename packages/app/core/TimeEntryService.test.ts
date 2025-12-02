@@ -44,6 +44,7 @@ describe("TimeEntryService", () => {
         date: new Date("2024-01-15"),
         hours: 2.5,
         description: "Client consultation",
+        metadata: {},
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
@@ -73,6 +74,7 @@ describe("TimeEntryService", () => {
           date: result.date,
           hours: 2.5,
           description: "Client consultation",
+          metadata: {},
           createdAt: result.createdAt,
           updatedAt: result.updatedAt,
         },
@@ -125,6 +127,7 @@ describe("TimeEntryService", () => {
         date: new Date("2024-01-15"),
         hours: 3.0,
         description: "Updated client consultation",
+        metadata: {},
         createdAt: created.createdAt,
         updatedAt: expect.any(Date),
       });
@@ -154,28 +157,8 @@ describe("TimeEntryService", () => {
 
       const updateLog = logs[1];
       expect(updateLog).toBeDefined();
-      expect(updateLog!.beforeData).toEqual({
-        id: created.id,
-        matterId: context.matter.id,
-        timekeeperId: context.timekeeper.id,
-        billId: context.bill!.id,
-        date: created.date,
-        hours: 2.5,
-        description: "Client consultation",
-        createdAt: created.createdAt,
-        updatedAt: created.updatedAt,
-      });
-      expect(updateLog!.afterData).toEqual({
-        id: result.id,
-        matterId: context.matter.id,
-        timekeeperId: context.timekeeper.id,
-        billId: context.bill!.id,
-        date: result.date,
-        hours: 3.0,
-        description: "Client consultation",
-        createdAt: result.createdAt,
-        updatedAt: result.updatedAt,
-      });
+      expect(updateLog!.beforeData).toEqual(created);
+      expect(updateLog!.afterData).toEqual(result);
     });
 
     it("should reject updating time entry to a matter where timekeeper has no role", async () => {
