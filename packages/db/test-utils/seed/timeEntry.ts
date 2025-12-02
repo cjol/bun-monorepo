@@ -15,6 +15,7 @@ export const mockTimeEntries = [
     date: new Date("2024-01-15"),
     hours: 2.5,
     description: "Research case law on patent claims",
+    metadata: { category: "research", urgency: "high" },
     createdAt: seedNow,
     updatedAt: seedNow,
   },
@@ -26,6 +27,7 @@ export const mockTimeEntries = [
     date: new Date("2024-01-16"),
     hours: 3.0,
     description: "Draft motion to dismiss",
+    metadata: { category: "drafting", urgency: "medium" },
     createdAt: seedNow,
     updatedAt: seedNow,
   },
@@ -55,6 +57,7 @@ export async function createTestTimeEntry(
     date?: Date;
     hours?: number;
     description?: string;
+    metadata?: Record<string, string>;
   }
 ) {
   const [timeEntry] = await db
@@ -66,6 +69,7 @@ export async function createTestTimeEntry(
       date: overrides?.date ?? new Date("2024-01-15"),
       hours: overrides?.hours ?? 2.0,
       description: overrides?.description ?? "Test time entry",
+      metadata: overrides?.metadata ?? {},
     })
     .returning();
   if (!timeEntry) throw new Error("Failed to create test time entry");

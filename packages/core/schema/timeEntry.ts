@@ -17,6 +17,26 @@ import { billSchema } from "./bill";
 import { timekeeperSchema } from "./timekeeper";
 import { generateId } from "./utils/generateId";
 
+/** Custom column type for metadata - stores Record<string, string> as JSON */
+export const jsonMetadata = customType<{
+  data: Record<string, string>;
+  driverData: string;
+}>({
+  dataType() {
+    return "text";
+  },
+  toDriver(value: Record<string, string>) {
+    // Validate that all values are strings at insertion time
+    const validated = z.record(z.string(), z.string()).parse(value);
+    return JSON.stringify(validated);
+  },
+  fromDriver(value: string) {
+    const parsed = JSON.parse(value);
+    // Validate on read as well for safety
+    return z.record(z.string(), z.string()).parse(parsed);
+  },
+});
+
 export const timeEntrySchema = sqliteTable("time_entry", {
   id: text("id")
     .primaryKey()
@@ -33,6 +53,7 @@ export const timeEntrySchema = sqliteTable("time_entry", {
   date: integer("date", { mode: "timestamp" }).notNull(),
   hours: real("hours").notNull(),
   description: text("description").notNull(),
+  metadata: jsonMetadata("metadata").notNull().default({}),
   ...timestamps,
 });
 
@@ -54,6 +75,10 @@ export const newTimeEntryInputSchema = z.object({
   date: isoDateSchema,
   hours: positiveNumberSchema.describe("Number of hours worked"),
   description: z.string().describe("Description of the work performed"),
+  metadata: z
+    .record(z.string(), z.string())
+    .optional()
+    .describe("Custom metadata key-value pairs"),
 });
 
 export const updateTimeEntryInputSchema = newTimeEntryInputSchema

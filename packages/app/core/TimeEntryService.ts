@@ -57,6 +57,7 @@ export const TimeEntryService = (deps: Deps) => {
         date: Date;
         hours: number;
         description: string;
+        metadata: Record<string, string>;
       }>
     ): Promise<TimeEntry> => {
       // Get the existing entry for the changelog
