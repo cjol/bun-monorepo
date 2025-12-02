@@ -178,7 +178,6 @@ evalite("Calculation Request", {
 
     // Setup: create matter with time entries
     const matter = await services.matter.createMatter({
-      id: "00000000-0000-0000-0000-000000000000",
       clientName: "Test Corp",
       matterName: "Tax Advisory",
       description: null,

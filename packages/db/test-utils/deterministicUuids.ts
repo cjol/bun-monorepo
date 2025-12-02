@@ -1,9 +1,11 @@
+import { setDefaultGeneratorOptions } from "@ai-starter/core/schema/utils/generateId";
+
 let timeCounter = 0;
 const baseTime = new Date("2025-01-01T00:00:00.000Z").getTime();
 
 /**
  * Sets up deterministic ID and timestamp generation for tests.
- * Seeds Math.random to make ULID generation deterministic.
+ * Configures ULID generation to use deterministic PRNG and timestamps.
  * Overrides Date constructor and Date.now() to return deterministic timestamps.
  * This ensures that the same sequence of operations always generates the same IDs and timestamps,
  * which is crucial for prompt caching in evals.
@@ -11,17 +13,28 @@ const baseTime = new Date("2025-01-01T00:00:00.000Z").getTime();
 export function setupDeterministicIds() {
   timeCounter = 0; // Reset time counter
 
-  // Seed Math.random for deterministic ULID generation
+  // Create deterministic PRNG for ULID generation
   let randomSeed = 12345;
-  Math.random = () => {
+  const deterministicPrng = () => {
     randomSeed = (randomSeed * 9301 + 49297) % 233280;
     return randomSeed / 233280;
   };
 
+  // Create deterministic seed time function
+  const deterministicSeedTime = () => {
+    return baseTime + timeCounter++ * 1000;
+  };
+
+  // Set default PRNG and seed time for ULID generation
+  setDefaultGeneratorOptions({
+    prng: deterministicPrng,
+    seedTime: deterministicSeedTime,
+  });
+
   // Save original Date
   const OriginalDate = Date;
 
-  // Override Date constructor for deterministic timestamps
+  // Override Date constructor for deterministic timestamps (for other uses beyond ULIDs)
   // @ts-expect-error - We're intentionally overriding the global Date
   globalThis.Date = class extends OriginalDate {
     constructor(...args: unknown[]) {
