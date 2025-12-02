@@ -31,6 +31,16 @@ export const DrizzleTimekeeperRoleRepository = ({
     });
     return results;
   },
+  async findByTimekeeperAndMatter(timekeeperId: string, matterId: string) {
+    const result = await db.query.timekeeperRoleSchema.findFirst({
+      where: (fields, { and }) =>
+        and(
+          eq(fields.timekeeperId, timekeeperId),
+          eq(fields.matterId, matterId)
+        ),
+    });
+    return result ?? null;
+  },
   async create(data) {
     const [result] = await db
       .insert(timekeeperRoleSchema)

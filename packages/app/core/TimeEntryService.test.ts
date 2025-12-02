@@ -1,4 +1,8 @@
 import { describe, it, expect, beforeEach } from "bun:test";
+import {
+  createTestMatter,
+  createTestTimekeeper,
+} from "@ai-starter/db/test-utils";
 import { testDB } from "@ai-starter/db/test-utils";
 import { getRepos, type DB } from "@ai-starter/db";
 import { TimeEntryService } from "./TimeEntryService";
@@ -74,6 +78,25 @@ describe("TimeEntryService", () => {
         },
         changedAt: expect.any(Date),
       });
+    });
+
+    it("should reject creating a time entry when timekeeper has no role in matter", async () => {
+      // Create a different matter without assigning the timekeeper to it
+      const otherMatter = await createTestMatter(db);
+      if (!otherMatter) throw new Error("Failed to create other matter");
+
+      await expect(
+        service.createTimeEntry({
+          matterId: otherMatter.id,
+          timekeeperId: context.timekeeper.id,
+          billId: null,
+          date: new Date("2024-01-15"),
+          hours: 2.5,
+          description: "Client consultation",
+        })
+      ).rejects.toThrow(
+        `Timekeeper ${context.timekeeper.id} does not have a role within matter ${otherMatter.id}`
+      );
     });
   });
   describe("updateTimeEntry", () => {
@@ -153,6 +176,56 @@ describe("TimeEntryService", () => {
         createdAt: result.createdAt,
         updatedAt: result.updatedAt,
       });
+    });
+
+    it("should reject updating time entry to a matter where timekeeper has no role", async () => {
+      const created = await service.createTimeEntry({
+        matterId: context.matter.id,
+        timekeeperId: context.timekeeper.id,
+        billId: context.bill!.id,
+        date: new Date("2024-01-15"),
+        hours: 2.5,
+        description: "Client consultation",
+      });
+
+      // Create a different matter without assigning the timekeeper to it
+      const otherMatter = await createTestMatter(db);
+      if (!otherMatter) throw new Error("Failed to create other matter");
+
+      await expect(
+        service.updateTimeEntry(created.id, {
+          matterId: otherMatter.id,
+        })
+      ).rejects.toThrow(
+        `Timekeeper ${context.timekeeper.id} does not have a role within matter ${otherMatter.id}`
+      );
+    });
+
+    it("should reject updating time entry to a timekeeper who has no role in the matter", async () => {
+      const created = await service.createTimeEntry({
+        matterId: context.matter.id,
+        timekeeperId: context.timekeeper.id,
+        billId: context.bill!.id,
+        date: new Date("2024-01-15"),
+        hours: 2.5,
+        description: "Client consultation",
+      });
+
+      // Create a different timekeeper without assigning them to the matter
+      const otherTimekeeper = await createTestTimekeeper(db, {
+        name: "Other Timekeeper",
+        email: "other@example.com",
+      });
+      if (!otherTimekeeper)
+        throw new Error("Failed to create other timekeeper");
+
+      await expect(
+        service.updateTimeEntry(created.id, {
+          timekeeperId: otherTimekeeper.id,
+        })
+      ).rejects.toThrow(
+        `Timekeeper ${otherTimekeeper.id} does not have a role within matter ${context.matter.id}`
+      );
     });
   });
 });
