@@ -37,11 +37,17 @@ export function createMatterSandboxFunctions(service: MatterService) {
   const createMatter = defineSandboxFunction({
     description: "Create a new matter",
     inputSchema: newMatterInputSchema,
-    execute: async ({ clientName, matterName, description }) => {
+    execute: async ({
+      clientName,
+      matterName,
+      description,
+      timeEntryMetadataSchema,
+    }) => {
       return service.createMatter({
         clientName,
         matterName,
         description,
+        timeEntryMetadataSchema,
       });
     },
   });

@@ -1,33 +1,37 @@
 import { sqliteTable, text, customType } from "drizzle-orm/sqlite-core";
 import { z } from "zod";
-import { zerialize, dezerialize, type SzType, type ZodTypes } from "zodex";
 import { timestamps } from "./utils/timestamps";
 import { ulidSchema } from "./utils/validation";
 import { generateId } from "./utils/generateId";
 
 /**
+ * Type definition for time entry metadata schema.
+ * Simple format: Record<string, {type: "string" | "number", name: string}>
+ */
+export type TimeEntryMetadataSchema = Record<
+  string,
+  { type: "string" | "number"; name: string }
+>;
+
+/**
  * Custom column type for time entry metadata schema.
- * Uses zodex to properly serialize/deserialize Zod schemas to/from a JSON format.
- * This allows round-trip conversion: Zod schema → serialized format → Zod schema.
+ * Stores a simple schema format as JSON.
  */
 export const jsonTimeEntryMetadataSchema = customType<{
-  data: ZodTypes | null;
+  data: TimeEntryMetadataSchema | null;
   driverData: string;
 }>({
   dataType() {
     return "text";
   },
-  toDriver(value: ZodTypes | null) {
+  toDriver(value: TimeEntryMetadataSchema | null) {
     if (!value) return JSON.stringify(null);
-    // Convert Zod schema to serialized format using zodex
-    const serialized = zerialize(value);
-    return JSON.stringify(serialized);
+    return JSON.stringify(value);
   },
   fromDriver(value: string) {
     const parsed = JSON.parse(value);
     if (!parsed) return null;
-    // Reconstruct Zod schema from serialized format using zodex
-    return dezerialize(parsed as SzType);
+    return parsed as TimeEntryMetadataSchema;
   },
 });
 
@@ -52,6 +56,11 @@ export type NewMatter = typeof matterSchema.$inferInsert;
  * Used for API input validation and sandbox function parameters.
  */
 
+const metadataFieldSchema = z.object({
+  type: z.enum(["string", "number"]).describe("The type of the metadata field"),
+  name: z.string().describe("The display name of the metadata field"),
+});
+
 export const newMatterInputSchema = z.object({
   clientName: z.string().describe("Name of the client"),
   matterName: z.string().describe("Name of the matter"),
@@ -60,11 +69,11 @@ export const newMatterInputSchema = z.object({
     .nullable()
     .describe("Optional description of the matter"),
   timeEntryMetadataSchema: z
-    .any()
+    .record(z.string(), metadataFieldSchema)
     .nullable()
     .optional()
     .describe(
-      "Optional Zod schema defining the structure of time entry metadata for this matter"
+      "Optional schema defining the structure of time entry metadata for this matter. Format: Record<fieldKey, {type: 'string' | 'number', name: displayName}>"
     ),
 });
 

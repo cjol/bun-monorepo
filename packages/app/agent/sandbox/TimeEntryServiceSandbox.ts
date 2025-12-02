@@ -36,6 +36,7 @@ export function createTimeEntrySandboxFunctions(service: TimeEntryService) {
       date,
       hours,
       description,
+      metadata,
     }) => {
       return service.createTimeEntry({
         matterId,
@@ -44,6 +45,7 @@ export function createTimeEntrySandboxFunctions(service: TimeEntryService) {
         date: new Date(date),
         hours,
         description,
+        metadata,
       });
     },
   });

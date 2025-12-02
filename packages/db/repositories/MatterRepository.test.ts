@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach } from "bun:test";
 import { DrizzleMatterRepository } from "./MatterRepository";
 import type { DB } from "../db";
 import { testDB } from "../test-utils/db";
-import { z } from "zod";
 
 describe("DrizzleMatterRepository", () => {
   let db: DB;
@@ -122,13 +121,13 @@ describe("DrizzleMatterRepository", () => {
   });
 
   describe("timeEntryMetadataSchema", () => {
-    it("should round-trip Zod schema using zodex", async () => {
-      // Create a test Zod schema
-      const testSchema = z.object({
-        category: z.enum(["research", "drafting", "meeting"]),
-        urgency: z.enum(["low", "medium", "high"]).optional(),
-        notes: z.string().optional(),
-      });
+    it("should store and retrieve simple metadata schema", async () => {
+      // Create a test schema using the simple format
+      const testSchema = {
+        category: { type: "string" as const, name: "Category" },
+        urgency: { type: "string" as const, name: "Urgency" },
+        hours_estimate: { type: "number" as const, name: "Hours Estimate" },
+      };
 
       // Create a matter with the schema
       const matter = await repository.create({
@@ -140,22 +139,24 @@ describe("DrizzleMatterRepository", () => {
       // Retrieve the matter
       const retrieved = await repository.get(matter.id);
 
-      // The schema should be reconstructed properly
+      // The schema should be stored and retrieved properly
       expect(retrieved).not.toBeNull();
       expect(retrieved!.timeEntryMetadataSchema).not.toBeNull();
+      expect(retrieved!.timeEntryMetadataSchema).toEqual(testSchema);
 
-      // Test that the reconstructed schema can validate data
-      const validData = {
-        category: "research" as const,
-        urgency: "high" as const,
-      };
-      const result = retrieved!.timeEntryMetadataSchema!.parse(validData);
-      expect(result).toEqual(validData);
-
-      // Test that invalid data is rejected
-      expect(() =>
-        retrieved!.timeEntryMetadataSchema!.parse({ category: "invalid" })
-      ).toThrow();
+      // Verify each field
+      expect(retrieved!.timeEntryMetadataSchema!.category).toEqual({
+        type: "string",
+        name: "Category",
+      });
+      expect(retrieved!.timeEntryMetadataSchema!.urgency).toEqual({
+        type: "string",
+        name: "Urgency",
+      });
+      expect(retrieved!.timeEntryMetadataSchema!.hours_estimate).toEqual({
+        type: "number",
+        name: "Hours Estimate",
+      });
     });
 
     it("should handle null timeEntryMetadataSchema", async () => {
