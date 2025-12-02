@@ -241,7 +241,7 @@ export default function TimekeeperRolesPage() {
                     </Text>
                   </Table.Td>
                   <Table.Td>{timekeeperRole.role}</Table.Td>
-                  <Table.Td>${timekeeperRole.billableRate}/hr</Table.Td>
+                  <Table.Td>£{timekeeperRole.billableRate}/hr</Table.Td>
                   <Table.Td>
                     <Group gap="xs">
                       <ActionIcon
@@ -298,7 +298,7 @@ export default function TimekeeperRolesPage() {
             <NumberInput
               label="Billable Rate (per hour)"
               placeholder="Enter hourly rate"
-              prefix="$"
+              prefix="£"
               min={0}
               decimalScale={2}
               required
