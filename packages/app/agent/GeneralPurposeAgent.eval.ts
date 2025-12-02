@@ -120,7 +120,6 @@ evalite("Create Time Entries", {
       matterName: "Contract Review",
       description: null,
     });
-    console.log("MATTER: ", matter.id);
 
     const timekeeper = await createTestTimekeeper(db);
     if (!timekeeper) {

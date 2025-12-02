@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { defineSandboxFunction } from "../utils";
 import type { WorkflowService } from "../../core/WorkflowService";
-import { uuidSchema } from "@ai-starter/core/schema/utils/validation";
+import { ulidSchema } from "@ai-starter/core/schema/utils/validation";
 
 /**
  * Creates sandbox functions for WorkflowService.
@@ -11,7 +11,7 @@ export function createWorkflowSandboxFunctions(service: WorkflowService) {
   const listWorkflows = defineSandboxFunction({
     description: "List all available workflows for a matter",
     inputSchema: z.object({
-      matterId: uuidSchema.describe("The ULID of the matter"),
+      matterId: ulidSchema.describe("The ULID of the matter"),
     }),
     execute: async ({ matterId }) => {
       return service.listByMatter(matterId);
@@ -21,7 +21,7 @@ export function createWorkflowSandboxFunctions(service: WorkflowService) {
   const getWorkflow = defineSandboxFunction({
     description: "Fetch a specific workflow by ID",
     inputSchema: z.object({
-      id: uuidSchema.describe("The ULID of the workflow to fetch"),
+      id: ulidSchema.describe("The ULID of the workflow to fetch"),
     }),
     execute: async ({ id }) => {
       const workflow = await service.getWorkflow(id);

@@ -24,10 +24,10 @@ export type NewWorkflow = typeof workflowSchema.$inferInsert;
  */
 
 import { z } from "zod";
-import { uuidSchema } from "./utils/validation";
+import { ulidSchema } from "./utils/validation";
 
 export const newWorkflowInputSchema = z.object({
-  matterId: uuidSchema.describe("The ULID of the matter"),
+  matterId: ulidSchema.describe("The ULID of the matter"),
   name: z.string().describe("Name of the workflow"),
   instructions: z.string().describe("Natural language workflow instructions"),
 });
@@ -35,5 +35,5 @@ export const newWorkflowInputSchema = z.object({
 export const updateWorkflowInputSchema = newWorkflowInputSchema
   .partial()
   .extend({
-    id: uuidSchema.describe("The ULID of the workflow to update"),
+    id: ulidSchema.describe("The ULID of the workflow to update"),
   });

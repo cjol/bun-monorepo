@@ -8,7 +8,7 @@ import {
 import { z } from "zod";
 import { timestamps } from "./utils/timestamps";
 import {
-  uuidSchema,
+  ulidSchema,
   isoDateSchema,
   positiveNumberSchema,
 } from "./utils/validation";
@@ -45,9 +45,9 @@ export type NewTimeEntry = typeof timeEntrySchema.$inferInsert;
  */
 
 export const newTimeEntryInputSchema = z.object({
-  matterId: uuidSchema.describe("The ULID of the matter"),
-  timekeeperId: uuidSchema.describe("The ULID of the timekeeper"),
-  billId: uuidSchema
+  matterId: ulidSchema.describe("The ULID of the matter"),
+  timekeeperId: ulidSchema.describe("The ULID of the timekeeper"),
+  billId: ulidSchema
     .nullable()
     .optional()
     .describe("The ULID of the bill (if assigned)"),
@@ -59,7 +59,7 @@ export const newTimeEntryInputSchema = z.object({
 export const updateTimeEntryInputSchema = newTimeEntryInputSchema
   .partial()
   .extend({
-    id: uuidSchema.describe("The ULID of the time entry to update"),
+    id: ulidSchema.describe("The ULID of the time entry to update"),
   });
 
 /** Use as a custom column in other tables */

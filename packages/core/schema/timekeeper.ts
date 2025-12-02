@@ -1,7 +1,7 @@
 import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { z } from "zod";
 import { timestamps } from "./utils/timestamps";
-import { uuidSchema, emailSchema } from "./utils/validation";
+import { ulidSchema, emailSchema } from "./utils/validation";
 import { generateId } from "./utils/generateId";
 
 export const timekeeperSchema = sqliteTable("timekeeper", {
@@ -29,5 +29,5 @@ export const newTimekeeperInputSchema = z.object({
 export const updateTimekeeperInputSchema = newTimekeeperInputSchema
   .partial()
   .extend({
-    id: uuidSchema.describe("The ULID of the timekeeper to update"),
+    id: ulidSchema.describe("The ULID of the timekeeper to update"),
   });

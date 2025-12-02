@@ -1,7 +1,7 @@
 import { sqliteTable, text, real } from "drizzle-orm/sqlite-core";
 import { z } from "zod";
 import { timestamps } from "./utils/timestamps";
-import { uuidSchema, positiveNumberSchema } from "./utils/validation";
+import { ulidSchema, positiveNumberSchema } from "./utils/validation";
 import { timekeeperSchema } from "./timekeeper";
 import { matterSchema } from "./matter";
 import { generateId } from "./utils/generateId";
@@ -30,8 +30,8 @@ export type NewTimekeeperRole = typeof timekeeperRoleSchema.$inferInsert;
  */
 
 export const newTimekeeperRoleInputSchema = z.object({
-  timekeeperId: uuidSchema.describe("The ULID of the timekeeper"),
-  matterId: uuidSchema.describe("The ULID of the matter"),
+  timekeeperId: ulidSchema.describe("The ULID of the timekeeper"),
+  matterId: ulidSchema.describe("The ULID of the matter"),
   role: z.string().describe("Role title (e.g. Associate, Partner)"),
   billableRate: positiveNumberSchema.describe("Hourly billable rate"),
 });
@@ -39,5 +39,5 @@ export const newTimekeeperRoleInputSchema = z.object({
 export const updateTimekeeperRoleInputSchema = newTimekeeperRoleInputSchema
   .partial()
   .extend({
-    id: uuidSchema.describe("The ULID of the timekeeper role to update"),
+    id: ulidSchema.describe("The ULID of the timekeeper role to update"),
   });

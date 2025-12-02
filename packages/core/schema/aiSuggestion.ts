@@ -1,7 +1,7 @@
 import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { z } from "zod";
 import { timestamps } from "./utils/timestamps";
-import { uuidSchema } from "./utils/validation";
+import { ulidSchema } from "./utils/validation";
 import {
   jsonNewTimeEntry,
   timeEntrySchema,
@@ -34,7 +34,7 @@ export type NewAiSuggestion = typeof aiSuggestionSchema.$inferInsert;
  */
 
 export const newAiSuggestionInputSchema = z.object({
-  timeEntryId: uuidSchema.describe(
+  timeEntryId: ulidSchema.describe(
     "The ULID of the time entry to suggest changes for"
   ),
   suggestedChanges: newTimeEntryInputSchema.describe(

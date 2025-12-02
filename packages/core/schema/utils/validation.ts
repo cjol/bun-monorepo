@@ -11,9 +11,6 @@ import { z } from "zod";
  */
 export const ulidSchema = z.ulid();
 
-/** @deprecated Use ulidSchema instead - kept for backwards compatibility during migration */
-export const uuidSchema = ulidSchema;
-
 /** ISO date string validation (e.g. 2025-01-01) */
 export const isoDateSchema = z
   .string()

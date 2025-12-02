@@ -2,7 +2,7 @@ import { z } from "zod";
 import { defineSandboxFunction } from "../utils";
 import type { AiSuggestionService } from "../../core/AiSuggestionService";
 import { newAiSuggestionInputSchema } from "@ai-starter/core/schema/aiSuggestion";
-import { uuidSchema } from "@ai-starter/core/schema/utils/validation";
+import { ulidSchema } from "@ai-starter/core/schema/utils/validation";
 
 /**
  * Creates sandbox functions for AiSuggestionService.
@@ -29,7 +29,7 @@ export function createAiSuggestionSandboxFunctions(
   const listPendingSuggestions = defineSandboxFunction({
     description: "List all pending AI suggestions for a matter",
     inputSchema: z.object({
-      matterId: uuidSchema.describe("The ULID of the matter"),
+      matterId: ulidSchema.describe("The ULID of the matter"),
     }),
     execute: async ({ matterId }) => {
       return service.listByStatus(matterId, "pending");

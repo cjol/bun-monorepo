@@ -5,7 +5,7 @@ import {
   newMatterInputSchema,
   updateMatterInputSchema,
 } from "@ai-starter/core/schema/matter";
-import { uuidSchema } from "@ai-starter/core/schema/utils/validation";
+import { ulidSchema } from "@ai-starter/core/schema/utils/validation";
 
 /**
  * Creates sandbox functions for MatterService.
@@ -23,7 +23,7 @@ export function createMatterSandboxFunctions(service: MatterService) {
   const getMatter = defineSandboxFunction({
     description: "Fetch a specific matter by ID",
     inputSchema: z.object({
-      id: uuidSchema.describe("The ULID of the matter to fetch"),
+      id: ulidSchema.describe("The ULID of the matter to fetch"),
     }),
     execute: async ({ id }) => {
       const matter = await service.getMatter(id);

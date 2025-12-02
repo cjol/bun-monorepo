@@ -85,7 +85,6 @@ describe("CLI e2e", () => {
 
     const patchResult =
       await $`bun ${cliPath} patch-foo non-existent-id "New Name" --database file:${dbPath}`.text();
-    console.log("Patch Result:", patchResult);
 
     expect(patchResult).toContain("not found");
 
