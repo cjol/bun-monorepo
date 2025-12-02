@@ -18,7 +18,7 @@
     "test": "bun test",
     "eval:dev": "evalite watch",
     "eval": "evalite",
-    "typecheck": "tsc --build packages/*/tsconfig.json apps/*/tsconfig.json tests/tsconfig.json",
+    "typecheck": "tsc --build --noEmit --force",
     "lint": "eslint . && prettier --check .",
     "lint:fix": "bun format && eslint --fix --unsafe .",
     "format": "prettier --write .",
