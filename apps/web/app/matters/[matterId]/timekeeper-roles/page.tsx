@@ -26,7 +26,7 @@ import { api } from "../../../../lib/api";
 
 interface TimekeeperRoleFormValues {
   timekeeperId: string;
-  role: string;
+  roleId: string;
   billableRate: number;
 }
 
@@ -40,32 +40,42 @@ export default function TimekeeperRolesPage() {
   const form = useForm<TimekeeperRoleFormValues>({
     initialValues: {
       timekeeperId: "",
-      role: "",
+      roleId: "",
       billableRate: 0,
     },
     validate: {
       timekeeperId: (value) => (!value ? "Timekeeper is required" : null),
-      role: (value) => (!value ? "Role is required" : null),
+      roleId: (value) => (!value ? "Role is required" : null),
       billableRate: (value) =>
         value <= 0 ? "Billable rate must be greater than 0" : null,
     },
   });
 
-  const { data: timekeeperRoles, isLoading: isLoadingRoles } = useQuery({
-    queryKey: ["timekeeperRoles", matterId],
-    queryFn: async () => {
-      const rolesEndpoint = api.matters({ matterId })["timekeeper-roles"];
-      const response = await rolesEndpoint.get();
-      if (response.error) throw new Error("Failed to fetch timekeeper roles");
-      return response.data;
-    },
-  });
+  const { data: timekeeperRoles, isLoading: isLoadingTimekeeperRoles } =
+    useQuery({
+      queryKey: ["timekeeperRoles", matterId],
+      queryFn: async () => {
+        const rolesEndpoint = api.matters({ matterId })["timekeeper-roles"];
+        const response = await rolesEndpoint.get();
+        if (response.error) throw new Error("Failed to fetch timekeeper roles");
+        return response.data;
+      },
+    });
 
   const { data: timekeepers, isLoading: isLoadingTimekeepers } = useQuery({
     queryKey: ["timekeepers"],
     queryFn: async () => {
       const response = await api.timekeepers.get();
       if (response.error) throw new Error("Failed to fetch timekeepers");
+      return response.data;
+    },
+  });
+
+  const { data: roles, isLoading: isLoadingRoles } = useQuery({
+    queryKey: ["roles"],
+    queryFn: async () => {
+      const response = await api.roles.get();
+      if (response.error) throw new Error("Failed to fetch roles");
       return response.data;
     },
   });
@@ -158,13 +168,13 @@ export default function TimekeeperRolesPage() {
   const handleEdit = (role: {
     id: string;
     timekeeperId: string;
-    role: string;
+    roleId: string;
     billableRate: number;
   }) => {
     setEditingRoleId(role.id);
     form.setValues({
       timekeeperId: role.timekeeperId,
-      role: role.role,
+      roleId: role.roleId,
       billableRate: role.billableRate,
     });
     setOpened(true);
@@ -192,9 +202,13 @@ export default function TimekeeperRolesPage() {
     ? timekeeperRoles
     : [];
   const timekeepersArray = Array.isArray(timekeepers) ? timekeepers : [];
+  const rolesArray = Array.isArray(roles) ? roles : [];
 
   // Create a map of timekeeper IDs to names for display
   const timekeeperMap = new Map(timekeepersArray.map((tk) => [tk.id, tk.name]));
+
+  // Create a map of role IDs to names for display
+  const roleMap = new Map(rolesArray.map((r) => [r.id, r.name]));
 
   return (
     <Container size="xl">
@@ -213,7 +227,7 @@ export default function TimekeeperRolesPage() {
       </Group>
 
       <Paper shadow="sm" p="md" radius="md" withBorder>
-        {isLoadingRoles || isLoadingTimekeepers ? (
+        {isLoadingTimekeeperRoles || isLoadingTimekeepers || isLoadingRoles ? (
           <Group justify="center" p="xl">
             <Loader />
           </Group>
@@ -240,7 +254,9 @@ export default function TimekeeperRolesPage() {
                         "Unknown"}
                     </Text>
                   </Table.Td>
-                  <Table.Td>{timekeeperRole.role}</Table.Td>
+                  <Table.Td>
+                    {roleMap.get(timekeeperRole.roleId) || "Unknown"}
+                  </Table.Td>
                   <Table.Td>£{timekeeperRole.billableRate}/hr</Table.Td>
                   <Table.Td>
                     <Group gap="xs">
@@ -289,11 +305,16 @@ export default function TimekeeperRolesPage() {
               disabled={!!editingRoleId}
               {...form.getInputProps("timekeeperId")}
             />
-            <TextInput
+            <Select
               label="Role"
-              placeholder="e.g. Partner, Associate, Paralegal"
+              placeholder="Select a role"
+              data={rolesArray.map((r) => ({
+                value: r.id,
+                label: r.name,
+              }))}
               required
-              {...form.getInputProps("role")}
+              searchable
+              {...form.getInputProps("roleId")}
             />
             <NumberInput
               label="Billable Rate (per hour)"

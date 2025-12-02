@@ -56,14 +56,23 @@ describe("API e2e", () => {
     expect(listTimekeepersResponse.status).toBe(200);
     expect(listTimekeepersResponse.data).toBeDefined();
 
-    // 2. Configure Matter Resources
+    // 2. Create a Role first
+    const createStandaloneRoleResponse = await client.roles.post({
+      name: "Senior Associate",
+      description: "Senior associate lawyer",
+    });
+    expect(createStandaloneRoleResponse.status).toBe(201);
+    expect(createStandaloneRoleResponse.data).toBeDefined();
+    const role = createStandaloneRoleResponse.data!;
+
+    // 3. Configure Matter Resources with the role
     const createRoleResponse = await client
       .matters({
         matterId: matter.id,
       })
       ["timekeeper-roles"].post({
         timekeeperId: timekeeper.id,
-        role: "Senior Associate",
+        roleId: role.id,
         billableRate: 350.0,
       });
     expect(createRoleResponse.status).toBe(201);

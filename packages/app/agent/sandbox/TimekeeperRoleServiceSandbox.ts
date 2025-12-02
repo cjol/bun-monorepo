@@ -31,11 +31,11 @@ export function createTimekeeperRoleSandboxFunctions(
   const createTimekeeperRole = defineSandboxFunction({
     description: "Create a new timekeeper role assignment",
     inputSchema: newTimekeeperRoleInputSchema,
-    execute: async ({ timekeeperId, matterId, role, billableRate }) => {
+    execute: async ({ timekeeperId, matterId, roleId, billableRate }) => {
       return service.createTimekeeperRole({
         timekeeperId,
         matterId,
-        role,
+        roleId,
         billableRate,
       });
     },

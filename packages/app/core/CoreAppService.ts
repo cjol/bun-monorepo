@@ -8,6 +8,7 @@ import type {
   WorkflowRepository,
   TimekeeperRepository,
   TimekeeperRoleRepository,
+  RoleRepository,
 } from "@ai-starter/core";
 import { MatterService } from "./MatterService";
 import { BillService } from "./BillService";
@@ -16,6 +17,7 @@ import { AiSuggestionService } from "./AiSuggestionService";
 import { WorkflowService } from "./WorkflowService";
 import { TimekeeperService } from "./TimekeeperService";
 import { TimekeeperRoleService } from "./TimekeeperRoleService";
+import { RoleService } from "./RoleService";
 
 export interface Deps {
   repos: {
@@ -28,6 +30,7 @@ export interface Deps {
     workflow: WorkflowRepository;
     timekeeper: TimekeeperRepository;
     timekeeperRole: TimekeeperRoleRepository;
+    role: RoleRepository;
   };
 }
 
@@ -63,6 +66,9 @@ export const CoreAppService = (deps: Deps) => {
   const timekeeperRoleService = TimekeeperRoleService({
     repos: { timekeeperRole: repos.timekeeperRole },
   });
+  const roleService = RoleService({
+    repos: { role: repos.role },
+  });
 
   return {
     // Legacy foo methods (kept for backwards compatibility)
@@ -78,6 +84,7 @@ export const CoreAppService = (deps: Deps) => {
     workflow: workflowService,
     timekeeper: timekeeperService,
     timekeeperRole: timekeeperRoleService,
+    role: roleService,
   };
 };
 

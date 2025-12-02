@@ -12,6 +12,7 @@ import type {
   WorkflowService as WorkflowServiceType,
   TimekeeperService as TimekeeperServiceType,
   TimekeeperRoleService as TimekeeperRoleServiceType,
+  RoleService as RoleServiceType,
 } from "../core";
 import { createMatterSandboxFunctions } from "./sandbox/MatterServiceSandbox";
 import { createBillSandboxFunctions } from "./sandbox/BillServiceSandbox";
@@ -20,6 +21,7 @@ import { createAiSuggestionSandboxFunctions } from "./sandbox/AiSuggestionServic
 import { createWorkflowSandboxFunctions } from "./sandbox/WorkflowServiceSandbox";
 import { createTimekeeperSandboxFunctions } from "./sandbox/TimekeeperServiceSandbox";
 import { createTimekeeperRoleSandboxFunctions } from "./sandbox/TimekeeperRoleServiceSandbox";
+import { createRoleSandboxFunctions } from "./sandbox/RoleServiceSandbox";
 import {
   createSandboxTool,
   generateFunctionDocs,
@@ -42,6 +44,7 @@ export interface CreateGeneralPurposeAgentOptions {
     workflow: WorkflowServiceType;
     timekeeper: TimekeeperServiceType;
     timekeeperRole: TimekeeperRoleServiceType;
+    role: RoleServiceType;
   };
 
   /**
@@ -69,6 +72,7 @@ function createTimesheetManagementFunctions(
     ...createWorkflowSandboxFunctions(services.workflow),
     ...createTimekeeperSandboxFunctions(services.timekeeper),
     ...createTimekeeperRoleSandboxFunctions(services.timekeeperRole),
+    ...createRoleSandboxFunctions(services.role),
   } as Record<string, SandboxFunction<unknown, unknown>>;
 }
 
