@@ -5,7 +5,7 @@ import {
   newTimeEntryInputSchema,
   updateTimeEntryInputSchema,
 } from "@ai-starter/core/schema/timeEntry";
-import { uuidSchema } from "@ai-starter/core/schema/utils/validation";
+import { ulidSchema } from "@ai-starter/core/schema/utils/validation";
 
 /**
  * Creates sandbox functions for TimeEntryService.
@@ -15,7 +15,7 @@ export function createTimeEntrySandboxFunctions(service: TimeEntryService) {
   const getTimeEntry = defineSandboxFunction({
     description: "Fetch a specific time entry by ID",
     inputSchema: z.object({
-      id: uuidSchema.describe("The ULID of the time entry to fetch"),
+      id: ulidSchema.describe("The ULID of the time entry to fetch"),
     }),
     execute: async ({ id }) => {
       const entry = await service.getTimeEntry(id);
@@ -63,7 +63,7 @@ export function createTimeEntrySandboxFunctions(service: TimeEntryService) {
   const listTimeEntriesByMatter = defineSandboxFunction({
     description: "List all time entries for a specific matter",
     inputSchema: z.object({
-      matterId: uuidSchema.describe("The ULID of the matter"),
+      matterId: ulidSchema.describe("The ULID of the matter"),
     }),
     execute: async ({ matterId }) => {
       return service.listByMatter(matterId);
@@ -73,8 +73,8 @@ export function createTimeEntrySandboxFunctions(service: TimeEntryService) {
   const listTimeEntriesByBill = defineSandboxFunction({
     description: "List all time entries for a specific bill",
     inputSchema: z.object({
-      matterId: uuidSchema.describe("The ULID of the matter"),
-      billId: uuidSchema.describe("The ULID of the bill"),
+      matterId: ulidSchema.describe("The ULID of the matter"),
+      billId: ulidSchema.describe("The ULID of the bill"),
     }),
     execute: async ({ matterId, billId }) => {
       return service.listByBill(matterId, billId);

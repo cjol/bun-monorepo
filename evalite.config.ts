@@ -6,5 +6,4 @@ export default defineConfig({
   cache: true,
   testTimeout: 60_000,
   storage: () => createSqliteStorage("./evalite.db"),
-  setupFiles: ["./packages/db/test-utils/deterministicUuids.ts"],
 });
