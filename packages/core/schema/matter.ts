@@ -6,11 +6,17 @@ import { generateId } from "./utils/generateId";
 
 /**
  * Type definition for time entry metadata schema.
- * Simple format: Record<string, {type: "string" | "number", name: string}>
+ * Simple format supporting string, number, and enum types.
  */
 export type TimeEntryMetadataSchema = Record<
   string,
-  { type: "string" | "number"; name: string }
+  | { type: "string"; name: string }
+  | { type: "number"; name: string }
+  | {
+      type: "enum";
+      name: string;
+      values: { name: string; value: string }[];
+    }
 >;
 
 /**
@@ -56,10 +62,29 @@ export type NewMatter = typeof matterSchema.$inferInsert;
  * Used for API input validation and sandbox function parameters.
  */
 
-const metadataFieldSchema = z.object({
-  type: z.enum(["string", "number"]).describe("The type of the metadata field"),
-  name: z.string().describe("The display name of the metadata field"),
-});
+const metadataFieldSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("string"),
+    name: z.string().describe("The display name of the metadata field"),
+  }),
+  z.object({
+    type: z.literal("number"),
+    name: z.string().describe("The display name of the metadata field"),
+  }),
+  z.object({
+    type: z.literal("enum"),
+    name: z.string().describe("The display name of the metadata field"),
+    values: z
+      .array(
+        z.object({
+          name: z.string().describe("Display name of the enum option"),
+          value: z.string().describe("Value to store for the enum option"),
+        })
+      )
+      .min(1)
+      .describe("Array of possible enum values with name and value"),
+  }),
+]);
 
 export const newMatterInputSchema = z.object({
   clientName: z.string().describe("Name of the client"),
@@ -73,7 +98,7 @@ export const newMatterInputSchema = z.object({
     .nullable()
     .optional()
     .describe(
-      "Optional schema defining the structure of time entry metadata for this matter. Format: Record<fieldKey, {type: 'string' | 'number', name: displayName}>"
+      "Optional schema defining the structure of time entry metadata for this matter. Format: Record<fieldKey, {type: 'string' | 'number' | 'enum', name: displayName, values?: {name: string, value: string}[]}>"
     ),
 });
 
