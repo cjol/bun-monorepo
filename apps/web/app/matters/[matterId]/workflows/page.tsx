@@ -28,6 +28,7 @@ import type { Workflow } from "@ai-starter/core";
 interface WorkflowFormValues {
   name: string;
   instructions: string;
+  trigger: "time_entry:batch_created";
 }
 
 export default function WorkflowsPage() {
@@ -41,6 +42,7 @@ export default function WorkflowsPage() {
     initialValues: {
       name: "",
       instructions: "",
+      trigger: "time_entry:batch_created",
     },
     validate: {
       name: (value) => (!value ? "Name is required" : null),
@@ -62,6 +64,7 @@ export default function WorkflowsPage() {
       const response = await api.matters({ matterId }).workflows.post({
         name: values.name,
         instructions: values.instructions,
+        trigger: values.trigger,
       });
       if (response.error) throw new Error("Failed to create workflow");
       return response.data;
@@ -147,16 +150,12 @@ export default function WorkflowsPage() {
     },
   });
 
-  const handleEdit = (workflow: {
-    id: string;
-    matterId: string;
-    name: string;
-    instructions: string;
-  }) => {
+  const handleEdit = (workflow: Workflow) => {
     setEditingWorkflow(workflow.id);
     form.setValues({
       name: workflow.name,
       instructions: workflow.instructions,
+      trigger: workflow.trigger as "time_entry:batch_created",
     });
     setOpened(true);
   };
@@ -249,11 +248,7 @@ export default function WorkflowsPage() {
                         variant="subtle"
                         color="red"
                         onClick={() =>
-                          handleDelete(
-                            workflow.matterId,
-                            workflow.id,
-                            workflow.name
-                          )
+                          handleDelete(matterId, workflow.id, workflow.name)
                         }
                       >
                         <IconTrash size={16} />

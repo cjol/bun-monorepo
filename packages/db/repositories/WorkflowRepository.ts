@@ -1,6 +1,6 @@
 import { workflowSchema, type WorkflowRepository } from "@ai-starter/core";
 import type { DB } from "../db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { notFound, badImplementation } from "@hapi/boom";
 
 interface Deps {
@@ -15,6 +15,19 @@ export const DrizzleWorkflowRepository = ({
       where: eq(workflowSchema.id, id),
     });
     return result ?? null;
+  },
+  async listByMatter(matterId: string) {
+    return db.query.workflowSchema.findMany({
+      where: eq(workflowSchema.matterId, matterId),
+    });
+  },
+  async listByTrigger(matterId: string, trigger: string) {
+    return db.query.workflowSchema.findMany({
+      where: and(
+        eq(workflowSchema.trigger, trigger),
+        eq(workflowSchema.matterId, matterId)
+      ),
+    });
   },
   async create(data) {
     const [result] = await db.insert(workflowSchema).values(data).returning();
@@ -40,11 +53,5 @@ export const DrizzleWorkflowRepository = ({
     if (!result) {
       throw notFound(`Workflow with ID ${id} not found`, { id });
     }
-  },
-  async listByMatter(matterId: string) {
-    const results = await db.query.workflowSchema.findMany({
-      where: eq(workflowSchema.matterId, matterId),
-    });
-    return results;
   },
 });

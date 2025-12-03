@@ -100,6 +100,7 @@ describe("API e2e", () => {
         name: "Time Entry Review Process",
         instructions:
           "Review all time entries for clarity and accuracy. Ensure descriptions are detailed and professional.",
+        trigger: "time_entry:batch_created",
       });
     expect(createWorkflowResponse.status).toBe(201);
     expect(createWorkflowResponse.data).toBeDefined();

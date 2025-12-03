@@ -12,8 +12,6 @@ describe("DrizzleWorkflowRepository", () => {
   beforeEach(async () => {
     db = await testDB();
     repository = DrizzleWorkflowRepository({ db });
-
-    // Create a matter for foreign key reference
     context = await createBasicTestContext(db);
   });
 
@@ -30,6 +28,7 @@ describe("DrizzleWorkflowRepository", () => {
         matterId: context.matter.id,
         name: "New Workflow",
         instructions: "Follow these steps...",
+        trigger: "time_entry:batch_created",
       });
 
       const result = await repository.get(workflow.id);
@@ -38,6 +37,7 @@ describe("DrizzleWorkflowRepository", () => {
         matterId: context.matter.id,
         name: "New Workflow",
         instructions: "Follow these steps...",
+        trigger: "time_entry:batch_created",
         createdAt: expect.any(Date),
       });
     });
@@ -49,6 +49,7 @@ describe("DrizzleWorkflowRepository", () => {
         matterId: context.matter.id,
         name: "Original Name",
         instructions: "Original instructions",
+        trigger: "time_entry:batch_created",
       });
 
       const updated = await repository.update(workflow.id, {
@@ -60,6 +61,7 @@ describe("DrizzleWorkflowRepository", () => {
         matterId: context.matter.id,
         name: "Updated Name",
         instructions: "Original instructions",
+        trigger: "time_entry:batch_created",
       });
     });
 
@@ -76,6 +78,7 @@ describe("DrizzleWorkflowRepository", () => {
         matterId: context.matter.id,
         name: "To Delete",
         instructions: "Will be deleted",
+        trigger: "time_entry:batch_created",
       });
 
       await repository.delete(workflow.id);
@@ -95,21 +98,58 @@ describe("DrizzleWorkflowRepository", () => {
       expect(results).toEqual([]);
     });
 
-    it("should return all workflows for matter", async () => {
+    it("should return all workflows for a matter", async () => {
       await repository.create({
         matterId: context.matter.id,
         name: "Workflow 1",
         instructions: "Instructions 1",
+        trigger: "time_entry:batch_created",
       });
       await repository.create({
         matterId: context.matter.id,
         name: "Workflow 2",
         instructions: "Instructions 2",
+        trigger: "time_entry:batch_created",
       });
 
       const results = await repository.listByMatter(context.matter.id);
 
       expect(results).toHaveLength(2);
+    });
+  });
+
+  describe("listByTrigger", () => {
+    it("should return empty array when no workflows exist for trigger", async () => {
+      const results = await repository.listByTrigger(
+        context.matter.id,
+        "time_entry:batch_created"
+      );
+      expect(results).toEqual([]);
+    });
+
+    it("should return only workflows with matching trigger", async () => {
+      await repository.create({
+        matterId: context.matter.id,
+        name: "Workflow 1",
+        instructions: "Instructions 1",
+        trigger: "time_entry:batch_created",
+      });
+      await repository.create({
+        matterId: context.matter.id,
+        name: "Workflow 2",
+        instructions: "Instructions 2",
+        trigger: "time_entry:batch_created",
+      });
+
+      const results = await repository.listByTrigger(
+        context.matter.id,
+        "time_entry:batch_created"
+      );
+
+      expect(results).toHaveLength(2);
+      expect(
+        results.every((w) => w.trigger === "time_entry:batch_created")
+      ).toBe(true);
     });
   });
 });

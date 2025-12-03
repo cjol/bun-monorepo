@@ -15,6 +15,8 @@
     "cli": "bun apps/cli/index.ts",
     "api": "bun apps/api/index.ts",
     "web": "bun --watch apps/api/index.ts",
+    "worker": "bun apps/worker/index.ts",
+    "worker:watch": "bun apps/worker/index.ts --watch",
     "test": "bun test",
     "eval:dev": "evalite watch",
     "eval": "evalite",

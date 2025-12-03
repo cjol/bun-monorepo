@@ -285,6 +285,7 @@ evalite("Review Workflow", {
       matterId: matter.id,
       name: "Timesheet Review Policy",
       instructions: input.workflowInstructions,
+      trigger: "time_entry:batch_created",
     });
 
     // Create time entries

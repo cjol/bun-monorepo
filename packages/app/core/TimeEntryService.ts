@@ -6,6 +6,8 @@ import {
   type NewTimeEntry,
 } from "@ai-starter/core";
 import { badRequest } from "@hapi/boom";
+import type { WorkflowService as WorkflowServiceType } from "./WorkflowService";
+import type { JobService as JobServiceType } from "./JobService";
 
 export interface Deps {
   repos: {
@@ -13,10 +15,14 @@ export interface Deps {
     timeEntryChangeLog: TimeEntryChangeLogRepository;
     timekeeperRole: TimekeeperRoleRepository;
   };
+  services?: {
+    workflow?: WorkflowServiceType;
+    job?: JobServiceType;
+  };
 }
 
 export const TimeEntryService = (deps: Deps) => {
-  const { repos } = deps;
+  const { repos, services } = deps;
 
   return {
     getTimeEntry: repos.timeEntry.get,
@@ -44,6 +50,39 @@ export const TimeEntryService = (deps: Deps) => {
         beforeData: null,
         afterData: created,
       });
+
+      // Enqueue jobs for triggered workflows (fire and forget)
+      if (services?.workflow && services?.job) {
+        const { workflow: workflowService, job: jobService } = services;
+        workflowService
+          .listByTrigger(data.matterId, "time_entry:batch_created")
+          .then(async (workflows) => {
+            for (const workflow of workflows) {
+              const timeEntriesJson = JSON.stringify([created], null, 2);
+              const prompt = `A new time entry has been created for matter ${data.matterId}.
+
+Time entries:
+${timeEntriesJson}
+
+Please process these time entries according to the workflow instructions.`;
+
+              await jobService.createJob({
+                type: "agent",
+                parameters: {
+                  prompt,
+                  matterId: data.matterId,
+                  workflowId: workflow.id,
+                },
+              });
+            }
+          })
+          .catch((error: Error) => {
+            console.error(
+              "Error enqueueing workflow jobs for time entry:",
+              error.message
+            );
+          });
+      }
 
       return created;
     },

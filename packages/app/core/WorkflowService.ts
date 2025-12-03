@@ -15,6 +15,7 @@ export const WorkflowService = (deps: Deps) => {
     updateWorkflow: repos.workflow.update,
     deleteWorkflow: repos.workflow.delete,
     listByMatter: repos.workflow.listByMatter,
+    listByTrigger: repos.workflow.listByTrigger,
   };
 };
 
