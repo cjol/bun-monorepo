@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@ai-starter/api": "workspace:*",
+    "@ai-starter/app": "workspace:*",
     "@ai-starter/core": "workspace:*",
     "@ai-starter/db": "workspace:*"
   },
