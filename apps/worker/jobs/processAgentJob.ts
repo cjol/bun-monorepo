@@ -1,4 +1,4 @@
-import { createGeneralPurposeAgent } from "@ai-starter/app";
+import { createGeneralPurposeAgent, buildMatterContext } from "@ai-starter/app";
 import type { Job } from "@ai-starter/core";
 import type { ProcessorDeps } from "../processor";
 
@@ -10,7 +10,7 @@ export interface AgentJobParameters {
 
 /**
  * Process an "agent" type job by executing the GeneralPurposeAgent
- * with the workflow instructions and prompt.
+ * with the matter context, workflow instructions and prompt.
  */
 export async function processAgentJob(job: Job, { app, model }: ProcessorDeps) {
   const params = job.parameters as unknown as AgentJobParameters;
@@ -21,7 +21,16 @@ export async function processAgentJob(job: Job, { app, model }: ProcessorDeps) {
     throw new Error(`Workflow ${params.workflowId} not found`);
   }
 
-  // Create agent with workflow context
+  // Build matter context
+  const matterContext = await buildMatterContext(params.matterId, {
+    services: {
+      matter: app.matter,
+      timekeeperRole: app.timekeeperRole,
+      bill: app.bill,
+    },
+  });
+
+  // Create agent with matter context and workflow instructions
   const agent = createGeneralPurposeAgent({
     services: {
       matter: app.matter,
@@ -33,6 +42,7 @@ export async function processAgentJob(job: Job, { app, model }: ProcessorDeps) {
       timekeeperRole: app.timekeeperRole,
       role: app.role,
     },
+    matterContext,
     workflowInstructions: workflow.instructions,
     model: model,
   });

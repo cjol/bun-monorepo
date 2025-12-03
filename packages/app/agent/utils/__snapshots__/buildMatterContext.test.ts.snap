@@ -1,0 +1,46 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`buildMatterContext should build comprehensive matter context with all details 1`] = `
+"## Matter Context
+
+**Client**: Acme Corporation
+**Matter**: Patent Litigation 2024
+**Description**: Defense of patent infringement claims related to software
+
+
+### Timekeepers
+
+- **Jane Smith** (jane.smith@lawfirm.com) - $500 - Partner (Partner lawyer)
+- **John Doe** (john.doe@lawfirm.com) - $300 - Associate (Associate lawyer)
+
+### Bills
+
+- Bill \`01JGFJKDMRP46FPCBVAT5MH7W2\` (Jan 1-31, 2024) - GBP - draft - 2 time entries
+- Bill \`01JGFJKGJGR2KGB0JS2FXDTBJ6\` (Feb 1-29, 2024) - GBP - finalized - 1 time entry
+
+
+### Time Entry Metadata Schema:
+- **task_code** (Task Code): \`research\` (Research), \`drafting\` (Drafting), \`court\` (Court Appearance)
+- **urgency** (Urgency Level): \`low\` (Low), \`medium\` (Medium), \`high\` (High)
+- **case_number** (Case Number): string"
+`;
+
+exports[`buildMatterContext should handle matter with no timekeepers or bills 1`] = `
+"## Matter Context
+
+**Client**: Simple Corp
+**Matter**: Quick Consultation
+
+
+### Timekeepers
+
+No timekeepers assigned to this matter.
+
+### Bills
+
+No bills created for this matter.
+
+
+### Time Entry Metadata Schema:
+None defined"
+`;

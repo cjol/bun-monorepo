@@ -42,7 +42,9 @@ export const CoreAppService = (deps: Deps) => {
 
   // Initialize services that don't have cross-dependencies first
   const matterService = MatterService({ repos: { matter: repos.matter } });
-  const billService = BillService({ repos: { bill: repos.bill } });
+  const billService = BillService({
+    repos: { bill: repos.bill, timeEntry: repos.timeEntry },
+  });
   const workflowService = WorkflowService({
     repos: { workflow: repos.workflow },
   });
@@ -50,7 +52,11 @@ export const CoreAppService = (deps: Deps) => {
     repos: { timekeeper: repos.timekeeper },
   });
   const timekeeperRoleService = TimekeeperRoleService({
-    repos: { timekeeperRole: repos.timekeeperRole },
+    repos: {
+      timekeeperRole: repos.timekeeperRole,
+      timekeeper: repos.timekeeper,
+      role: repos.role,
+    },
   });
   const roleService = RoleService({
     repos: { role: repos.role },
