@@ -3,10 +3,13 @@
   "type": "module",
   "private": true,
   "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.53",
     "@ai-starter/api": "workspace:*",
     "@ai-starter/app": "workspace:*",
     "@ai-starter/core": "workspace:*",
-    "@ai-starter/db": "workspace:*"
+    "@ai-starter/db": "workspace:*",
+    "ai": "^5.0.106",
+    "evalite": "^1.0.0-beta.15"
   },
   "devDependencies": {
     "@types/bun": "latest"

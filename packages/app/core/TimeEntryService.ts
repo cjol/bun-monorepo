@@ -51,10 +51,10 @@ export const TimeEntryService = (deps: Deps) => {
         afterData: created,
       });
 
-      // Enqueue jobs for triggered workflows (fire and forget)
+      // Enqueue jobs for triggered workflows
       if (services?.workflow && services?.job) {
         const { workflow: workflowService, job: jobService } = services;
-        workflowService
+        await workflowService
           .listByTrigger(data.matterId, "time_entry:batch_created")
           .then(async (workflows) => {
             for (const workflow of workflows) {
