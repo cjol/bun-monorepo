@@ -9,6 +9,9 @@ import {
   createTestTimekeeper,
 } from "@ai-starter/db/test-utils";
 import { getRepos } from "@ai-starter/db";
+
+import { faithfulness } from "evalite/scorers";
+import { buildMatterContext } from "./utils/buildMatterContext";
 import {
   MatterService,
   BillService,
@@ -358,6 +361,150 @@ evalite("Review Workflow", {
         );
 
         return withPrefix.length / suggestions.length;
+      },
+    },
+  ],
+});
+
+evalite("Matter Context Awareness", {
+  data: [
+    {
+      input: {
+        question:
+          "Who has the highest value of time on the current draft bill?",
+      },
+      expected: {
+        shouldMentionRate: true,
+        expectedRate: 250,
+      },
+    },
+  ],
+  task: async (input) => {
+    const { db, model, services, repos } = await setupTest();
+
+    // Setup: Create a matter with rich context
+    const matter = await services.matter.createMatter({
+      clientName: "Global Tech Inc",
+      matterName: "M&A Advisory",
+      description: "Acquisition of startup company",
+    });
+
+    // Create timekeepers
+    const partner = await createTestTimekeeper(db, {
+      name: "Sarah Johnson",
+      email: "sarah.johnson@firm.com",
+    });
+    const associate = await createTestTimekeeper(db, {
+      name: "Mike Chen",
+      email: "mike.chen@firm.com",
+    });
+
+    if (!partner || !associate) {
+      throw new Error("Failed to create timekeepers");
+    }
+
+    // Get roles
+    const roles = await repos.role.list();
+    const partnerRole = roles.find((r) => r.name === "Partner");
+    const associateRole = roles.find((r) => r.name === "Associate");
+
+    if (!partnerRole || !associateRole) {
+      throw new Error("Roles not found");
+    }
+
+    // Assign timekeepers with specific rates
+    await createTestTimekeeperRole(db, partner.id, matter.id, {
+      roleId: partnerRole.id,
+      billableRate: 500,
+    });
+    await createTestTimekeeperRole(db, associate.id, matter.id, {
+      roleId: associateRole.id,
+      billableRate: 250,
+    });
+
+    // Create a bill
+    await services.bill.createBill({
+      matterId: matter.id,
+      periodStart: new Date("2024-12-01"),
+      periodEnd: new Date("2024-12-31"),
+      status: "paid",
+    });
+    const draftBill = await services.bill.createBill({
+      matterId: matter.id,
+      periodStart: new Date("2025-01-01"),
+      periodEnd: new Date("2025-01-31"),
+      status: "draft",
+    });
+
+    await repos.timeEntry.create({
+      matterId: matter.id,
+      timekeeperId: partner.id,
+      billId: draftBill.id,
+      date: new Date("2025-01-15"),
+      hours: 4,
+      description: "Strategic planning session",
+      metadata: {},
+    });
+
+    await repos.timeEntry.create({
+      matterId: matter.id,
+      timekeeperId: associate.id,
+      billId: draftBill.id,
+      date: new Date("2025-01-20"),
+      hours: 6,
+      description: "Due diligence review",
+      metadata: {},
+    });
+
+    // Build matter context
+    const matterContext = await buildMatterContext(matter.id, {
+      services: {
+        matter: services.matter,
+        timekeeperRole: services.timekeeperRole,
+        bill: services.bill,
+      },
+    });
+
+    const agent = createGeneralPurposeAgent({
+      services,
+      model,
+      matterContext,
+    });
+
+    // Ask agent a question that requires matter context
+    const { text, steps } = await runAgent(agent, input.question);
+
+    return {
+      responseText: text,
+      matterContext,
+      logs: steps.map((s) => s.content),
+    };
+  },
+  scorers: [
+    {
+      name: "Correctness",
+      scorer: ({ output, input }) => {
+        return faithfulness({
+          question: input.question,
+          answer: output.responseText,
+          groundTruth: [
+            output.matterContext,
+            "The partner, Sarah Johnson, has the highest value of time on the current draft bill (£2000 in total made up of 4 hours at £500 per hour) ",
+            "The associate, Mike Chen, has £1500 in total made up of 6 hours on the current draft bill, at £250 per hour",
+          ],
+          model: anthropic("claude-haiku-4-5"),
+        });
+      },
+    },
+    {
+      name: "Tool efficiency",
+      scorer: ({ output: { logs } }) => {
+        const toolCalls = logs.flatMap((c) =>
+          c.filter((m) => m.type === "tool-call")
+        );
+        // should be possible with a single tool call to retrieve time entries
+        const overhead = 1 - toolCalls.length;
+        return Math.max(0, (10 - overhead) / 10);
       },
     },
   ],

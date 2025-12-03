@@ -22,7 +22,7 @@
     "eval": "evalite",
     "typecheck": "tsc --build --noEmit --force",
     "lint": "eslint . && prettier --check .",
-    "lint:fix": "bun format && eslint --fix --unsafe .",
+    "lint:fix": "bun format && eslint --fix .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "bun run lint && bun run typecheck && bun run test && bun run eval --threshold=95"

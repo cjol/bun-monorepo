@@ -8,3 +8,7 @@ export {
   type SandboxExecutionResult,
 } from "./createSandboxTool";
 export { generateFunctionDocs } from "./generateFunctionDocs";
+export {
+  buildMatterContext,
+  type BuildMatterContextDeps,
+} from "./buildMatterContext";

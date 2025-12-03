@@ -48,6 +48,13 @@ export interface CreateGeneralPurposeAgentOptions {
   };
 
   /**
+   * Optional matter context to include in the agent's system prompt.
+   * Provides comprehensive information about the matter including timekeepers,
+   * bills, and matter details.
+   */
+  matterContext?: string;
+
+  /**
    * Optional workflow instructions to include in the agent's system prompt.
    * These provide context and guidelines for the agent's behavior.
    */
@@ -109,7 +116,7 @@ function createTimesheetManagementFunctions(
 export function createGeneralPurposeAgent(
   options: CreateGeneralPurposeAgentOptions
 ) {
-  const { services, workflowInstructions } = options;
+  const { services, matterContext, workflowInstructions } = options;
   const sandboxFunctions = createTimesheetManagementFunctions(services);
 
   const systemPrompt = `You are a timesheet management assistant. You help users manage matters, bills, and time entries.
@@ -146,6 +153,7 @@ Use console.log() for debugging -- you will be able to see the logs in the outpu
 
 The return value will be shown to the user, but not to you to preserve your context window and protect sensitive information.
 
+${matterContext ? `\n${matterContext}\n` : ""}
 ${workflowInstructions ? `\n## Workflow Instructions\n\n${workflowInstructions}\n\nFollow these instructions when executing tasks.\n` : ""}
 ${generateFunctionDocs(sandboxFunctions)}`;
 
