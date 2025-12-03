@@ -1,61 +1,11 @@
 import { CoreAppService } from "@ai-starter/app";
-import { createGeneralPurposeAgent } from "@ai-starter/app/agent";
+import { type LanguageModel } from "@ai-starter/app/agent";
 import type { Job } from "@ai-starter/core";
+import { processAgentJob } from "./jobs/processAgentJob";
 
 export interface ProcessorDeps {
   app: ReturnType<typeof CoreAppService>;
-}
-
-export interface AgentJobParameters {
-  prompt: string;
-  matterId: string;
-  workflowId: string;
-}
-
-/**
- * Process an "agent" type job by executing the GeneralPurposeAgent
- * with the workflow instructions and prompt.
- */
-async function processAgentJob(
-  job: Job,
-  app: ReturnType<typeof CoreAppService>
-): Promise<{ success: true }> {
-  const params = job.parameters as unknown as AgentJobParameters;
-
-  // Get the workflow for its instructions
-  const workflow = await app.workflow.getWorkflow(params.workflowId);
-  if (!workflow) {
-    throw new Error(`Workflow ${params.workflowId} not found`);
-  }
-
-  // Create agent with workflow context
-  const agent = createGeneralPurposeAgent({
-    services: {
-      matter: app.matter,
-      bill: app.bill,
-      timeEntry: app.timeEntry,
-      aiSuggestion: app.aiSuggestion,
-      workflow: app.workflow,
-      timekeeper: app.timekeeper,
-      timekeeperRole: app.timekeeperRole,
-      role: app.role,
-    },
-    workflowInstructions: workflow.instructions,
-  });
-
-  // Execute the agent
-  const agentStream = agent.stream({
-    messages: [{ role: "user", content: params.prompt }],
-  });
-
-  // Consume the stream to execute the agent
-  for await (const _chunk of agentStream.fullStream) {
-    // Just consume the stream, don't need to process chunks
-  }
-
-  console.log(`Agent job ${job.id} for workflow ${workflow.name} completed`);
-
-  return { success: true };
+  model: LanguageModel;
 }
 
 /**
@@ -73,15 +23,13 @@ export async function processNextJob(deps: ProcessorDeps): Promise<boolean> {
     return false;
   }
 
-  console.log(`Processing job ${job.id} (type: ${job.type})`);
-
   try {
     let result: unknown;
 
     // Route to appropriate processor based on job type
     switch (job.type) {
       case "agent":
-        result = await processAgentJob(job, app);
+        result = await processAgentJob(job, deps);
         break;
 
       default:
@@ -90,7 +38,6 @@ export async function processNextJob(deps: ProcessorDeps): Promise<boolean> {
 
     // Mark job as completed
     await app.job.completeJob(job.id, result as Record<string, unknown>);
-    console.log(`Job ${job.id} completed successfully`);
     return true;
   } catch (error) {
     // Mark job as failed
