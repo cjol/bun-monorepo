@@ -24,3 +24,6 @@ export type { TimekeeperRoleService as TimekeeperRoleServiceType } from "./Timek
 
 export { RoleService } from "./RoleService";
 export type { RoleService as RoleServiceType } from "./RoleService";
+
+export { JobService } from "./JobService";
+export type { JobService as JobServiceType } from "./JobService";

@@ -12,6 +12,7 @@ export const workflowSchema = sqliteTable("workflow", {
     .references(() => matterSchema.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   instructions: text("instructions").notNull(),
+  trigger: text("trigger").notNull(),
   ...timestamps,
 });
 
@@ -26,10 +27,18 @@ export type NewWorkflow = typeof workflowSchema.$inferInsert;
 import { z } from "zod";
 import { ulidSchema } from "./utils/validation";
 
+export const workflowTriggerSchema = z.enum([
+  "time_entry:batch_created",
+  // Additional triggers can be added here in the future
+]);
+
 export const newWorkflowInputSchema = z.object({
   matterId: ulidSchema.describe("The ULID of the matter"),
   name: z.string().describe("Name of the workflow"),
   instructions: z.string().describe("Natural language workflow instructions"),
+  trigger: workflowTriggerSchema.describe(
+    "The event that triggers this workflow"
+  ),
 });
 
 export const updateWorkflowInputSchema = newWorkflowInputSchema

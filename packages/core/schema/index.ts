@@ -16,3 +16,4 @@ export * from "./timekeeper";
 export * from "./timekeeperRole";
 export * from "./role";
 export * from "./rate";
+export * from "./job";

@@ -10,3 +10,4 @@ export * from "./WorkflowRepository";
 export * from "./TimekeeperRepository";
 export * from "./TimekeeperRoleRepository";
 export * from "./RoleRepository";
+export * from "./JobRepository";

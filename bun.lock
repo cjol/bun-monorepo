@@ -90,6 +90,23 @@
         "typescript": "5.9.2",
       },
     },
+    "apps/worker": {
+      "name": "@ai-starter/worker",
+      "bin": {
+        "ai-starter-worker": "./index.ts",
+      },
+      "dependencies": {
+        "@ai-starter/app": "workspace:*",
+        "@ai-starter/core": "workspace:*",
+        "@ai-starter/db": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
     "packages/app": {
       "name": "@ai-starter/app",
       "version": "0.0.1",
@@ -174,6 +191,8 @@
     "@ai-starter/db": ["@ai-starter/db@workspace:packages/db"],
 
     "@ai-starter/web": ["@ai-starter/web@workspace:apps/web"],
+
+    "@ai-starter/worker": ["@ai-starter/worker@workspace:apps/worker"],
 
     "@babel/runtime": ["@babel/runtime@7.28.4", "", {}, "sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ=="],
 
