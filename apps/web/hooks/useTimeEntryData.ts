@@ -5,8 +5,11 @@ import type {
   TimekeeperRole,
   Matter,
   TimeEntry,
+  Job,
 } from "@ai-starter/core";
 import { api } from "../lib/api";
+
+type TimeEntryWithJobs = TimeEntry & { jobs?: Job[] };
 
 /**
  * Custom hook to fetch all data needed for displaying enriched time entries.
@@ -70,14 +73,15 @@ export function useTimeEntryData(matterId: string) {
     data: timeEntries,
     isLoading: isLoadingTimeEntries,
     error: timeEntriesError,
-  } = useQuery<TimeEntry[]>({
+  } = useQuery<TimeEntryWithJobs[]>({
     queryKey: ["time-entries", matterId],
     queryFn: async () => {
       const matterApi = api.matters({ matterId });
       const response = await matterApi["time-entries"].get();
       if (response.error) throw new Error("Failed to fetch time entries");
-      return response.data as TimeEntry[];
+      return response.data as TimeEntryWithJobs[];
     },
+    refetchInterval: 1000,
   });
 
   const isLoading =

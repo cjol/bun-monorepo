@@ -22,9 +22,9 @@ import { DateTimePicker } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { IconPlus, IconEdit, IconTrash } from "@tabler/icons-react";
+import { IconPlus, IconEdit, IconTrash, IconRobot } from "@tabler/icons-react";
 import { api } from "../../../../lib/api";
-import type { Bill } from "@ai-starter/core";
+import type { Bill, Job } from "@ai-starter/core";
 import { useTimeEntryData } from "../../../../hooks/useTimeEntryData";
 import {
   useEnrichedTimeEntries,
@@ -44,6 +44,8 @@ interface TimeEntryFormValues {
 export default function TimeEntriesPage() {
   const [editingEntry, setEditingEntry] = useState<string | null>(null);
   const [opened, setOpened] = useState(false);
+  const [jobsModalOpened, setJobsModalOpened] = useState(false);
+  const [selectedJobs, setSelectedJobs] = useState<Job[]>([]);
   const params = useParams<{ matterId: string }>();
   const matterId = params.matterId;
   const queryClient = useQueryClient();
@@ -63,7 +65,7 @@ export default function TimeEntriesPage() {
     },
   });
 
-  // Fetch all required data
+  // Fetch all required data (timeEntries now include jobs array)
   const {
     timekeepers,
     roles,
@@ -180,6 +182,13 @@ export default function TimeEntriesPage() {
       label: `${new Date(bill.periodStart).toLocaleDateString()} - ${new Date(bill.periodEnd).toLocaleDateString()}`,
     })) || [];
 
+  const getJobIconColor = (jobs: Job[]) => {
+    if (jobs.some((job) => job.status === "running")) return "green";
+    if (jobs.some((job) => job.status === "failed")) return "red";
+    if (jobs.some((job) => job.status === "completed")) return "blue";
+    return "gray"; // all pending
+  };
+
   const handleSubmit = (values: TimeEntryFormValues) => {
     if (editingEntry) {
       updateTimeEntryMutation.mutate({
@@ -274,6 +283,18 @@ export default function TimeEntriesPage() {
                   })}
                   <Table.Td>
                     <Group gap="xs">
+                      {entry.jobs && entry.jobs.length > 0 && (
+                        <ActionIcon
+                          variant="subtle"
+                          color={getJobIconColor(entry.jobs)}
+                          onClick={() => {
+                            setSelectedJobs(entry.jobs || []);
+                            setJobsModalOpened(true);
+                          }}
+                        >
+                          <IconRobot size={16} />
+                        </ActionIcon>
+                      )}
                       <ActionIcon variant="subtle">
                         <IconEdit size={16} />
                       </ActionIcon>
@@ -361,6 +382,147 @@ export default function TimeEntriesPage() {
             </Group>
           </Stack>
         </form>
+      </Modal>
+
+      {/* Jobs Modal */}
+      <Modal
+        opened={jobsModalOpened}
+        onClose={() => {
+          setJobsModalOpened(false);
+          setSelectedJobs([]);
+        }}
+        title="Related Jobs"
+        size="xl"
+      >
+        <Stack gap="md">
+          {selectedJobs.length === 0 ? (
+            <Text c="dimmed" ta="center">
+              No jobs found
+            </Text>
+          ) : (
+            selectedJobs.map((job) => (
+              <Paper key={job.id} p="md" withBorder>
+                <Stack gap="sm">
+                  <Group justify="space-between">
+                    <Text fw={600} size="lg">
+                      Job {job.id}
+                    </Text>
+                    <Text
+                      size="sm"
+                      c={
+                        job.status === "completed"
+                          ? "green"
+                          : job.status === "failed"
+                            ? "red"
+                            : job.status === "running"
+                              ? "blue"
+                              : "gray"
+                      }
+                    >
+                      {job.status.toUpperCase()}
+                    </Text>
+                  </Group>
+
+                  <div>
+                    <Text size="sm" fw={500} mb={4}>
+                      Type:
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      {job.type}
+                    </Text>
+                  </div>
+
+                  {job.scheduledAt && (
+                    <div>
+                      <Text size="sm" fw={500} mb={4}>
+                        Scheduled:
+                      </Text>
+                      <Text size="sm" c="dimmed">
+                        {new Date(job.scheduledAt).toLocaleString()}
+                      </Text>
+                    </div>
+                  )}
+
+                  {job.startedAt && (
+                    <div>
+                      <Text size="sm" fw={500} mb={4}>
+                        Started:
+                      </Text>
+                      <Text size="sm" c="dimmed">
+                        {new Date(job.startedAt).toLocaleString()}
+                      </Text>
+                    </div>
+                  )}
+
+                  {job.finishedAt && (
+                    <div>
+                      <Text size="sm" fw={500} mb={4}>
+                        Finished:
+                      </Text>
+                      <Text size="sm" c="dimmed">
+                        {new Date(job.finishedAt).toLocaleString()}
+                      </Text>
+                    </div>
+                  )}
+
+                  {job.parameters !== null && job.parameters !== undefined && (
+                    <div>
+                      <Text size="sm" fw={500} mb={4}>
+                        Parameters:
+                      </Text>
+                      <Paper p="xs" bg="gray.0" style={{ overflow: "auto" }}>
+                        <pre
+                          style={{
+                            margin: 0,
+                            fontSize: "12px",
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          {JSON.stringify(
+                            job.parameters,
+                            (_key: string, value: unknown): unknown =>
+                              typeof value === "bigint"
+                                ? value.toString()
+                                : value,
+                            2
+                          )}
+                        </pre>
+                      </Paper>
+                    </div>
+                  )}
+
+                  {job.result !== null && job.result !== undefined && (
+                    <div>
+                      <Text size="sm" fw={500} mb={4}>
+                        Result:
+                      </Text>
+                      <Paper p="xs" bg="gray.0" style={{ overflow: "auto" }}>
+                        <pre
+                          style={{
+                            margin: 0,
+                            fontSize: "12px",
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          {JSON.stringify(
+                            job.result,
+                            (_key: string, value: unknown): unknown =>
+                              typeof value === "bigint"
+                                ? value.toString()
+                                : value,
+                            2
+                          )}
+                        </pre>
+                      </Paper>
+                    </div>
+                  )}
+                </Stack>
+              </Paper>
+            ))
+          )}
+        </Stack>
       </Modal>
     </Container>
   );

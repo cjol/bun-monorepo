@@ -96,9 +96,11 @@
         "ai-starter-worker": "./index.ts",
       },
       "dependencies": {
+        "@ai-sdk/anthropic": "^2.0.53",
         "@ai-starter/app": "workspace:*",
         "@ai-starter/core": "workspace:*",
         "@ai-starter/db": "workspace:*",
+        "ai": "^5.0.106",
       },
       "devDependencies": {
         "@types/bun": "latest",

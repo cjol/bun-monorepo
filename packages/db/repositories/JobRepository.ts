@@ -1,6 +1,10 @@
-import { jobSchema, type JobRepository } from "@ai-starter/core";
+import {
+  jobSchema,
+  jobEntitySchema,
+  type JobRepository,
+} from "@ai-starter/core";
 import type { DB } from "../db";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, and } from "drizzle-orm";
 import { notFound, badImplementation } from "@hapi/boom";
 
 interface Deps {
@@ -51,9 +55,24 @@ export const DrizzleJobRepository = ({ db }: Deps): JobRepository => ({
     return result;
   },
 
-  async create(data: Parameters<JobRepository["create"]>[0]) {
+  async create(
+    data: Parameters<JobRepository["create"]>[0],
+    entities?: Parameters<JobRepository["create"]>[1]
+  ) {
     const [result] = await db.insert(jobSchema).values(data).returning();
     if (!result) throw badImplementation("Failed to create Job");
+
+    // Link entities if provided
+    if (entities && entities.length > 0) {
+      await db.insert(jobEntitySchema).values(
+        entities.map((entity) => ({
+          jobId: result.id,
+          entityType: entity.entityType as "time_entry",
+          entityId: entity.entityId,
+        }))
+      );
+    }
+
     return result;
   },
 
@@ -77,5 +96,20 @@ export const DrizzleJobRepository = ({ db }: Deps): JobRepository => ({
     if (!result) {
       throw notFound(`Job with ID ${id} not found`, { id });
     }
+  },
+
+  async listEntitiesByJob(jobId: string) {
+    return db.query.jobEntitySchema.findMany({
+      where: eq(jobEntitySchema.jobId, jobId),
+    });
+  },
+
+  async listJobsByEntity(entityType: string, entityId: string) {
+    return db.query.jobEntitySchema.findMany({
+      where: and(
+        eq(jobEntitySchema.entityType, entityType as "time_entry"),
+        eq(jobEntitySchema.entityId, entityId)
+      ),
+    });
   },
 });

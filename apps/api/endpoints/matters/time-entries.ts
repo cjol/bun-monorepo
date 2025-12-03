@@ -34,28 +34,40 @@ export const matterTimeEntryRoutes = ({ app }: Context) =>
             `Time entry with ID ${params.timeEntryId} not found in matter ${params.matterId}`
           );
         }
-        return status(200, result);
+        const jobs = await app.timeEntry.getTimeEntryJobs(params.timeEntryId);
+        return status(200, { ...result, jobs });
       },
       {
         params: matterTimeEntryParamsSchema,
         detail: {
           summary: "Get Time Entry",
-          description: "Retrieve a single time entry by ID within a matter.",
+          description:
+            "Retrieve a single time entry by ID within a matter, including related jobs.",
         },
       }
     )
     .get(
       "/",
       async ({ params, query, status }) => {
+        let entries;
         if (query.billId) {
-          const result = await app.timeEntry.listByBill(
+          entries = await app.timeEntry.listByBill(
             params.matterId,
             query.billId
           );
-          return status(200, result);
+        } else {
+          entries = await app.timeEntry.listByMatter(params.matterId);
         }
-        const result = await app.timeEntry.listByMatter(params.matterId);
-        return status(200, result);
+
+        // Enrich each entry with related jobs
+        const enrichedEntries = await Promise.all(
+          entries.map(async (entry) => {
+            const jobs = await app.timeEntry.getTimeEntryJobs(entry.id);
+            return { ...entry, jobs };
+          })
+        );
+
+        return status(200, enrichedEntries);
       },
       {
         params: matterIdParamsSchema,
@@ -63,7 +75,7 @@ export const matterTimeEntryRoutes = ({ app }: Context) =>
         detail: {
           summary: "List Time Entries",
           description:
-            "Retrieve a list of all time entries for a matter, optionally filtered by bill.",
+            "Retrieve a list of all time entries for a matter, optionally filtered by bill. Each entry includes related jobs.",
         },
       }
     )

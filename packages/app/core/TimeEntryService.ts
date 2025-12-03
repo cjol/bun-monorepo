@@ -29,6 +29,25 @@ export const TimeEntryService = (deps: Deps) => {
     listByMatter: repos.timeEntry.listByMatter,
     listByBill: repos.timeEntry.listByMatterAndBill,
 
+    /**
+     * Get all jobs associated with a time entry.
+     */
+    getTimeEntryJobs: async (timeEntryId: string) => {
+      if (!services?.job) {
+        return [];
+      }
+      const jobService = services.job;
+      const jobEntities = await jobService.listJobsByEntity(
+        "time_entry",
+        timeEntryId
+      );
+      // Hydrate with full job objects
+      const jobs = await Promise.all(
+        jobEntities.map((je) => jobService.getJob(je.jobId))
+      );
+      return jobs.filter((job) => job !== undefined);
+    },
+
     createTimeEntry: async (data: NewTimeEntry): Promise<TimeEntry> => {
       // Validate that the timekeeper has a role within the matter
       const timekeeperRole =
@@ -66,14 +85,22 @@ ${timeEntriesJson}
 
 Please process these time entries according to the workflow instructions.`;
 
-              await jobService.createJob({
-                type: "agent",
-                parameters: {
-                  prompt,
-                  matterId: data.matterId,
-                  workflowId: workflow.id,
+              await jobService.createJob(
+                {
+                  type: "agent",
+                  parameters: {
+                    prompt,
+                    matterId: data.matterId,
+                    workflowId: workflow.id,
+                  },
                 },
-              });
+                [
+                  {
+                    entityType: "time_entry",
+                    entityId: created.id,
+                  },
+                ]
+              );
             }
           })
           .catch((error: Error) => {

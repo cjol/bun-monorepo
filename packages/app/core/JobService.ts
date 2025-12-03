@@ -39,6 +39,16 @@ export const JobService = (deps: Deps) => {
         finishedAt: new Date(),
       });
     },
+
+    /**
+     * Get all entities linked to a job.
+     */
+    listEntitiesByJob: repos.job.listEntitiesByJob,
+
+    /**
+     * Get all jobs linked to an entity.
+     */
+    listJobsByEntity: repos.job.listJobsByEntity,
   };
 };
 
