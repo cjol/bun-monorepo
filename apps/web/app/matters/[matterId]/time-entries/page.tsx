@@ -22,9 +22,16 @@ import { DateTimePicker } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { IconPlus, IconEdit, IconTrash, IconRobot } from "@tabler/icons-react";
+import {
+  IconPlus,
+  IconEdit,
+  IconTrash,
+  IconRobot,
+  IconCheck,
+  IconX,
+} from "@tabler/icons-react";
 import { api } from "../../../../lib/api";
-import type { Bill, Job } from "@ai-starter/core";
+import type { Bill, Job, AiSuggestion } from "@ai-starter/core";
 import { useTimeEntryData } from "../../../../hooks/useTimeEntryData";
 import {
   useEnrichedTimeEntries,
@@ -32,6 +39,9 @@ import {
   type EnrichedTimeEntry,
 } from "../../../../hooks/useEnrichedTimeEntries";
 import { useMetadataFields } from "../../../../hooks/useMetadataFields";
+import { useSuggestions } from "../../../../hooks/useSuggestions";
+import { SuggestionDiff } from "../../../../components/SuggestionDiff";
+import { SuggestionCycler } from "../../../../components/SuggestionCycler";
 
 interface TimeEntryFormValues {
   timekeeperId: string;
@@ -46,6 +56,9 @@ export default function TimeEntriesPage() {
   const [opened, setOpened] = useState(false);
   const [jobsModalOpened, setJobsModalOpened] = useState(false);
   const [selectedJobs, setSelectedJobs] = useState<Job[]>([]);
+  const [suggestionIndices, setSuggestionIndices] = useState<
+    Record<string, number>
+  >({});
   const params = useParams<{ matterId: string }>();
   const matterId = params.matterId;
   const queryClient = useQueryClient();
@@ -96,6 +109,13 @@ export default function TimeEntriesPage() {
 
   // Extract metadata fields from the matter schema
   const metadataFields = useMetadataFields(matter);
+
+  // Fetch suggestions for the matter
+  const {
+    suggestionsByTimeEntry,
+    approveSuggestionMutation,
+    rejectSuggestionMutation,
+  } = useSuggestions(matterId);
 
   const createTimeEntryMutation = useMutation({
     mutationFn: async (values: TimeEntryFormValues) => {
@@ -189,6 +209,37 @@ export default function TimeEntriesPage() {
     return "gray"; // all pending
   };
 
+  // Helper to get the current suggestion for a time entry
+  const getCurrentSuggestion = (
+    timeEntryId: string
+  ): AiSuggestion | undefined => {
+    const list = suggestionsByTimeEntry.get(timeEntryId);
+    if (!list || list.length === 0) return undefined;
+    const index = suggestionIndices[timeEntryId] || 0;
+    return list[index];
+  };
+
+  // Helper to cycle through suggestions for a time entry
+  const cycleSuggestion = (timeEntryId: string) => {
+    const list = suggestionsByTimeEntry.get(timeEntryId);
+    if (!list || list.length <= 1) return;
+
+    setSuggestionIndices((prev) => {
+      const currentIndex = prev[timeEntryId] || 0;
+      const nextIndex = (currentIndex + 1) % list.length;
+      return {
+        ...prev,
+        [timeEntryId]: nextIndex,
+      };
+    });
+  };
+
+  // Helper to get timekeeper name by ID
+  const getTimekeeperName = (timekeeperId: string): string => {
+    const timekeeper = timekeepers?.find((tk) => tk.id === timekeeperId);
+    return timekeeper?.name || "Unknown";
+  };
+
   const handleSubmit = (values: TimeEntryFormValues) => {
     if (editingEntry) {
       updateTimeEntryMutation.mutate({
@@ -243,69 +294,179 @@ export default function TimeEntriesPage() {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {enrichedTimeEntries.map((entry: EnrichedTimeEntry) => (
-                <Table.Tr key={entry.id}>
-                  <Table.Td>
-                    {new Date(entry.date).toLocaleDateString()}
-                  </Table.Td>
-                  <Table.Td>
-                    <Text fw={500}>{entry.timekeeperName}</Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text>{entry.roleName}</Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text>{formatCurrency(entry.billableRate)}</Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text fw={500}>{entry.hours}</Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text lineClamp={2}>{entry.description}</Text>
-                  </Table.Td>
-                  {metadataFields.map((field) => {
-                    const metadata = entry.metadata as Record<string, string>;
-                    const value = metadata[field.key];
-                    let displayValue = value || "-";
+              {enrichedTimeEntries.map((entry: EnrichedTimeEntry) => {
+                const suggestion = getCurrentSuggestion(entry.id);
+                const suggestionsList = suggestionsByTimeEntry.get(entry.id);
+                const currentSuggestionIndex = suggestionIndices[entry.id] || 0;
 
-                    // For enum fields, show the readable name instead of the raw value
-                    if (field.type === "enum" && value) {
-                      const enumOption = field.values.find(
-                        (v) => v.value === value
-                      );
-                      displayValue = enumOption?.name || value;
-                    }
-
-                    return (
-                      <Table.Td key={field.key}>
-                        <Text>{displayValue}</Text>
-                      </Table.Td>
-                    );
-                  })}
-                  <Table.Td>
-                    <Group gap="xs">
-                      {entry.jobs && entry.jobs.length > 0 && (
-                        <ActionIcon
-                          variant="subtle"
-                          color={getJobIconColor(entry.jobs)}
-                          onClick={() => {
-                            setSelectedJobs(entry.jobs || []);
-                            setJobsModalOpened(true);
-                          }}
-                        >
-                          <IconRobot size={16} />
-                        </ActionIcon>
+                return (
+                  <Table.Tr
+                    key={entry.id}
+                    style={{
+                      borderLeft: suggestion
+                        ? "4px solid var(--mantine-color-yellow-6)"
+                        : undefined,
+                    }}
+                  >
+                    <Table.Td>
+                      {suggestion &&
+                      suggestion.suggestedChanges.date !== entry.date ? (
+                        <SuggestionDiff
+                          oldValue={entry.date}
+                          newValue={suggestion.suggestedChanges.date}
+                          formatValue={(date) =>
+                            new Date(date).toLocaleDateString()
+                          }
+                        />
+                      ) : (
+                        new Date(entry.date).toLocaleDateString()
                       )}
-                      <ActionIcon variant="subtle">
-                        <IconEdit size={16} />
-                      </ActionIcon>
-                      <ActionIcon variant="subtle" color="red">
-                        <IconTrash size={16} />
-                      </ActionIcon>
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
+                    </Table.Td>
+                    <Table.Td>
+                      {suggestion &&
+                      suggestion.suggestedChanges.timekeeperId !==
+                        entry.timekeeperId ? (
+                        <SuggestionDiff
+                          oldValue={entry.timekeeperName}
+                          newValue={getTimekeeperName(
+                            suggestion.suggestedChanges.timekeeperId
+                          )}
+                        />
+                      ) : (
+                        <Text fw={500}>{entry.timekeeperName}</Text>
+                      )}
+                    </Table.Td>
+                    <Table.Td>
+                      <Text>{entry.roleName}</Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text>{formatCurrency(entry.billableRate)}</Text>
+                    </Table.Td>
+                    <Table.Td>
+                      {suggestion &&
+                      suggestion.suggestedChanges.hours !== entry.hours ? (
+                        <SuggestionDiff
+                          oldValue={entry.hours}
+                          newValue={suggestion.suggestedChanges.hours}
+                        />
+                      ) : (
+                        <Text fw={500}>{entry.hours}</Text>
+                      )}
+                    </Table.Td>
+                    <Table.Td>
+                      {suggestion &&
+                      suggestion.suggestedChanges.description !==
+                        entry.description ? (
+                        <SuggestionDiff
+                          oldValue={entry.description}
+                          newValue={suggestion.suggestedChanges.description}
+                        />
+                      ) : (
+                        <Text lineClamp={2}>{entry.description}</Text>
+                      )}
+                    </Table.Td>
+                    {metadataFields.map((field) => {
+                      const metadata = entry.metadata as Record<string, string>;
+                      const value = metadata[field.key];
+                      let displayValue = value || "-";
+
+                      // For enum fields, show the readable name instead of the raw value
+                      if (field.type === "enum" && value) {
+                        const enumOption = field.values.find(
+                          (v) => v.value === value
+                        );
+                        displayValue = enumOption?.name || value;
+                      }
+
+                      // Check if there's a suggestion for this metadata field
+                      const suggestedMetadata = suggestion?.suggestedChanges
+                        .metadata as Record<string, string>;
+                      const suggestedValue = suggestedMetadata?.[field.key];
+                      let suggestedDisplayValue = suggestedValue || "-";
+
+                      if (field.type === "enum" && suggestedValue) {
+                        const enumOption = field.values.find(
+                          (v) => v.value === suggestedValue
+                        );
+                        suggestedDisplayValue =
+                          enumOption?.name || suggestedValue;
+                      }
+
+                      const hasMetadataDiff =
+                        suggestion && suggestedValue !== value;
+
+                      return (
+                        <Table.Td key={field.key}>
+                          {hasMetadataDiff ? (
+                            <SuggestionDiff
+                              oldValue={displayValue}
+                              newValue={suggestedDisplayValue}
+                            />
+                          ) : (
+                            <Text>{displayValue}</Text>
+                          )}
+                        </Table.Td>
+                      );
+                    })}
+                    <Table.Td>
+                      <Group gap="xs">
+                        {suggestion && (
+                          <>
+                            {/* Suggestion cycler if multiple suggestions */}
+                            {suggestionsList && suggestionsList.length > 1 && (
+                              <SuggestionCycler
+                                currentIndex={currentSuggestionIndex}
+                                totalCount={suggestionsList.length}
+                                onCycle={() => cycleSuggestion(entry.id)}
+                              />
+                            )}
+                            {/* Approve button */}
+                            <ActionIcon
+                              variant="subtle"
+                              color="green"
+                              onClick={() =>
+                                approveSuggestionMutation.mutate(suggestion.id)
+                              }
+                              loading={approveSuggestionMutation.isPending}
+                            >
+                              <IconCheck size={16} />
+                            </ActionIcon>
+                            {/* Reject button */}
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              onClick={() =>
+                                rejectSuggestionMutation.mutate(suggestion.id)
+                              }
+                              loading={rejectSuggestionMutation.isPending}
+                            >
+                              <IconX size={16} />
+                            </ActionIcon>
+                          </>
+                        )}
+                        {entry.jobs && entry.jobs.length > 0 && (
+                          <ActionIcon
+                            variant="subtle"
+                            color={getJobIconColor(entry.jobs)}
+                            onClick={() => {
+                              setSelectedJobs(entry.jobs || []);
+                              setJobsModalOpened(true);
+                            }}
+                          >
+                            <IconRobot size={16} />
+                          </ActionIcon>
+                        )}
+                        <ActionIcon variant="subtle">
+                          <IconEdit size={16} />
+                        </ActionIcon>
+                        <ActionIcon variant="subtle" color="red">
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                );
+              })}
             </Table.Tbody>
           </Table>
         )}

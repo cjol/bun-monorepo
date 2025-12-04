@@ -79,10 +79,10 @@
 
 ## TODO List:
 
-- [ ] Create an EmailIngestionService (e.g., via webhook) that parses inbound emails and creates new Conversation and Message records.
-- [ ] Create an EmailSendingService that agents can call via a tool, which sends a Message as an outbound email.
-- [ ] Web chat interface for users to interact with agents directly.
-- [ ] Prevent AI Agents from creating time entries directly, instead making them create suggestions
+- [x] Prevent AI Agents from creating time entries directly, instead making them create suggestions
 - [ ] Improve UI display of AI suggestions and allow users to accept/reject them
-- [ ] View change log for time entries in the web UI
 - [ ] Allow generation of documents (define document templates and allow AI agents to invoke a template from code sandbox)
+- [ ] Create an EmailSendingService that agents can call via a tool, which sends a Message as an outbound email.
+- [ ] Create an EmailIngestionService (e.g., via webhook) that parses inbound emails and creates new Conversation and Message records.
+- [ ] Web chat interface for users to interact with agents directly.
+- [ ] View change log for time entries in the web UI
