@@ -31,6 +31,7 @@ export const documentSchema = sqliteTable("document", {
 
 export type Document = typeof documentSchema.$inferSelect;
 export type NewDocument = typeof documentSchema.$inferInsert;
+export type GeneratedBy = "agent" | "user" | "system";
 
 /**
  * Zod validation schemas for Document entity.
