@@ -3,9 +3,11 @@
 exports[`buildMatterContext should build comprehensive matter context with all details 1`] = `
 "## Matter Context
 
+**ID**: 01JGFJJZ00H7NE7NA00Q687B0D
 **Client**: Acme Corporation
 **Matter**: Patent Litigation 2024
 **Description**: Defense of patent infringement claims related to software
+**Matter Currency**: GBP
 
 
 ### Timekeepers
@@ -28,8 +30,10 @@ exports[`buildMatterContext should build comprehensive matter context with all d
 exports[`buildMatterContext should handle matter with no timekeepers or bills 1`] = `
 "## Matter Context
 
+**ID**: 01JGFJJZ00H7NE7NA00Q687B0D
 **Client**: Simple Corp
 **Matter**: Quick Consultation
+**Matter Currency**: GBP
 
 
 ### Timekeepers

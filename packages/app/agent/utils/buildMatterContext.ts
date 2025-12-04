@@ -18,11 +18,11 @@ export interface BuildMatterContextDeps {
  * E.g., "Jan 1-31, 2024" or "Dec 25, 2023 - Jan 5, 2024"
  */
 function formatDateRange(start: Date, end: Date): string {
-  const startMonth = start.toLocaleDateString("en-US", { month: "short" });
+  const startMonth = start.toLocaleDateString("en-GB", { month: "short" });
   const startDay = start.getDate();
   const startYear = start.getFullYear();
 
-  const endMonth = end.toLocaleDateString("en-US", { month: "short" });
+  const endMonth = end.toLocaleDateString("en-GB", { month: "short" });
   const endDay = end.getDate();
   const endYear = end.getFullYear();
 
@@ -100,11 +100,13 @@ export async function buildMatterContext(
   let context = "## Matter Context\n\n";
 
   // Matter details
+  context += `**ID**: ${matter.id}\n`;
   context += `**Client**: ${matter.clientName}\n`;
   context += `**Matter**: ${matter.matterName}\n`;
   if (matter.description) {
     context += `**Description**: ${matter.description}\n`;
   }
+  context += "**Matter Currency**: GBP\n";
   context += "\n\n";
 
   // Timekeepers section

@@ -14,12 +14,14 @@ import type {
 import { MatterService } from "./MatterService";
 import { BillService } from "./BillService";
 import { TimeEntryService } from "./TimeEntryService";
+import { TimeEntryImportService } from "./TimeEntryImportService";
 import { AiSuggestionService } from "./AiSuggestionService";
 import { WorkflowService } from "./WorkflowService";
 import { TimekeeperService } from "./TimekeeperService";
 import { TimekeeperRoleService } from "./TimekeeperRoleService";
 import { RoleService } from "./RoleService";
 import { JobService } from "./JobService";
+import { CsvHeaderMappingService } from "./CsvHeaderMappingService";
 
 export interface Deps {
   repos: {
@@ -41,6 +43,7 @@ export const CoreAppService = (deps: Deps) => {
   const { repos } = deps;
 
   // Initialize services that don't have cross-dependencies first
+  const csvMappingService = CsvHeaderMappingService({ model: undefined });
   const matterService = MatterService({ repos: { matter: repos.matter } });
   const billService = BillService({
     repos: { bill: repos.bill, timeEntry: repos.timeEntry },
@@ -77,6 +80,19 @@ export const CoreAppService = (deps: Deps) => {
     },
   });
 
+  const timeEntryImportService = TimeEntryImportService({
+    repos: {
+      timeEntry: repos.timeEntry,
+      timeEntryChangeLog: repos.timeEntryChangeLog,
+      timekeeperRole: repos.timekeeperRole,
+      timekeeper: repos.timekeeper,
+      role: repos.role,
+      bill: repos.bill,
+      matter: repos.matter,
+    },
+    services: { timeEntry: timeEntryService, csvMapping: csvMappingService },
+  });
+
   const aiSuggestionService = AiSuggestionService({
     repos: {
       aiSuggestion: repos.aiSuggestion,
@@ -85,8 +101,6 @@ export const CoreAppService = (deps: Deps) => {
       timeEntry: timeEntryService,
     },
   });
-
-  // Now create timeEntryService WITH job service
 
   return {
     // Legacy foo methods (kept for backwards compatibility)
@@ -98,6 +112,7 @@ export const CoreAppService = (deps: Deps) => {
     matter: matterService,
     bill: billService,
     timeEntry: timeEntryService,
+    timeEntryImport: timeEntryImportService,
     aiSuggestion: aiSuggestionService,
     workflow: workflowService,
     timekeeper: timekeeperService,

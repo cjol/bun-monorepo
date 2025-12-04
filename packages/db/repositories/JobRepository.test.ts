@@ -197,4 +197,150 @@ describe("DrizzleJobRepository", () => {
       expect(claimed).toBeUndefined();
     });
   });
+
+  describe("entity linking", () => {
+    describe("create with entities", () => {
+      it("should create a job with linked entities", async () => {
+        const job = await repository.create(
+          {
+            type: "agent",
+            parameters: { prompt: "Test" },
+          },
+          [
+            { entityType: "time_entry", entityId: "entry-1" },
+            { entityType: "time_entry", entityId: "entry-2" },
+          ]
+        );
+
+        expect(job.id).toBeDefined();
+
+        const entities = await repository.listEntitiesByJob(job.id);
+        expect(entities).toHaveLength(2);
+        expect(entities[0]?.entityType).toBe("time_entry");
+        expect(entities[0]?.entityId).toBe("entry-1");
+        expect(entities[1]?.entityType).toBe("time_entry");
+        expect(entities[1]?.entityId).toBe("entry-2");
+      });
+
+      it("should create a job without entities when none provided", async () => {
+        const job = await repository.create({
+          type: "agent",
+          parameters: { prompt: "Test" },
+        });
+
+        expect(job.id).toBeDefined();
+
+        const entities = await repository.listEntitiesByJob(job.id);
+        expect(entities).toEqual([]);
+      });
+    });
+
+    describe("listEntitiesByJob", () => {
+      it("should return empty array when no entities are linked", async () => {
+        const job = await repository.create({
+          type: "agent",
+          parameters: { prompt: "Test" },
+        });
+
+        const entities = await repository.listEntitiesByJob(job.id);
+        expect(entities).toEqual([]);
+      });
+
+      it("should return all entities for a job", async () => {
+        const job = await repository.create(
+          {
+            type: "agent",
+            parameters: { prompt: "Test" },
+          },
+          [
+            { entityType: "time_entry", entityId: "entry-1" },
+            { entityType: "time_entry", entityId: "entry-2" },
+          ]
+        );
+
+        const entities = await repository.listEntitiesByJob(job.id);
+        expect(entities).toHaveLength(2);
+        expect(entities.map((e) => e.entityId)).toEqual(["entry-1", "entry-2"]);
+      });
+    });
+
+    describe("listJobsByEntity", () => {
+      it("should return empty array when no jobs are linked", async () => {
+        const jobs = await repository.listJobsByEntity("time_entry", "entry-1");
+        expect(jobs).toEqual([]);
+      });
+
+      it("should return all jobs for an entity", async () => {
+        const job1 = await repository.create(
+          {
+            type: "agent",
+            parameters: { prompt: "Job 1" },
+          },
+          [{ entityType: "time_entry", entityId: "entry-1" }]
+        );
+
+        const job2 = await repository.create(
+          {
+            type: "agent",
+            parameters: { prompt: "Job 2" },
+          },
+          [{ entityType: "time_entry", entityId: "entry-1" }]
+        );
+
+        const jobs = await repository.listJobsByEntity("time_entry", "entry-1");
+        expect(jobs).toHaveLength(2);
+        expect(jobs.map((j) => j.jobId).sort()).toEqual(
+          [job1.id, job2.id].sort()
+        );
+      });
+
+      it("should not return jobs for other entities", async () => {
+        await repository.create(
+          {
+            type: "agent",
+            parameters: { prompt: "Job 1" },
+          },
+          [{ entityType: "time_entry", entityId: "entry-1" }]
+        );
+
+        await repository.create(
+          {
+            type: "agent",
+            parameters: { prompt: "Job 2" },
+          },
+          [{ entityType: "time_entry", entityId: "entry-2" }]
+        );
+
+        const jobs = await repository.listJobsByEntity("time_entry", "entry-1");
+        expect(jobs).toHaveLength(1);
+        expect(jobs[0]?.entityId).toBe("entry-1");
+      });
+    });
+
+    describe("cascade deletion", () => {
+      it("should delete job entities when job is deleted", async () => {
+        const job = await repository.create(
+          {
+            type: "agent",
+            parameters: { prompt: "Test" },
+          },
+          [
+            { entityType: "time_entry", entityId: "entry-1" },
+            { entityType: "time_entry", entityId: "entry-2" },
+          ]
+        );
+
+        // Verify entities exist
+        let entities = await repository.listEntitiesByJob(job.id);
+        expect(entities).toHaveLength(2);
+
+        // Delete the job
+        await repository.delete(job.id);
+
+        // Verify entities are deleted (cascade)
+        entities = await repository.listEntitiesByJob(job.id);
+        expect(entities).toEqual([]);
+      });
+    });
+  });
 });

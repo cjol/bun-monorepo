@@ -2,6 +2,8 @@
 import { getDB, migrateDB, getRepos } from "@ai-starter/db";
 import { CoreAppService } from "@ai-starter/app";
 import { processNextJob } from "./processor";
+import { anthropic } from "@ai-sdk/anthropic";
+import path from "node:path";
 
 // Parse command line arguments
 const watchMode = process.argv.includes("--watch");
@@ -9,7 +11,11 @@ const pollInterval = 1000; // 1 second
 
 async function main() {
   // Initialize database and services
-  const db = getDB(process.env.DATABASE_URL || "file:./dev.db");
+  const databaseUrl =
+    process.env.DATABASE_URL ||
+    `file:${path.join(__dirname, "../../data/sqlite.db")}`;
+  const db = getDB(databaseUrl);
+  const model = anthropic("claude-haiku-4-5");
   await migrateDB(db);
   const repos = getRepos(db);
   const app = CoreAppService({ repos });
@@ -21,7 +27,7 @@ async function main() {
 
     while (true) {
       try {
-        const processed = await processNextJob({ app });
+        const processed = await processNextJob({ app, model, logger: console });
         if (!processed) {
           // No jobs available, wait before polling again
           await new Promise((resolve) => setTimeout(resolve, pollInterval));
@@ -41,7 +47,7 @@ async function main() {
 
     let processed = false;
     do {
-      processed = await processNextJob({ app });
+      processed = await processNextJob({ app, model, logger: console });
     } while (processed);
 
     console.log("No more pending jobs. Exiting.");

@@ -10,6 +10,9 @@ export type { BillService as BillServiceType } from "./BillService";
 export { TimeEntryService } from "./TimeEntryService";
 export type { TimeEntryService as TimeEntryServiceType } from "./TimeEntryService";
 
+export { TimeEntryImportService } from "./TimeEntryImportService";
+export type { TimeEntryImportService as TimeEntryImportServiceType } from "./TimeEntryImportService";
+
 export { AiSuggestionService } from "./AiSuggestionService";
 export type { AiSuggestionService as AiSuggestionServiceType } from "./AiSuggestionService";
 

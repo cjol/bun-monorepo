@@ -51,13 +51,19 @@ evalite("Worker processes time entry review workflow", {
     });
 
     // 2. Create a time entry (this should enqueue a job)
-    const timeEntry = await app.timeEntry.createTimeEntry({
-      matterId: matter.id,
-      timekeeperId: timekeeper.id,
-      date: new Date(input.timeEntryDate),
-      hours: input.timeEntryHours,
-      description: input.timeEntryDescription,
-    });
+    const timeEntries = await app.timeEntry.createTimeEntries(matter.id, [
+      {
+        matterId: matter.id,
+        timekeeperId: timekeeper.id,
+        date: new Date(input.timeEntryDate),
+        hours: input.timeEntryHours,
+        description: input.timeEntryDescription,
+      },
+    ]);
+    const timeEntry = timeEntries[0];
+    if (!timeEntry) {
+      throw new Error("Failed to create time entry");
+    }
     const originalDescription = timeEntry.description;
 
     // 3. Verify a job was enqueued
@@ -82,6 +88,7 @@ evalite("Worker processes time entry review workflow", {
 
     // 6. Get the updated time entry
     const updatedTimeEntry = await app.timeEntry.getTimeEntry(timeEntry.id);
+    console.log(timeEntry, updatedTimeEntry);
     if (!updatedTimeEntry) {
       throw new Error("Updated time entry not found");
     }

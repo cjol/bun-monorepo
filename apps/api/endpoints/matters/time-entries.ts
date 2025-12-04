@@ -34,28 +34,40 @@ export const matterTimeEntryRoutes = ({ app }: Context) =>
             `Time entry with ID ${params.timeEntryId} not found in matter ${params.matterId}`
           );
         }
-        return status(200, result);
+        const jobs = await app.timeEntry.getTimeEntryJobs(params.timeEntryId);
+        return status(200, { ...result, jobs });
       },
       {
         params: matterTimeEntryParamsSchema,
         detail: {
           summary: "Get Time Entry",
-          description: "Retrieve a single time entry by ID within a matter.",
+          description:
+            "Retrieve a single time entry by ID within a matter, including related jobs.",
         },
       }
     )
     .get(
       "/",
       async ({ params, query, status }) => {
+        let entries;
         if (query.billId) {
-          const result = await app.timeEntry.listByBill(
+          entries = await app.timeEntry.listByBill(
             params.matterId,
             query.billId
           );
-          return status(200, result);
+        } else {
+          entries = await app.timeEntry.listByMatter(params.matterId);
         }
-        const result = await app.timeEntry.listByMatter(params.matterId);
-        return status(200, result);
+
+        // Enrich each entry with related jobs
+        const enrichedEntries = await Promise.all(
+          entries.map(async (entry) => {
+            const jobs = await app.timeEntry.getTimeEntryJobs(entry.id);
+            return { ...entry, jobs };
+          })
+        );
+
+        return status(200, enrichedEntries);
       },
       {
         params: matterIdParamsSchema,
@@ -63,7 +75,7 @@ export const matterTimeEntryRoutes = ({ app }: Context) =>
         detail: {
           summary: "List Time Entries",
           description:
-            "Retrieve a list of all time entries for a matter, optionally filtered by bill.",
+            "Retrieve a list of all time entries for a matter, optionally filtered by bill. Each entry includes related jobs.",
         },
       }
     )
@@ -71,16 +83,19 @@ export const matterTimeEntryRoutes = ({ app }: Context) =>
       "/",
       async ({ params, body, status }) => {
         // Ensure the matterId in the body matches the URL
-        const result = await app.timeEntry.createTimeEntry({
-          ...body,
-          matterId: params.matterId,
-          date: new Date(body.date),
-        });
-        return status(201, result);
+        const result = await app.timeEntry.createTimeEntries(params.matterId, [
+          {
+            ...body,
+            matterId: params.matterId,
+            date: new Date(body.date),
+          },
+        ]);
+        return status(201, result[0]);
       },
       {
         params: matterIdParamsSchema,
-        body: newTimeEntryInputSchema.omit({ matterId: true }),
+        // TODO: validate against actual matter metadata schema
+        body: newTimeEntryInputSchema().omit({ matterId: true }),
         detail: {
           summary: "Create Time Entry",
           description: "Create a new time entry for a matter.",
@@ -106,10 +121,43 @@ export const matterTimeEntryRoutes = ({ app }: Context) =>
       },
       {
         params: matterTimeEntryParamsSchema,
-        body: updateTimeEntryInputSchema.omit({ id: true, matterId: true }),
+        body: updateTimeEntryInputSchema().omit({ id: true, matterId: true }),
         detail: {
           summary: "Update Time Entry",
           description: "Update an existing time entry within a matter.",
         },
       }
+    )
+    .post(
+      "/import",
+      async ({ params, body, status }) => {
+        const csvContent = await body.file.text();
+
+        console.log("Importing time entries CSV:", csvContent.slice(0, 100));
+        const result = await app.timeEntryImport.importTimeEntries(
+          params.matterId,
+          csvContent
+        );
+
+        if (!result.success) {
+          // Return 400 for validation errors
+          return status(400, result);
+        }
+
+        return status(201, result);
+      },
+      {
+        params: matterIdParamsSchema,
+        body: t.Object({
+          file: t.File(),
+        }),
+        detail: {
+          summary: "Import Time Entries from CSV",
+          description:
+            "Import multiple time entries from a CSV file. Required columns: date, timekeeperName, hours, description. Optional columns: billId, metadata.*",
+        },
+      }
     );
+
+// const app = new Elysia()
+// 	.post('/upload',)

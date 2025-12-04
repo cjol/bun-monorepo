@@ -16,10 +16,13 @@ export const DrizzleTimeEntryRepository = ({
     });
     return result ?? null;
   },
-  async create(data) {
-    const [result] = await db.insert(timeEntrySchema).values(data).returning();
-    if (!result) throw badImplementation("Failed to create TimeEntry");
-    return result;
+  async createMany(data) {
+    if (data.length === 0) return [];
+    const results = await db.insert(timeEntrySchema).values(data).returning();
+    if (!results || results.length !== data.length) {
+      throw badImplementation("Failed to create TimeEntries");
+    }
+    return results;
   },
   async update(id: string, data) {
     const [result] = await db

@@ -17,3 +17,4 @@ export * from "./timekeeperRole";
 export * from "./role";
 export * from "./rate";
 export * from "./job";
+export * from "./jobEntity";

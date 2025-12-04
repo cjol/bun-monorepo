@@ -108,35 +108,40 @@ describe("buildMatterContext", () => {
     });
 
     // Create time entries
-    await repos.timeEntry.create({
-      matterId: matter.id,
-      timekeeperId: partner.id,
-      billId: bill1.id,
-      date: new Date("2024-01-15"),
-      hours: 5,
-      description: "Initial case review",
-      metadata: {},
-    });
+    await repos.timeEntry.createMany([
+      {
+        matterId: matter.id,
+        timekeeperId: partner.id,
+        billId: bill1.id,
+        date: new Date("2024-01-15"),
+        hours: 4,
+        description: "Initial consultation",
+      },
+    ]);
 
-    await repos.timeEntry.create({
-      matterId: matter.id,
-      timekeeperId: associate.id,
-      billId: bill1.id,
-      date: new Date("2024-01-20"),
-      hours: 3,
-      description: "Legal research",
-      metadata: {},
-    });
+    await repos.timeEntry.createMany([
+      {
+        matterId: matter.id,
+        timekeeperId: associate.id,
+        billId: bill1.id,
+        date: new Date("2024-01-20"),
+        hours: 3,
+        description: "Legal research",
+        metadata: {},
+      },
+    ]);
 
-    await repos.timeEntry.create({
-      matterId: matter.id,
-      timekeeperId: associate.id,
-      billId: bill2.id,
-      date: new Date("2024-02-10"),
-      hours: 4,
-      description: "Draft motion",
-      metadata: {},
-    });
+    await repos.timeEntry.createMany([
+      {
+        matterId: matter.id,
+        timekeeperId: associate.id,
+        billId: bill2.id,
+        date: new Date("2024-02-10"),
+        hours: 4,
+        description: "Draft motion",
+        metadata: { phase: "drafting" },
+      },
+    ]);
 
     // Build context
     const context = await buildMatterContext(matter.id, {

@@ -51,10 +51,6 @@ export async function processAgentJob(job: Job, { app, model }: ProcessorDeps) {
   const result = await agent.generate({
     messages: [{ role: "user", content: params.prompt }],
   });
-  console.log(workflow.instructions);
-  console.log(params.prompt);
-
-  console.log(`Agent job ${job.id} for workflow ${workflow.name} completed`);
 
   return {
     success: true,

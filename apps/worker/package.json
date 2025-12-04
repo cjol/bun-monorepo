@@ -17,8 +17,10 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.53",
     "@ai-starter/app": "workspace:*",
     "@ai-starter/core": "workspace:*",
-    "@ai-starter/db": "workspace:*"
+    "@ai-starter/db": "workspace:*",
+    "ai": "^5.0.106"
   }
 }

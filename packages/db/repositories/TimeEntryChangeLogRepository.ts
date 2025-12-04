@@ -13,6 +13,17 @@ interface Deps {
 export const DrizzleTimeEntryChangeLogRepository = ({
   db,
 }: Deps): TimeEntryChangeLogRepository => ({
+  async insertMany(data) {
+    if (data.length === 0) return [];
+    const results = await db
+      .insert(timeEntryChangeLogSchema)
+      .values(data)
+      .returning();
+    if (!results || results.length !== data.length) {
+      throw badImplementation("Failed to insert TimeEntryChangeLogs");
+    }
+    return results;
+  },
   async insert(data) {
     const [result] = await db
       .insert(timeEntryChangeLogSchema)
