@@ -27,14 +27,18 @@ describe("DrizzleTimeEntryRepository", () => {
     });
 
     it("should return time entry when it exists", async () => {
-      const timeEntry = await repository.create({
-        matterId: context.matter.id,
-        timekeeperId: context.timekeeper.id,
-        billId: context.bill!.id,
-        date: new Date("2024-01-15"),
-        hours: 2.5,
-        description: "Worked on something",
-      });
+      const timeEntries = await repository.createMany([
+        {
+          matterId: context.matter.id,
+          timekeeperId: context.timekeeper.id,
+          billId: context.bill!.id,
+          date: new Date("2024-01-15"),
+          hours: 2.5,
+          description: "Worked on something",
+        },
+      ]);
+      const timeEntry = timeEntries[0];
+      if (!timeEntry) throw new Error("Failed to create time entry");
       const result = await repository.get(timeEntry.id);
 
       expect(result).toMatchObject({
@@ -49,13 +53,18 @@ describe("DrizzleTimeEntryRepository", () => {
 
   describe("update", () => {
     it("should update a time entry", async () => {
-      const timeEntry = await repository.create({
-        matterId: context.matter.id,
-        timekeeperId: context.timekeeper.id,
-        date: new Date("2024-01-15"),
-        hours: 2.0,
-        description: "Original description",
-      });
+      const timeEntries = await repository.createMany([
+        {
+          matterId: context.matter.id,
+          timekeeperId: context.timekeeper.id,
+          date: new Date("2024-01-15"),
+          hours: 2.0,
+          description: "Original description",
+        },
+      ]);
+
+      const timeEntry = timeEntries[0];
+      if (!timeEntry) throw new Error("Failed to create time entry");
 
       const updated = await repository.update(timeEntry.id, {
         hours: 3.0,
@@ -81,13 +90,19 @@ describe("DrizzleTimeEntryRepository", () => {
 
   describe("delete", () => {
     it("should delete a time entry", async () => {
-      const timeEntry = await repository.create({
-        matterId: context.matter.id,
-        timekeeperId: context.timekeeper.id,
-        date: new Date("2024-01-15"),
-        hours: 1.0,
-        description: "To delete",
-      });
+      const timeEntries = await repository.createMany([
+        {
+          matterId: context.matter.id,
+          timekeeperId: context.timekeeper.id,
+          billId: context.bill!.id,
+          date: new Date("2024-01-15"),
+          hours: 2.5,
+          description: "Worked on something",
+        },
+      ]);
+
+      const timeEntry = timeEntries[0];
+      if (!timeEntry) throw new Error("Failed to create time entry");
 
       await repository.delete(timeEntry.id);
       const result = await repository.get(timeEntry.id);
@@ -107,20 +122,22 @@ describe("DrizzleTimeEntryRepository", () => {
     });
 
     it("should return all time entries", async () => {
-      await repository.create({
-        matterId: context.matter.id,
-        timekeeperId: context.timekeeper.id,
-        date: new Date("2024-01-15"),
-        hours: 1.0,
-        description: "Entry 1",
-      });
-      await repository.create({
-        matterId: context.matter.id,
-        timekeeperId: context.timekeeper.id,
-        date: new Date("2024-01-16"),
-        hours: 2.0,
-        description: "Entry 2",
-      });
+      await repository.createMany([
+        {
+          matterId: context.matter.id,
+          timekeeperId: context.timekeeper.id,
+          date: new Date("2024-01-15"),
+          hours: 1.0,
+          description: "Entry 1",
+        },
+        {
+          matterId: context.matter.id,
+          timekeeperId: context.timekeeper.id,
+          date: new Date("2024-01-16"),
+          hours: 2.0,
+          description: "Entry 2",
+        },
+      ]);
 
       const results = await repository.listByMatter(context.matter.id);
 
@@ -134,20 +151,22 @@ describe("DrizzleTimeEntryRepository", () => {
         matterName: "Matter 2",
       });
 
-      await repository.create({
-        matterId: context.matter.id,
-        timekeeperId: context.timekeeper.id,
-        date: new Date("2024-01-15"),
-        hours: 1.0,
-        description: "Entry 1",
-      });
-      await repository.create({
-        matterId: matter2.id,
-        timekeeperId: context.timekeeper.id, // technically this is illegal because the timekeeper isn't defined within the matter, but it's fine for testing
-        date: new Date("2024-01-15"),
-        hours: 2.0,
-        description: "Entry 2",
-      });
+      await repository.createMany([
+        {
+          matterId: context.matter.id,
+          timekeeperId: context.timekeeper.id,
+          date: new Date("2024-01-15"),
+          hours: 1.0,
+          description: "Entry 1",
+        },
+        {
+          matterId: matter2.id,
+          timekeeperId: context.timekeeper.id, // technically this is illegal because the timekeeper isn't defined within the matter, but it's fine for testing
+          date: new Date("2024-01-15"),
+          hours: 2.0,
+          description: "Entry 2",
+        },
+      ]);
 
       const results = await repository.listByMatter(context.matter.id);
 
@@ -166,21 +185,23 @@ describe("DrizzleTimeEntryRepository", () => {
     });
 
     it("should return time entries for specific bill", async () => {
-      await repository.create({
-        matterId: context.matter.id,
-        timekeeperId: context.timekeeper.id,
-        billId: context.bill!.id,
-        date: new Date("2024-01-15"),
-        hours: 1.0,
-        description: "Entry 1",
-      });
-      await repository.create({
-        matterId: context.matter.id,
-        timekeeperId: context.timekeeper.id,
-        date: new Date("2024-01-15"),
-        hours: 2.0,
-        description: "Entry 2",
-      });
+      await repository.createMany([
+        {
+          matterId: context.matter.id,
+          timekeeperId: context.timekeeper.id,
+          billId: context.bill!.id,
+          date: new Date("2024-01-15"),
+          hours: 1.0,
+          description: "Entry 1",
+        },
+        {
+          matterId: context.matter.id,
+          timekeeperId: context.timekeeper.id,
+          date: new Date("2024-01-15"),
+          hours: 2.0,
+          description: "Entry 2",
+        },
+      ]);
 
       const results = await repository.listByMatterAndBill(
         context.matter.id,

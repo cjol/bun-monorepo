@@ -26,27 +26,17 @@ export function createTimeEntrySandboxFunctions(service: TimeEntryService) {
     },
   });
 
-  const createTimeEntry = defineSandboxFunction({
-    description: "Create a new time entry",
-    inputSchema: newTimeEntryInputSchema(),
-    execute: async ({
-      matterId,
-      timekeeperId,
-      billId,
-      date,
-      hours,
-      description,
-      metadata,
-    }) => {
-      return service.createTimeEntry({
+  const createTimeEntries = defineSandboxFunction({
+    description: "Create a batch of new time entries for a specific matter",
+    inputSchema: z.object({
+      matterId: z.string(),
+      entries: z.array(newTimeEntryInputSchema()),
+    }),
+    execute: async ({ matterId, entries }) => {
+      return service.createTimeEntries(
         matterId,
-        timekeeperId,
-        billId,
-        date: new Date(date),
-        hours,
-        description,
-        metadata,
-      });
+        entries.map((input) => ({ ...input, date: new Date(input.date) }))
+      );
     },
   });
 
@@ -85,7 +75,7 @@ export function createTimeEntrySandboxFunctions(service: TimeEntryService) {
 
   return {
     getTimeEntry,
-    createTimeEntry,
+    createTimeEntries,
     updateTimeEntry,
     listTimeEntriesByMatter,
     listTimeEntriesByBill,

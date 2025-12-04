@@ -9,6 +9,8 @@ import {
 import type { TimeEntry } from "@ai-starter/core";
 import { TimeEntryService } from "./TimeEntryService";
 import type { CsvHeaderMappingService } from "./CsvHeaderMappingService";
+import { WorkflowService } from "./WorkflowService";
+import { JobService } from "..";
 
 describe("TimeEntryImportService", () => {
   let db: DB;
@@ -40,11 +42,13 @@ describe("TimeEntryImportService", () => {
     // (createTimeTrackingTestContext already seeds roles)
     context = await createTimeTrackingTestContext(db, { withBill: true });
     mockCsvMappingService.mapCsvHeaders.mockClear();
+    const workflow = WorkflowService({ repos });
+    const job = JobService({ repos });
 
     service = TimeEntryImportService({
       repos,
       services: {
-        timeEntry: TimeEntryService({ repos }),
+        timeEntry: TimeEntryService({ repos, services: { workflow, job } }),
         csvMapping: mockCsvMappingService,
       },
     });

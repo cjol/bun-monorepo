@@ -21,6 +21,7 @@ import {
   TimekeeperService,
   TimekeeperRoleService,
   RoleService,
+  JobService,
 } from "../core";
 import { createGeneralPurposeAgent } from "./GeneralPurposeAgent";
 import type { TimeEntry } from "@ai-starter/core";
@@ -32,13 +33,16 @@ async function setupTest() {
   const db = await testDB({ seed: false });
   const repos = getRepos(db);
   await doSeedRoles(db);
-  const timeEntry = TimeEntryService({ repos });
+  const workflow = WorkflowService({ repos });
+  const job = JobService({ repos });
+  const timeEntry = TimeEntryService({ repos, services: { workflow, job } });
   const services = {
+    job,
+    workflow,
+    timeEntry,
     matter: MatterService({ repos }),
     bill: BillService({ repos }),
-    timeEntry,
     aiSuggestion: AiSuggestionService({ repos, services: { timeEntry } }),
-    workflow: WorkflowService({ repos }),
     timekeeper: TimekeeperService({ repos }),
     timekeeperRole: TimekeeperRoleService({ repos }),
     role: RoleService({ repos }),
@@ -212,16 +216,17 @@ evalite("Calculation Request", {
     }
 
     // Create the time entries
-    for (const entry of input.entries) {
-      await services.timeEntry.createTimeEntry({
+    await services.timeEntry.createTimeEntries(
+      matter.id,
+      input.entries.map((entry) => ({
         matterId: matter.id,
         timekeeperId: timekeeper.id,
         billId: null,
         date: new Date("2025-01-01"),
         hours: entry.hours,
         description: entry.description,
-      });
-    }
+      }))
+    );
 
     const agent = createGeneralPurposeAgent({ services, model });
 
@@ -292,19 +297,17 @@ evalite("Review Workflow", {
     });
 
     // Create time entries
-    const entries: TimeEntry[] = [];
-    for (const entry of input.entries) {
-      entries.push(
-        await services.timeEntry.createTimeEntry({
-          matterId: matter.id,
-          timekeeperId: timekeeper.id,
-          billId: null,
-          date: new Date("2025-01-10"),
-          hours: entry.hours,
-          description: entry.description,
-        })
-      );
-    }
+    const entries: TimeEntry[] = await services.timeEntry.createTimeEntries(
+      matter.id,
+      input.entries.map((entry) => ({
+        matterId: matter.id,
+        timekeeperId: timekeeper.id,
+        billId: null,
+        date: new Date("2025-01-10"),
+        hours: entry.hours,
+        description: entry.description,
+      }))
+    );
 
     const agent = createGeneralPurposeAgent({
       services,
@@ -436,25 +439,27 @@ evalite("Matter Context Awareness", {
       status: "draft",
     });
 
-    await repos.timeEntry.create({
-      matterId: matter.id,
-      timekeeperId: partner.id,
-      billId: draftBill.id,
-      date: new Date("2025-01-15"),
-      hours: 4,
-      description: "Strategic planning session",
-      metadata: {},
-    });
+    await repos.timeEntry.createMany([
+      {
+        matterId: matter.id,
+        timekeeperId: partner.id,
+        billId: draftBill.id,
+        date: new Date("2025-01-15"),
+        hours: 4,
+        description: "Strategic planning session",
+      },
+    ]);
 
-    await repos.timeEntry.create({
-      matterId: matter.id,
-      timekeeperId: associate.id,
-      billId: draftBill.id,
-      date: new Date("2025-01-20"),
-      hours: 6,
-      description: "Due diligence review",
-      metadata: {},
-    });
+    await repos.timeEntry.createMany([
+      {
+        matterId: matter.id,
+        timekeeperId: associate.id,
+        billId: draftBill.id,
+        date: new Date("2025-01-20"),
+        hours: 6,
+        description: "Legal research and document preparation",
+      },
+    ]);
 
     // Build matter context
     const matterContext = await buildMatterContext(matter.id, {

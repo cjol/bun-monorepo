@@ -83,12 +83,14 @@ export const matterTimeEntryRoutes = ({ app }: Context) =>
       "/",
       async ({ params, body, status }) => {
         // Ensure the matterId in the body matches the URL
-        const result = await app.timeEntry.createTimeEntry({
-          ...body,
-          matterId: params.matterId,
-          date: new Date(body.date),
-        });
-        return status(201, result);
+        const result = await app.timeEntry.createTimeEntries(params.matterId, [
+          {
+            ...body,
+            matterId: params.matterId,
+            date: new Date(body.date),
+          },
+        ]);
+        return status(201, result[0]);
       },
       {
         params: matterIdParamsSchema,

@@ -8,6 +8,8 @@ import {
   createTimeTrackingTestContext,
   type TimeTrackingTestContext,
 } from "@ai-starter/db/test-utils";
+import { WorkflowService } from "./WorkflowService";
+import { JobService } from "./JobService";
 
 describe("AiSuggestionService", () => {
   let db: DB;
@@ -20,7 +22,13 @@ describe("AiSuggestionService", () => {
   beforeEach(async () => {
     db = await testDB();
     repos = await getRepos(db);
-    timeEntryService = TimeEntryService({ repos });
+    timeEntryService = TimeEntryService({
+      repos,
+      services: {
+        workflow: WorkflowService({ repos }),
+        job: JobService({ repos }),
+      },
+    });
     service = AiSuggestionService({
       repos,
       services: { timeEntry: timeEntryService },
@@ -28,14 +36,18 @@ describe("AiSuggestionService", () => {
 
     context = await createTimeTrackingTestContext(db, { withBill: false });
 
-    timeEntry = await timeEntryService.createTimeEntry({
-      matterId: context.matter.id,
-      timekeeperId: context.timekeeper.id,
-      billId: null,
-      date: new Date("2024-01-15"),
-      hours: 2.5,
-      description: "Client consultation",
-    });
+    timeEntry = (
+      await timeEntryService.createTimeEntries(context.matter.id, [
+        {
+          matterId: context.matter.id,
+          timekeeperId: context.timekeeper.id,
+          billId: null,
+          date: new Date("2024-01-15"),
+          hours: 2.5,
+          description: "Client consultation",
+        },
+      ])
+    )[0]!;
   });
 
   describe("approveSuggestion", () => {

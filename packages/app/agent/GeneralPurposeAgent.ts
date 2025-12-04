@@ -134,13 +134,13 @@ const matter = await getMatter({ id: "some-uuid" });
 console.log("Matter:", matter.matterName);
 
 // Create a time entry
-const entry = await createTimeEntry({
+const entry = await createTimeEntries([{
   matterId: matter.id,
   billId: null,
   date: "2025-01-15",
   hours: 2.5,
   description: "Client meeting"
-});
+}]);
 
 // List time entries for a matter
 const entries = await listTimeEntriesByMatter({ matterId: matter.id });

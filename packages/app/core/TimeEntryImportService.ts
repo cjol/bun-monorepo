@@ -342,24 +342,11 @@ export const TimeEntryImportService = (deps: Deps) => {
         validatedRows.push(result as NewTimeEntry);
       }
 
-      // All rows valid - create time entries
-      const created: TimeEntry[] = [];
-      for (const entry of validatedRows) {
-        // Use TimeEntryService if available (to trigger workflows)
-        if (services?.timeEntry) {
-          const timeEntry = await services.timeEntry.createTimeEntry(entry);
-          created.push(timeEntry);
-        } else {
-          // Fallback to direct repository access
-          const timeEntry = await repos.timeEntry.create(entry);
-          await repos.timeEntryChangeLog.insert({
-            timeEntryId: timeEntry.id,
-            beforeData: null,
-            afterData: timeEntry,
-          });
-          created.push(timeEntry);
-        }
-      }
+      // create time entries in bulk
+      const created = await services.timeEntry.createTimeEntries(
+        matterId,
+        validatedRows
+      );
 
       return {
         success: true,
