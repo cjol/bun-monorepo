@@ -264,7 +264,8 @@ export default function TimeEntriesPage() {
                     <Text lineClamp={2}>{entry.description}</Text>
                   </Table.Td>
                   {metadataFields.map((field) => {
-                    const value = entry.metadata?.[field.key];
+                    const metadata = entry.metadata as Record<string, string>;
+                    const value = metadata[field.key];
                     let displayValue = value || "-";
 
                     // For enum fields, show the readable name instead of the raw value

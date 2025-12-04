@@ -28,7 +28,7 @@ export function createTimeEntrySandboxFunctions(service: TimeEntryService) {
 
   const createTimeEntry = defineSandboxFunction({
     description: "Create a new time entry",
-    inputSchema: newTimeEntryInputSchema,
+    inputSchema: newTimeEntryInputSchema(),
     execute: async ({
       matterId,
       timekeeperId,
@@ -53,7 +53,7 @@ export function createTimeEntrySandboxFunctions(service: TimeEntryService) {
   const updateTimeEntry = defineSandboxFunction({
     description:
       "Update an existing time entry (creates a changelog entry automatically)",
-    inputSchema: updateTimeEntryInputSchema,
+    inputSchema: updateTimeEntryInputSchema(),
     execute: async ({ id, date, ...data }) => {
       return service.updateTimeEntry(id, {
         ...data,

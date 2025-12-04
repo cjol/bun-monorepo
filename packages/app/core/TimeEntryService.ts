@@ -116,15 +116,7 @@ Please process these time entries according to the workflow instructions.`;
 
     updateTimeEntry: async (
       id: string,
-      data: Partial<{
-        matterId: string;
-        timekeeperId: string;
-        billId: string | null;
-        date: Date;
-        hours: number;
-        description: string;
-        metadata: Record<string, string>;
-      }>
+      data: Partial<NewTimeEntry>
     ): Promise<TimeEntry> => {
       // Get the existing entry for the changelog
       const existing = await repos.timeEntry.get(id);

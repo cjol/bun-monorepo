@@ -19,13 +19,13 @@ import { generateId } from "./utils/generateId";
 
 /** Custom column type for metadata - stores Record<string, string> as JSON */
 export const jsonMetadata = customType<{
-  data: Record<string, string>;
+  data: unknown;
   driverData: string;
 }>({
   dataType() {
     return "text";
   },
-  toDriver(value: Record<string, string>) {
+  toDriver(value: unknown) {
     // Validate that all values are strings at insertion time
     const validated = z.record(z.string(), z.string()).parse(value);
     return JSON.stringify(validated);
@@ -65,27 +65,33 @@ export type NewTimeEntry = typeof timeEntrySchema.$inferInsert;
  * Used for API input validation and sandbox function parameters.
  */
 
-export const newTimeEntryInputSchema = z.object({
-  matterId: ulidSchema.describe("The ULID of the matter"),
-  timekeeperId: ulidSchema.describe("The ULID of the timekeeper"),
-  billId: ulidSchema
-    .nullable()
-    .optional()
-    .describe("The ULID of the bill (if assigned)"),
-  date: isoDateSchema,
-  hours: positiveNumberSchema.describe("Number of hours worked"),
-  description: z.string().describe("Description of the work performed"),
-  metadata: z
-    .record(z.string(), z.string())
-    .optional()
-    .describe("Custom metadata key-value pairs"),
-});
-
-export const updateTimeEntryInputSchema = newTimeEntryInputSchema
-  .partial()
-  .extend({
-    id: ulidSchema.describe("The ULID of the time entry to update"),
+export const newTimeEntryInputSchema = (metaSchema?: z.ZodType | null) =>
+  z.object({
+    matterId: ulidSchema.describe("The ULID of the matter"),
+    timekeeperId: ulidSchema.describe("The ULID of the timekeeper"),
+    billId: ulidSchema
+      .nullable()
+      .optional()
+      .describe("The ULID of the bill (if assigned)"),
+    date: isoDateSchema,
+    hours: positiveNumberSchema.describe("Number of hours worked"),
+    description: z.string().describe("Description of the work performed"),
+    metadata: (metaSchema || z.record(z.string(), z.string()))
+      .optional()
+      .describe("Custom metadata key-value pairs"),
   });
+
+export const updateTimeEntryInputSchema = (
+  metaSchema: z.ZodType<Record<string, string>> = z.record(
+    z.string(),
+    z.string()
+  )
+) =>
+  newTimeEntryInputSchema(metaSchema)
+    .partial()
+    .extend({
+      id: ulidSchema.describe("The ULID of the time entry to update"),
+    });
 
 /** Use as a custom column in other tables */
 export const jsonTimeEntry = customType<{

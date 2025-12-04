@@ -37,7 +37,7 @@ export const newAiSuggestionInputSchema = z.object({
   timeEntryId: ulidSchema.describe(
     "The ULID of the time entry to suggest changes for"
   ),
-  suggestedChanges: newTimeEntryInputSchema.describe(
+  suggestedChanges: newTimeEntryInputSchema().describe(
     "Object containing the suggested time entry changes"
   ),
 });

@@ -502,9 +502,8 @@ evalite("Matter Context Awareness", {
         const toolCalls = logs.flatMap((c) =>
           c.filter((m) => m.type === "tool-call")
         );
-        // should be possible with a single tool call to retrieve time entries
-        const overhead = 1 - toolCalls.length;
-        return Math.max(0, (10 - overhead) / 10);
+        // should be possible with a single tool call to retrieve time entries and sum them
+        return Math.max(0, (10 + 1 - toolCalls.length) / 10);
       },
     },
   ],

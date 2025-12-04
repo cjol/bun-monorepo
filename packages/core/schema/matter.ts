@@ -41,6 +41,25 @@ export const jsonTimeEntryMetadataSchema = customType<{
   },
 });
 
+export const buildZodMetadataFieldSchema = (
+  schema: TimeEntryMetadataSchema | null
+) => {
+  if (!schema) return z.record(z.string(), z.string());
+
+  const fieldSchemas: Record<string, z.ZodTypeAny> = {};
+  for (const [key, field] of Object.entries(schema)) {
+    if (field.type === "string") {
+      fieldSchemas[key] = z.string().describe(field.name);
+    } else if (field.type === "number") {
+      fieldSchemas[key] = z.number().describe(field.name);
+    } else if (field.type === "enum") {
+      const enumValues = field.values.map((v) => v.value);
+      fieldSchemas[key] = z.enum(enumValues).describe(field.name);
+    }
+  }
+  return z.object(fieldSchemas).partial();
+};
+
 export const matterSchema = sqliteTable("matter", {
   id: text("id")
     .primaryKey()

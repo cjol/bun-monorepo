@@ -1,0 +1,6 @@
+date,timekeeperName,hours,description,metadata.taskCode,metadata.phase
+2025-01-15,Alice Johnson,2.5,Client meeting and case discussion,REV,discovery
+2025-01-15,Bob Smith,1.5,Legal research on precedent cases,RES,discovery
+2025-01-16,Alice Johnson,3.0,Draft initial motion,DRF,preparation
+2025-01-16,Bob Smith,2.0,Review and edit motion draft,REV,preparation
+2025-01-17,Charlie Davis,4.5,Deposition preparation,PREP,discovery
