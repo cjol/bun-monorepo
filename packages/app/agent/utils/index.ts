@@ -12,3 +12,4 @@ export {
   buildMatterContext,
   type BuildMatterContextDeps,
 } from "./buildMatterContext";
+export { filterSandboxFunctions } from "./filterSandboxFunctions";

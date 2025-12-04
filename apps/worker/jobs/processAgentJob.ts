@@ -1,4 +1,4 @@
-import { createGeneralPurposeAgent, buildMatterContext } from "@ai-starter/app";
+import { createCustomerAgent, buildMatterContext } from "@ai-starter/app";
 import type { Job } from "@ai-starter/core";
 import type { ProcessorDeps } from "../processor";
 
@@ -31,7 +31,7 @@ export async function processAgentJob(job: Job, { app, model }: ProcessorDeps) {
   });
 
   // Create agent with matter context and workflow instructions
-  const agent = createGeneralPurposeAgent({
+  const agent = createCustomerAgent({
     services: {
       matter: app.matter,
       bill: app.bill,

@@ -34,7 +34,7 @@ evalite("Worker processes time entry review workflow", {
       },
       expected: {
         originalDescription: "Drafted motion for summary judgment",
-        updatedDescription: "REVIEWED: Drafted motion for summary judgment",
+        suggestedDescription: "REVIEWED: Drafted motion for summary judgment",
       },
     },
   ],
@@ -77,7 +77,7 @@ evalite("Worker processes time entry review workflow", {
       throw new Error("Job is undefined");
     }
 
-    // 5. Process the job using the worker
+    // 4. Process job using worker
     const processed = await processNextJob({
       app,
       model,
@@ -86,19 +86,36 @@ evalite("Worker processes time entry review workflow", {
       throw new Error("Job was not processed");
     }
 
-    // 6. Get the updated time entry
-    const updatedTimeEntry = await app.timeEntry.getTimeEntry(timeEntry.id);
-    console.log(timeEntry, updatedTimeEntry);
-    if (!updatedTimeEntry) {
-      throw new Error("Updated time entry not found");
+    // 5. Verify time entry was NOT directly modified
+    const unchangedTimeEntry = await app.timeEntry.getTimeEntry(timeEntry.id);
+    if (!unchangedTimeEntry) {
+      throw new Error("Time entry not found");
     }
 
-    // 7. Get the completed job
+    // 6. Check that AI suggestion was created
+    const suggestions = await app.aiSuggestion.listByStatus(
+      matter.id,
+      "pending"
+    );
+    if (suggestions.length !== 1) {
+      throw new Error(
+        `Expected 1 pending suggestion, got ${suggestions.length}`
+      );
+    }
+
+    const suggestion = suggestions[0];
+    if (!suggestion) {
+      throw new Error("Suggestion is undefined");
+    }
+
+    // 7. Get completed job
     const completedJob = await app.job.getJob(job.id);
 
     return {
       originalDescription,
-      updatedDescription: updatedTimeEntry.description,
+      unchangedDescription: unchangedTimeEntry.description,
+      suggestedDescription: suggestion.suggestedChanges.description,
+      suggestionStatus: suggestion.status,
       jobStatus: completedJob?.status,
       jobStartedAt: completedJob?.startedAt,
       jobFinishedAt: completedJob?.finishedAt,
@@ -107,9 +124,17 @@ evalite("Worker processes time entry review workflow", {
   },
   scorers: [
     {
-      name: "Description Updated with REVIEWED prefix",
+      name: "Time entry unchanged",
       scorer: ({ output, expected }) => {
-        return output.updatedDescription === expected.updatedDescription
+        return output.unchangedDescription === expected.originalDescription
+          ? 1
+          : 0;
+      },
+    },
+    {
+      name: "AI suggestion created with correct description",
+      scorer: ({ output, expected }) => {
+        return output.suggestedDescription === expected.suggestedDescription
           ? 1
           : 0;
       },

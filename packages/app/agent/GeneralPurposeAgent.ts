@@ -25,7 +25,7 @@ import { createRoleSandboxFunctions } from "./sandbox/RoleServiceSandbox";
 import {
   createSandboxTool,
   generateFunctionDocs,
-  type SandboxFunction,
+  filterSandboxFunctions,
 } from "./utils";
 import { anthropic } from "@ai-sdk/anthropic";
 
@@ -61,6 +61,13 @@ export interface CreateGeneralPurposeAgentOptions {
   workflowInstructions?: string;
 
   model?: LanguageModel;
+
+  /**
+   * Optional list of allowed sandbox functions.
+   * If not provided, all functions are allowed.
+   * Use this to restrict agent capabilities for specific use cases.
+   */
+  allowedFunctions?: SandboxFunctionName[];
 }
 
 /**
@@ -68,9 +75,9 @@ export interface CreateGeneralPurposeAgentOptions {
  * These functions allow the agent to interact with matters, bills, time entries,
  * AI suggestions, and workflows.
  */
-function createTimesheetManagementFunctions(
+function createSandboxFunctions(
   services: CreateGeneralPurposeAgentOptions["services"]
-): Record<string, SandboxFunction<unknown, unknown>> {
+) {
   return {
     ...createMatterSandboxFunctions(services.matter),
     ...createBillSandboxFunctions(services.bill),
@@ -80,8 +87,12 @@ function createTimesheetManagementFunctions(
     ...createTimekeeperSandboxFunctions(services.timekeeper),
     ...createTimekeeperRoleSandboxFunctions(services.timekeeperRole),
     ...createRoleSandboxFunctions(services.role),
-  } as Record<string, SandboxFunction<unknown, unknown>>;
+  };
 }
+
+export type SandboxFunctionName = keyof ReturnType<
+  typeof createSandboxFunctions
+>;
 
 /**
  * Creates a general-purpose agent for timesheet management.
@@ -116,8 +127,13 @@ function createTimesheetManagementFunctions(
 export function createGeneralPurposeAgent(
   options: CreateGeneralPurposeAgentOptions
 ) {
-  const { services, matterContext, workflowInstructions } = options;
-  const sandboxFunctions = createTimesheetManagementFunctions(services);
+  const { services, matterContext, workflowInstructions, allowedFunctions } =
+    options;
+  const allSandboxFunctions = createSandboxFunctions(services);
+
+  const sandboxFunctions = allowedFunctions
+    ? filterSandboxFunctions(allSandboxFunctions, allowedFunctions)
+    : allSandboxFunctions;
 
   const systemPrompt = `You are a timesheet management assistant. You help users manage matters, bills, and time entries.
 
