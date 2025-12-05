@@ -79,6 +79,13 @@ export const DocumentService = (deps: Deps) => {
         throw notFound(`Document template with ID ${templateId} not found`);
       }
 
+      // Validate template belongs to the same matter
+      if (template.matterId !== matterId) {
+        throw badImplementation(
+          `Template ${templateId} belongs to matter ${template.matterId}, but document is being generated for matter ${matterId}`
+        );
+      }
+
       // Execute template
       const result = await executeTemplate({
         template,

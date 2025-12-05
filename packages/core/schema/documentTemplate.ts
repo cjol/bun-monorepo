@@ -3,11 +3,15 @@ import { z } from "zod";
 import { timestamps } from "./utils/timestamps";
 import { ulidSchema } from "./utils/validation";
 import { generateId } from "./utils/generateId";
+import { matterSchema } from "./matter";
 
 export const documentTemplateSchema = sqliteTable("document_template", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => generateId()),
+  matterId: text("matter_id")
+    .notNull()
+    .references(() => matterSchema.id),
   name: text("name").notNull(),
   description: text("description"),
   outputFormat: text("output_format", {
@@ -37,6 +41,9 @@ export const outputFormatSchema = z.enum([
 ]);
 
 export const newDocumentTemplateInputSchema = z.object({
+  matterId: ulidSchema.describe(
+    "The ULID of the matter this template belongs to"
+  ),
   name: z.string().describe("Name of the document template"),
   description: z
     .string()

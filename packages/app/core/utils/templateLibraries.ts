@@ -2,6 +2,7 @@
  * Template library utilities for document generation.
  * These are injected into the template execution sandbox.
  */
+import * as XLSX from "xlsx";
 
 /**
  * Format a number as currency
@@ -36,23 +37,6 @@ export const formatDate = (
 };
 
 /**
- * Simple HTML template helper
- */
-export const htmlTemplate = (
-  template: string,
-  data: Record<string, unknown>
-): string => {
-  let result = template;
-
-  for (const [key, value] of Object.entries(data)) {
-    const placeholder = `{{${key}}}`;
-    result = result.replace(new RegExp(placeholder, "g"), String(value));
-  }
-
-  return result;
-};
-
-/**
  * CSV escape helper
  */
 export const csvEscape = (value: string): string => {
@@ -77,3 +61,6 @@ export const csvContent = (headers: string[], rows: unknown[][]): string => {
   const dataRows = rows.map((row) => csvRow(row));
   return [headerRow, ...dataRows].join("\n");
 };
+
+// Export XLSX library directly for templates to use
+export { XLSX };

@@ -9,7 +9,7 @@ import { matterTimeEntryRoutes } from "./endpoints/matters/time-entries";
 import { matterAiSuggestionRoutes } from "./endpoints/matters/ai-suggestions";
 import { matterWorkflowRoutes } from "./endpoints/matters/workflows";
 import { matterTimekeeperRoleRoutes } from "./endpoints/matters/timekeeper-roles";
-import { documentTemplateRoutes } from "./endpoints/document-templates";
+import { matterDocumentTemplateRoutes } from "./endpoints/matters/document-templates";
 import { matterDocumentRoutes } from "./endpoints/matters/documents";
 import { env } from "./utils/env";
 import { Boom, isBoom } from "@hapi/boom";
@@ -48,6 +48,11 @@ export const getApp = (ctx: Context) =>
               name: "timekeeper-role",
               description: "Timekeeper role related endpoints",
             },
+            {
+              name: "document-template",
+              description: "Document template related endpoints",
+            },
+            { name: "document", description: "Document related endpoints" },
           ],
         },
       })
@@ -72,7 +77,7 @@ export const getApp = (ctx: Context) =>
     .use(matterAiSuggestionRoutes(ctx))
     .use(matterWorkflowRoutes(ctx))
     .use(matterTimekeeperRoleRoutes(ctx))
-    .use(documentTemplateRoutes(ctx))
+    .use(matterDocumentTemplateRoutes(ctx))
     .use(matterDocumentRoutes(ctx));
 
 export type App = ReturnType<typeof getApp>;

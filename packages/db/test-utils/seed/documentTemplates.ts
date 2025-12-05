@@ -1,9 +1,11 @@
 import type { DB } from "../../db";
 import type { NewDocumentTemplate } from "@ai-starter/core/schema/documentTemplate";
 import { documentTemplateSchema } from "@ai-starter/core/schema";
+import { mockMatters } from "./matter";
 
 export const timeEntrySpreadsheetTemplate: NewDocumentTemplate = {
   name: "Time Entry Spreadsheet",
+  matterId: mockMatters[0].id,
   description: "CSV export of time entries for a matter",
   outputFormat: "csv",
   dataSchema: JSON.stringify({
@@ -33,13 +35,14 @@ export const timeEntrySpreadsheetTemplate: NewDocumentTemplate = {
       entry.hours,
       entry.billName || "",
     ]);
-    
+
     return csvContent(headers, rows);
   `,
 };
 
 export const matterSummaryReportTemplate: NewDocumentTemplate = {
   name: "Matter Summary Report",
+  matterId: mockMatters[0].id,
   description: "HTML report summarizing matter information and time entries",
   outputFormat: "html",
   dataSchema: JSON.stringify({
@@ -70,7 +73,7 @@ export const matterSummaryReportTemplate: NewDocumentTemplate = {
   }),
   templateCode: `
     const totalHours = data.timeEntries.reduce((sum, entry) => sum + entry.hours, 0);
-    
+
     return \`
       <!DOCTYPE html>
       <html>
@@ -93,7 +96,7 @@ export const matterSummaryReportTemplate: NewDocumentTemplate = {
           <h2>\${data.matter.clientName} - \${data.matter.matterName}</h2>
           <p>\${data.matter.description || ""}</p>
         </div>
-        
+
         <div class="summary">
           <div class="summary-item">
             <h3>Total Hours</h3>
@@ -104,7 +107,7 @@ export const matterSummaryReportTemplate: NewDocumentTemplate = {
             <p>\${data.timeEntries.length}</p>
           </div>
         </div>
-        
+
         <h3>Time Entries</h3>
         <table>
           <thead>
@@ -134,6 +137,7 @@ export const matterSummaryReportTemplate: NewDocumentTemplate = {
 
 export const invoiceTemplate: NewDocumentTemplate = {
   name: "Invoice",
+  matterId: mockMatters[0].id,
   description: "HTML invoice for a bill",
   outputFormat: "html",
   dataSchema: JSON.stringify({
@@ -173,7 +177,7 @@ export const invoiceTemplate: NewDocumentTemplate = {
     const subtotal = data.timeEntries.reduce((sum, entry) => sum + (entry.hours * entry.hourlyRate), 0);
     const tax = subtotal * 0.1; // 10% tax
     const total = subtotal + tax;
-    
+
     return \`
       <!DOCTYPE html>
       <html>
@@ -195,7 +199,7 @@ export const invoiceTemplate: NewDocumentTemplate = {
           <h1>INVOICE</h1>
           <h2>#\${data.bill.id}</h2>
         </div>
-        
+
         <div class="invoice-details">
           <div>
             <strong>Bill To:</strong><br>
@@ -207,7 +211,7 @@ export const invoiceTemplate: NewDocumentTemplate = {
             \${formatDate(data.bill.periodStart)} to \${formatDate(data.bill.periodEnd)}
           </div>
         </div>
-        
+
         <table class="table">
           <thead>
             <tr>
@@ -244,7 +248,7 @@ export const invoiceTemplate: NewDocumentTemplate = {
             </tr>
           </tfoot>
         </table>
-        
+
         <div class="footer">
           <p>Thank you for your business!</p>
           <p>Payment due within 30 days</p>

@@ -3,7 +3,6 @@ import {
   formatCurrency,
   formatPercentage,
   formatDate,
-  htmlTemplate,
   csvEscape,
   csvRow,
   csvContent,
@@ -50,15 +49,6 @@ describe("templateLibraries", () => {
     it("should handle string dates", () => {
       const result = formatDate("2025-01-15", "short");
       expect(result).toBe("15 Jan 2025");
-    });
-  });
-
-  describe("htmlTemplate", () => {
-    it("should replace placeholders in template", () => {
-      const template = "Hello {{name}}, you have {{count}} messages";
-      const data = { name: "John", count: 5 };
-      const result = htmlTemplate(template, data);
-      expect(result).toBe("Hello John, you have 5 messages");
     });
   });
 

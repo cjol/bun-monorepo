@@ -29,7 +29,7 @@ export const DocumentTemplateService = (deps: Deps) => {
 
   return {
     getDocumentTemplate: repos.documentTemplate.get,
-    listDocumentTemplates: repos.documentTemplate.listAll,
+    listDocumentTemplates: repos.documentTemplate.listByMatter,
 
     createDocumentTemplate: async (
       data: Parameters<DocumentTemplateRepository["create"]>[0]

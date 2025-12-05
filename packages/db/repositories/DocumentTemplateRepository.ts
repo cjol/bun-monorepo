@@ -19,8 +19,10 @@ export const DrizzleDocumentTemplateRepository = ({
     });
     return result ?? null;
   },
-  async listAll() {
-    return db.query.documentTemplateSchema.findMany();
+  async listByMatter(matterId: string) {
+    return db.query.documentTemplateSchema.findMany({
+      where: eq(documentTemplateSchema.matterId, matterId),
+    });
   },
   async create(data) {
     const [result] = await db

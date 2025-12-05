@@ -5,6 +5,7 @@ import type { DocumentTemplate } from "@ai-starter/core";
 describe("executeTemplate", () => {
   const mockTemplate: DocumentTemplate = {
     id: "test-template-id",
+    matterId: "test-matter-id",
     name: "Test Template",
     description: "A test template",
     outputFormat: "text",

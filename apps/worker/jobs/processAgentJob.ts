@@ -41,6 +41,8 @@ export async function processAgentJob(job: Job, { app, model }: ProcessorDeps) {
       timekeeper: app.timekeeper,
       timekeeperRole: app.timekeeperRole,
       role: app.role,
+      document: app.document,
+      documentTemplate: app.documentTemplate,
     },
     matterContext,
     workflowInstructions: workflow.instructions,
