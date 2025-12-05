@@ -7,6 +7,11 @@ export interface AgentJobParameters {
   matterId: string;
   workflowId: string;
 }
+export interface AgentResultType {
+  success: true;
+  result: string;
+  logs: string[];
+}
 
 /**
  * Process an "agent" type job by executing the GeneralPurposeAgent

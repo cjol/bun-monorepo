@@ -117,6 +117,7 @@ Please process these time entries according to the workflow instructions.`;
 
             await services.job.createJob(
               {
+                name: workflow.name,
                 type: "agent",
                 parameters: {
                   prompt,

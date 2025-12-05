@@ -16,6 +16,7 @@ import {
   Stack,
   Loader,
   Paper,
+  Select,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
@@ -24,11 +25,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconPlus, IconEdit, IconTrash } from "@tabler/icons-react";
 import { api } from "../../../../lib/api";
 import type { Workflow } from "@ai-starter/core";
+import { workflowTriggerSchema } from "@ai-starter/core/schema/workflow";
 
 interface WorkflowFormValues {
   name: string;
   instructions: string;
-  trigger: "time_entry:batch_created";
+  trigger: typeof workflowTriggerSchema._output;
 }
 
 export default function WorkflowsPage() {
@@ -42,11 +44,12 @@ export default function WorkflowsPage() {
     initialValues: {
       name: "",
       instructions: "",
-      trigger: "time_entry:batch_created",
+      trigger: workflowTriggerSchema.options[0],
     },
     validate: {
       name: (value) => (!value ? "Name is required" : null),
       instructions: (value) => (!value ? "Instructions are required" : null),
+      trigger: (value) => (!value ? "Trigger is required" : null),
     },
   });
 
@@ -155,7 +158,7 @@ export default function WorkflowsPage() {
     form.setValues({
       name: workflow.name,
       instructions: workflow.instructions,
-      trigger: workflow.trigger as "time_entry:batch_created",
+      trigger: workflow.trigger as typeof workflowTriggerSchema._output,
     });
     setOpened(true);
   };
@@ -286,6 +289,16 @@ export default function WorkflowsPage() {
               required
               minRows={6}
               {...form.getInputProps("instructions")}
+            />
+            <Select
+              label="Trigger"
+              placeholder="Select the event that triggers this workflow"
+              required
+              data={workflowTriggerSchema.options.map((option) => ({
+                value: option,
+                label: option.replace(/_/g, " ").replace(/:/g, " - "),
+              }))}
+              {...form.getInputProps("trigger")}
             />
             <Group justify="flex-end">
               <Button

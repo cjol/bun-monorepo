@@ -86,8 +86,6 @@
 - [ ] Create an EmailSendingService that agents can call via a tool, which sends a Message as an outbound email.
 - [ ] Create an EmailIngestionService (e.g., via webhook) that parses inbound emails and creates new Conversation and Message records.
 - [ ] Web chat interface for users to interact with agents directly.
-- [ ] View change log for time entries in the web UI
-- [ ] Ensure the AI Agent knows what "AI Suggestions" are for and how the workflow works
 
 - evidence of consulting the DMS/Fee earner emails (dummy tools for the agent to call)
 - improved agent log view to show chat messages properly
@@ -97,3 +95,6 @@
 
 - Entry dashboard view for the matter
 - More "matter context" stuff? Workflow description/visualisation?
+
+- [ ] View change log for time entries in the web UI
+- [ ] Ensure the AI Agent knows what "AI Suggestions" are for and how the workflow works

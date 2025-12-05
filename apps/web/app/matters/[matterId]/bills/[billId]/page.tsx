@@ -35,6 +35,7 @@ import { useMetadataFields } from "../../../../../hooks/useMetadataFields";
 import { useSuggestions } from "../../../../../hooks/useSuggestions";
 import { TimeEntriesTable } from "../../../../../components/TimeEntriesTable";
 import { DocumentsList } from "../../../../../components/DocumentsList";
+import { ActivityModal } from "../../../../../components/ActivityModal";
 
 interface TimeEntryFormValues {
   timekeeperId: string;
@@ -460,154 +461,14 @@ export default function BillDetailPage() {
           </Modal>
 
           {/* Jobs Modal */}
-          <Modal
+          <ActivityModal
             opened={jobsModalOpened}
             onClose={() => {
               setJobsModalOpened(false);
               setSelectedJobs([]);
             }}
-            title="Related Jobs"
-            size="xl"
-          >
-            <Stack gap="md">
-              {selectedJobs.length === 0 ? (
-                <Text c="dimmed" ta="center">
-                  No jobs found
-                </Text>
-              ) : (
-                selectedJobs.map((job) => (
-                  <Paper key={job.id} p="md" withBorder>
-                    <Stack gap="sm">
-                      <Group justify="space-between">
-                        <Text fw={600} size="lg">
-                          Job {job.id}
-                        </Text>
-                        <Text
-                          size="sm"
-                          c={
-                            job.status === "completed"
-                              ? "green"
-                              : job.status === "failed"
-                                ? "red"
-                                : job.status === "running"
-                                  ? "blue"
-                                  : "gray"
-                          }
-                        >
-                          {job.status.toUpperCase()}
-                        </Text>
-                      </Group>
-
-                      <div>
-                        <Text size="sm" fw={500} mb={4}>
-                          Type:
-                        </Text>
-                        <Text size="sm" c="dimmed">
-                          {job.type}
-                        </Text>
-                      </div>
-
-                      {job.scheduledAt && (
-                        <div>
-                          <Text size="sm" fw={500} mb={4}>
-                            Scheduled:
-                          </Text>
-                          <Text size="sm" c="dimmed">
-                            {new Date(job.scheduledAt).toLocaleString()}
-                          </Text>
-                        </div>
-                      )}
-
-                      {job.startedAt && (
-                        <div>
-                          <Text size="sm" fw={500} mb={4}>
-                            Started:
-                          </Text>
-                          <Text size="sm" c="dimmed">
-                            {new Date(job.startedAt).toLocaleString()}
-                          </Text>
-                        </div>
-                      )}
-
-                      {job.finishedAt && (
-                        <div>
-                          <Text size="sm" fw={500} mb={4}>
-                            Finished:
-                          </Text>
-                          <Text size="sm" c="dimmed">
-                            {new Date(job.finishedAt).toLocaleString()}
-                          </Text>
-                        </div>
-                      )}
-
-                      {job.parameters !== null &&
-                        job.parameters !== undefined && (
-                          <div>
-                            <Text size="sm" fw={500} mb={4}>
-                              Parameters:
-                            </Text>
-                            <Paper
-                              p="xs"
-                              bg="gray.0"
-                              style={{ overflow: "auto" }}
-                            >
-                              <pre
-                                style={{
-                                  margin: 0,
-                                  fontSize: "12px",
-                                  whiteSpace: "pre-wrap",
-                                  wordBreak: "break-word",
-                                }}
-                              >
-                                {JSON.stringify(
-                                  job.parameters,
-                                  (_key: string, value: unknown): unknown =>
-                                    typeof value === "bigint"
-                                      ? value.toString()
-                                      : value,
-                                  2
-                                )}
-                              </pre>
-                            </Paper>
-                          </div>
-                        )}
-
-                      {job.result !== null && job.result !== undefined && (
-                        <div>
-                          <Text size="sm" fw={500} mb={4}>
-                            Result:
-                          </Text>
-                          <Paper
-                            p="xs"
-                            bg="gray.0"
-                            style={{ overflow: "auto" }}
-                          >
-                            <pre
-                              style={{
-                                margin: 0,
-                                fontSize: "12px",
-                                whiteSpace: "pre-wrap",
-                                wordBreak: "break-word",
-                              }}
-                            >
-                              {JSON.stringify(
-                                job.result,
-                                (_key: string, value: unknown): unknown =>
-                                  typeof value === "bigint"
-                                    ? value.toString()
-                                    : value,
-                                2
-                              )}
-                            </pre>
-                          </Paper>
-                        </div>
-                      )}
-                    </Stack>
-                  </Paper>
-                ))
-              )}
-            </Stack>
-          </Modal>
+            jobs={selectedJobs}
+          />
         </>
       )}
     </Container>
