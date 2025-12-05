@@ -20,15 +20,24 @@ export const matterDocumentRoutes = ({ app }: Context) =>
   new Elysia({ prefix: "/matters/:matterId/documents", tags: ["document"] })
     .get(
       "/",
-      async ({ params, status }) => {
-        const result = await app.document.listByMatter(params.matterId);
+      async ({ params, query, status }) => {
+        const { billId } = query as { billId?: string };
+        const result = billId
+          ? await app.document.listByBill(billId)
+          : await app.document.listByMatter(params.matterId);
         return status(200, result);
       },
       {
         params: matterIdParamsSchema,
+        query: t.Object({
+          billId: t.Optional(
+            t.String({ description: "Filter documents by bill ID" })
+          ),
+        }),
         detail: {
           summary: "List Documents",
-          description: "Get all documents for a specific matter",
+          description:
+            "Get all documents for a specific matter, optionally filtered by bill ID",
         },
       }
     )

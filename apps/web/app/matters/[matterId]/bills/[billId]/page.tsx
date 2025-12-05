@@ -34,6 +34,7 @@ import {
 import { useMetadataFields } from "../../../../../hooks/useMetadataFields";
 import { useSuggestions } from "../../../../../hooks/useSuggestions";
 import { TimeEntriesTable } from "../../../../../components/TimeEntriesTable";
+import { DocumentsList } from "../../../../../components/DocumentsList";
 
 interface TimeEntryFormValues {
   timekeeperId: string;
@@ -94,6 +95,18 @@ export default function BillDetailPage() {
       },
       refetchInterval: 1000,
     });
+
+  // Fetch documents for this bill
+  const { data: documentsForBill, isLoading: isLoadingDocuments } = useQuery({
+    queryKey: ["documents", matterId, { billId }],
+    queryFn: async () => {
+      const response = await api.matters({ matterId }).documents.get({
+        query: { billId },
+      });
+      if (response.error) throw new Error("Failed to fetch documents");
+      return response.data;
+    },
+  });
 
   // Fetch all required data for enrichment
   const { timekeepers, roles, timekeeperRoles, matter } =
@@ -260,7 +273,7 @@ export default function BillDetailPage() {
     }
   };
 
-  const isLoading = isLoadingBill || isLoadingTimeEntries;
+  const isLoading = isLoadingBill || isLoadingTimeEntries || isLoadingDocuments;
 
   return (
     <Container size="xl">
@@ -338,6 +351,13 @@ export default function BillDetailPage() {
               </Text>
             </Card>
           </SimpleGrid>
+
+          {/* Documents List */}
+          <DocumentsList
+            documents={documentsForBill || []}
+            isLoading={isLoadingDocuments}
+            matterId={matterId}
+          />
 
           {/* Time Entries Table */}
           <Paper shadow="sm" p="md" radius="md" withBorder>
