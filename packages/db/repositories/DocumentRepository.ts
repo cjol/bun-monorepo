@@ -22,6 +22,12 @@ export const DrizzleDocumentRepository = ({
       orderBy: (documents, { desc }) => [desc(documents.createdAt)],
     });
   },
+  async listByBill(billId: string) {
+    return db.query.documentSchema.findMany({
+      where: eq(documentSchema.billId, billId),
+      orderBy: (documents, { desc }) => [desc(documents.createdAt)],
+    });
+  },
   async create(data) {
     const [result] = await db.insert(documentSchema).values(data).returning();
     if (!result) throw badImplementation("Failed to create Document");
