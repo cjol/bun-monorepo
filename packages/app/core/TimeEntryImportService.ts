@@ -171,7 +171,6 @@ export const TimeEntryImportService = (deps: Deps) => {
 
     // Use AI to map headers to our expected field names
     const csvHeaders = Object.keys(parsed.data[0] || {});
-    console.log("Parsed raw");
     const mappingResult = await services.csvMapping.mapCsvHeaders(
       csvHeaders,
       matter
@@ -284,7 +283,6 @@ export const TimeEntryImportService = (deps: Deps) => {
       const validated = newTimeEntryInputSchema(
         buildZodMetadataFieldSchema(matter.timeEntryMetadataSchema)
       ).parse(draft);
-      console.log(validated);
       return { ...validated, date: new Date(validated.date) };
     } catch (e) {
       return {

@@ -13,6 +13,8 @@ import type {
   TimekeeperService as TimekeeperServiceType,
   TimekeeperRoleService as TimekeeperRoleServiceType,
   RoleService as RoleServiceType,
+  DocumentService as DocumentServiceType,
+  DocumentTemplateService as DocumentTemplateServiceType,
 } from "../core";
 import { createMatterSandboxFunctions } from "./sandbox/MatterServiceSandbox";
 import { createBillSandboxFunctions } from "./sandbox/BillServiceSandbox";
@@ -22,6 +24,8 @@ import { createWorkflowSandboxFunctions } from "./sandbox/WorkflowServiceSandbox
 import { createTimekeeperSandboxFunctions } from "./sandbox/TimekeeperServiceSandbox";
 import { createTimekeeperRoleSandboxFunctions } from "./sandbox/TimekeeperRoleServiceSandbox";
 import { createRoleSandboxFunctions } from "./sandbox/RoleServiceSandbox";
+import { createDocumentSandboxFunctions } from "./sandbox/DocumentServiceSandbox";
+import { createDocumentTemplateSandboxFunctions } from "./sandbox/DocumentTemplateServiceSandbox";
 import {
   createSandboxTool,
   generateFunctionDocs,
@@ -45,6 +49,8 @@ export interface CreateGeneralPurposeAgentOptions {
     timekeeper: TimekeeperServiceType;
     timekeeperRole: TimekeeperRoleServiceType;
     role: RoleServiceType;
+    document: DocumentServiceType;
+    documentTemplate: DocumentTemplateServiceType;
   };
 
   /**
@@ -87,6 +93,8 @@ function createSandboxFunctions(
     ...createTimekeeperSandboxFunctions(services.timekeeper),
     ...createTimekeeperRoleSandboxFunctions(services.timekeeperRole),
     ...createRoleSandboxFunctions(services.role),
+    ...createDocumentSandboxFunctions(services.document),
+    ...createDocumentTemplateSandboxFunctions(services.documentTemplate),
   };
 }
 
@@ -135,7 +143,7 @@ export function createGeneralPurposeAgent(
     ? filterSandboxFunctions(allSandboxFunctions, allowedFunctions)
     : allSandboxFunctions;
 
-  const systemPrompt = `You are a timesheet management assistant. You help users manage matters, bills, and time entries.
+  const systemPrompt = `You are a timesheet management assistant. You help users manage matters, bills, time entries, and documents.
 
 You have access to a code sandbox where you can execute JavaScript code to process and analyze timesheet data.
 You can call functions directly from your code to fetch data and perform operations.
@@ -161,6 +169,20 @@ const entry = await createTimeEntries([{
 // List time entries for a matter
 const entries = await listTimeEntriesByMatter({ matterId: matter.id });
 const totalHours = entries.reduce((sum, e) => sum + e.hours, 0);
+
+// Generate a document from a template
+const templates = await listDocumentTemplates();
+const template = templates.find(t => t.name.includes("Invoice"));
+if (template) {
+  const document = await generateDocument({
+    matterId: matter.id,
+    templateId: template.id,
+    data: { entries, totalHours },
+    name: "Invoice Summary"
+  });
+  console.log("Generated document:", document.name);
+}
+
 return totalHours;
 \`\`\`
 

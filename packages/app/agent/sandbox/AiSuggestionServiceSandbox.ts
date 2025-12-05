@@ -15,13 +15,14 @@ export function createAiSuggestionSandboxFunctions(
     description:
       "Create an AI suggestion for time entry changes (for review/approval)",
     inputSchema: newAiSuggestionInputSchema,
-    execute: async ({ timeEntryId, suggestedChanges }) => {
+    execute: async ({ timeEntryId, suggestedChanges, explanation }) => {
       return service.createSuggestion({
         timeEntryId,
         suggestedChanges: {
           ...suggestedChanges,
           date: new Date(suggestedChanges.date),
         },
+        explanation,
       });
     },
   });

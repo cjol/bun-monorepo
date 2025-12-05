@@ -30,3 +30,9 @@ export type { RoleService as RoleServiceType } from "./RoleService";
 
 export { JobService } from "./JobService";
 export type { JobService as JobServiceType } from "./JobService";
+
+export { DocumentTemplateService } from "./DocumentTemplateService";
+export type { DocumentTemplateService as DocumentTemplateServiceType } from "./DocumentTemplateService";
+
+export { DocumentService } from "./DocumentService";
+export type { DocumentService as DocumentServiceType } from "./DocumentService";

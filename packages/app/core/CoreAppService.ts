@@ -10,6 +10,8 @@ import type {
   TimekeeperRoleRepository,
   RoleRepository,
   JobRepository,
+  DocumentTemplateRepository,
+  DocumentRepository,
 } from "@ai-starter/core";
 import { MatterService } from "./MatterService";
 import { BillService } from "./BillService";
@@ -22,6 +24,9 @@ import { TimekeeperRoleService } from "./TimekeeperRoleService";
 import { RoleService } from "./RoleService";
 import { JobService } from "./JobService";
 import { CsvHeaderMappingService } from "./CsvHeaderMappingService";
+import { DocumentTemplateService } from "./DocumentTemplateService";
+import { DocumentService } from "./DocumentService";
+import type { FileStorage } from "@ai-starter/core";
 
 export interface Deps {
   repos: {
@@ -36,11 +41,14 @@ export interface Deps {
     timekeeperRole: TimekeeperRoleRepository;
     role: RoleRepository;
     job: JobRepository;
+    documentTemplate: DocumentTemplateRepository;
+    document: DocumentRepository;
   };
+  storage: FileStorage;
 }
 
 export const CoreAppService = (deps: Deps) => {
-  const { repos } = deps;
+  const { repos, storage } = deps;
 
   // Initialize services that don't have cross-dependencies first
   const csvMappingService = CsvHeaderMappingService({ model: undefined });
@@ -102,6 +110,18 @@ export const CoreAppService = (deps: Deps) => {
     },
   });
 
+  const documentTemplateService = DocumentTemplateService({
+    repos: { documentTemplate: repos.documentTemplate },
+  });
+
+  const documentService = DocumentService({
+    repos: {
+      document: repos.document,
+      documentTemplate: repos.documentTemplate,
+    },
+    storage,
+  });
+
   return {
     // Legacy foo methods (kept for backwards compatibility)
     getFoo: repos.foo.get,
@@ -119,6 +139,8 @@ export const CoreAppService = (deps: Deps) => {
     timekeeperRole: timekeeperRoleService,
     role: roleService,
     job: jobService,
+    documentTemplate: documentTemplateService,
+    document: documentService,
   };
 };
 

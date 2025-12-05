@@ -18,3 +18,5 @@ export * from "./role";
 export * from "./rate";
 export * from "./job";
 export * from "./jobEntity";
+export * from "./documentTemplate";
+export * from "./document";

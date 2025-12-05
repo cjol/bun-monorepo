@@ -20,6 +20,7 @@ import {
   IconUsers,
   IconNote,
   IconChevronDown,
+  IconFileDescription,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -48,6 +49,11 @@ function getMatterNavigationItems(matterId: string) {
       href: `${base}/suggestions`,
     },
     { icon: IconNote, label: "Workflows", href: `${base}/workflows` },
+    {
+      icon: IconFileDescription,
+      label: "Documents",
+      href: `${base}/documents`,
+    },
   ];
 }
 

@@ -11,3 +11,5 @@ export * from "./TimekeeperRepository";
 export * from "./TimekeeperRoleRepository";
 export * from "./RoleRepository";
 export * from "./JobRepository";
+export * from "./DocumentTemplateRepository";
+export * from "./DocumentRepository";
