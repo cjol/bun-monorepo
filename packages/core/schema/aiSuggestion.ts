@@ -17,6 +17,7 @@ export const aiSuggestionSchema = sqliteTable("ai_suggestion", {
     .notNull()
     .references(() => timeEntrySchema.id, { onDelete: "cascade" }),
   suggestedChanges: jsonNewTimeEntry("suggested_changes").notNull(),
+  explanation: text("explanation").notNull(),
   status: text("status", {
     enum: ["pending", "approved", "rejected"],
   })
@@ -40,4 +41,7 @@ export const newAiSuggestionInputSchema = z.object({
   suggestedChanges: newTimeEntryInputSchema().describe(
     "Object containing the suggested time entry changes"
   ),
+  explanation: z
+    .string()
+    .describe("Explanation for why these changes are being suggested"),
 });

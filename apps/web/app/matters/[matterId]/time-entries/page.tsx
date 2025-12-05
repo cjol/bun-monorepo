@@ -317,6 +317,7 @@ export default function TimeEntriesPage() {
                           formatValue={(date) =>
                             new Date(date).toLocaleDateString()
                           }
+                          explanation={suggestion.explanation}
                         />
                       ) : (
                         new Date(entry.date).toLocaleDateString()
@@ -331,6 +332,7 @@ export default function TimeEntriesPage() {
                           newValue={getTimekeeperName(
                             suggestion.suggestedChanges.timekeeperId
                           )}
+                          explanation={suggestion.explanation}
                         />
                       ) : (
                         <Text fw={500}>{entry.timekeeperName}</Text>
@@ -348,6 +350,7 @@ export default function TimeEntriesPage() {
                         <SuggestionDiff
                           oldValue={entry.hours}
                           newValue={suggestion.suggestedChanges.hours}
+                          explanation={suggestion.explanation}
                         />
                       ) : (
                         <Text fw={500}>{entry.hours}</Text>
@@ -360,6 +363,7 @@ export default function TimeEntriesPage() {
                         <SuggestionDiff
                           oldValue={entry.description}
                           newValue={suggestion.suggestedChanges.description}
+                          explanation={suggestion.explanation}
                         />
                       ) : (
                         <Text lineClamp={2}>{entry.description}</Text>
@@ -401,6 +405,7 @@ export default function TimeEntriesPage() {
                             <SuggestionDiff
                               oldValue={displayValue}
                               newValue={suggestedDisplayValue}
+                              explanation={suggestion?.explanation}
                             />
                           ) : (
                             <Text>{displayValue}</Text>

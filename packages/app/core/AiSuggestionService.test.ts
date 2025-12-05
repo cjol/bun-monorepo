@@ -55,6 +55,7 @@ describe("AiSuggestionService", () => {
       const suggestion = await service.createSuggestion({
         timeEntryId: timeEntry.id,
         suggestedChanges: { ...timeEntry, hours: 3.5 },
+        explanation: "Test explanation for hours change",
       });
 
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -84,6 +85,7 @@ describe("AiSuggestionService", () => {
       const suggestion = await service.createSuggestion({
         timeEntryId: timeEntry.id,
         suggestedChanges: { ...timeEntry, hours: 3.5 },
+        explanation: "Test explanation for hours change",
       });
 
       await service.approveSuggestion(suggestion.id);
@@ -97,6 +99,7 @@ describe("AiSuggestionService", () => {
       const suggestion = await service.createSuggestion({
         timeEntryId: timeEntry.id,
         suggestedChanges: { ...timeEntry, hours: 3.5 },
+        explanation: "Test explanation for hours change",
       });
 
       const result = await service.rejectSuggestion(suggestion.id);

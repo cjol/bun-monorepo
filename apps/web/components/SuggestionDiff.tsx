@@ -1,9 +1,10 @@
-import { Text } from "@mantine/core";
+import { Text, Tooltip } from "@mantine/core";
 
 interface SuggestionDiffProps {
   oldValue: string | number | Date;
   newValue: string | number | Date;
   formatValue?: (value: string | number | Date) => string;
+  explanation?: string;
 }
 
 /**
@@ -15,6 +16,7 @@ export function SuggestionDiff({
   oldValue,
   newValue,
   formatValue,
+  explanation,
 }: SuggestionDiffProps) {
   const format = (value: string | number | Date) => {
     if (formatValue) {
@@ -33,11 +35,17 @@ export function SuggestionDiff({
 
   // If values are the same, just show the value
   if (formattedOld === formattedNew) {
-    return <Text>{formattedOld}</Text>;
+    return explanation ? (
+      <Tooltip label={explanation} position="top" withArrow>
+        <Text component="span">{formattedOld}</Text>
+      </Tooltip>
+    ) : (
+      <Text>{formattedOld}</Text>
+    );
   }
 
-  return (
-    <>
+  const diffContent = (
+    <span>
       <Text component="span" td="line-through" c="dimmed">
         {formattedOld}
       </Text>
@@ -45,6 +53,14 @@ export function SuggestionDiff({
       <Text component="span" c="green" fw={500}>
         {formattedNew}
       </Text>
-    </>
+    </span>
+  );
+
+  return explanation ? (
+    <Tooltip label={explanation} position="top" withArrow>
+      {diffContent}
+    </Tooltip>
+  ) : (
+    diffContent
   );
 }
