@@ -35,6 +35,7 @@ describe("DrizzleAiSuggestionRepository", () => {
       const suggestion = await repository.create({
         timeEntryId: context.timeEntry.id,
         suggestedChanges: { ...context.timeEntry, hours: 3.0 },
+        explanation: "Test explanation for hours change",
       });
 
       const result = await repository.get(suggestion.id);
@@ -47,6 +48,8 @@ describe("DrizzleAiSuggestionRepository", () => {
     it("should create a new AI suggestion", async () => {
       const suggestion = await repository.create({
         timeEntryId: context.timeEntry.id,
+
+        explanation: "Test explanation for suggestion",
         suggestedChanges: {
           ...context.timeEntry,
           hours: 3.5,
@@ -61,6 +64,7 @@ describe("DrizzleAiSuggestionRepository", () => {
         updatedAt: expect.any(Date),
         timeEntryId: context.timeEntry.id,
         status: "pending",
+        explanation: "Test explanation for suggestion",
         suggestedChanges: expect.objectContaining({
           hours: 3.5,
           description: "Updated",
@@ -74,6 +78,7 @@ describe("DrizzleAiSuggestionRepository", () => {
       const suggestion = await repository.create({
         timeEntryId: context.timeEntry.id,
         suggestedChanges: { ...context.timeEntry, hours: 3.0 },
+        explanation: "Test explanation for hours change",
       });
 
       const updated = await repository.updateStatus(suggestion.id, "approved");
@@ -85,6 +90,7 @@ describe("DrizzleAiSuggestionRepository", () => {
       const suggestion = await repository.create({
         timeEntryId: context.timeEntry.id,
         suggestedChanges: { ...context.timeEntry, hours: 3.0 },
+        explanation: "Test explanation for hours change",
       });
 
       const updated = await repository.updateStatus(suggestion.id, "rejected");
@@ -104,6 +110,7 @@ describe("DrizzleAiSuggestionRepository", () => {
       const suggestion = await repository.create({
         timeEntryId: context.timeEntry.id,
         suggestedChanges: { ...context.timeEntry, hours: 3.0 },
+        explanation: "Test explanation for hours change",
       });
 
       await repository.delete(suggestion.id);
@@ -126,10 +133,14 @@ describe("DrizzleAiSuggestionRepository", () => {
     it("should return all suggestions for matter", async () => {
       await repository.create({
         timeEntryId: context.timeEntry.id,
+
+        explanation: "Test explanation for suggestion",
         suggestedChanges: { ...context.timeEntry, hours: 2.5 },
       });
       await repository.create({
         timeEntryId: context.timeEntry.id,
+
+        explanation: "Test explanation for suggestion",
         suggestedChanges: { ...context.timeEntry, hours: 3.5 },
       });
 
@@ -160,10 +171,14 @@ describe("DrizzleAiSuggestionRepository", () => {
 
       await repository.create({
         timeEntryId: context.timeEntry.id,
+
+        explanation: "Test explanation for suggestion",
         suggestedChanges: { ...context.timeEntry, hours: 2.5 },
       });
       await repository.create({
         timeEntryId: timeEntry2.id,
+
+        explanation: "Test explanation for suggestion",
         suggestedChanges: { ...timeEntry2, hours: 1.5 },
       });
 
@@ -178,11 +193,15 @@ describe("DrizzleAiSuggestionRepository", () => {
     it("should return suggestions with pending status", async () => {
       await repository.create({
         timeEntryId: context.timeEntry.id,
+
+        explanation: "Test explanation for suggestion",
         suggestedChanges: { ...context.timeEntry, hours: 2.5 },
         status: "pending",
       });
       await repository.create({
         timeEntryId: context.timeEntry.id,
+
+        explanation: "Test explanation for suggestion",
         suggestedChanges: { ...context.timeEntry, hours: 3.5 },
         status: "approved",
       });
@@ -207,6 +226,8 @@ describe("DrizzleAiSuggestionRepository", () => {
     it("should return empty array when no suggestions match status", async () => {
       await repository.create({
         timeEntryId: context.timeEntry.id,
+
+        explanation: "Test explanation for suggestion",
         suggestedChanges: { ...context.timeEntry, hours: 2.5 },
         status: "pending",
       });

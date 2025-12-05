@@ -93,6 +93,7 @@ describe("TimeEntryService", () => {
           createdAt: result.createdAt,
           updatedAt: result.updatedAt,
         },
+        reason: null,
         changedAt: expect.any(Date),
       });
     });

@@ -2,7 +2,7 @@ Create a sample matter for Project Blackstone. This matter involves a contract d
 
 # Time Entry data
 
-For time entries in this matter, we should track the following information in addition to the standard time entry fields: - Phase of work - Category of work
+For time entries in this matter, we should track the following information in addition to the standard time entry fields: - Phase of work - Category of work (ZA10: Deal documentation and implementation, ZB10: Organizational / coordination, ZC10: Tax, ZD10: Employment, ZE10: Real Estate, ZF10: Anti-trust, ZG10: Disclosure and due diligence, ZH10: Corporate re-organisation, ZI10: Corporate matters, corporate governance and board matters, ZJ10: Asset Disposition or Restructuring, ZK10: Fee applications)
 
 # Workflows
 
@@ -14,7 +14,8 @@ When a new time entry is received, we must check whether it refers to a meeting 
 
 # Document Templates
 
-Each billing period, we will need to issue the client with a copy of the underlying time entries. These should be sent in a beautiful HTML report including a summary table at the start listing the breakdown of costs per role of timekeeper.
-Below the summary we should list the detail of all time entries, grouped by phase of work and ordered by date within each phase.
+Each billing period, we will need to issue the client with a copy of the underlying time entries. These should be sent in a beautiful HTML report including a summary table at the start listing the breakdown of costs per role of timekeeper. Below the summary we should list the detail of all time entries, grouped by phase of work and ordered by date within each phase.
 
-# TODO: timekeepers
+# Timekeepers
+
+Create the following timekeepers and roles in Project Blackstone: Kaylie Gibson (Senior Associate) £795/hour, Robert McBride (Senior Associate) £795/hour, Lewis Majors (Partner) £905/hour, Rebecca Martin (Partner) £905/hour, Jeremy White (Associate) £660/hour, William Bassett (Associate) £660/hour, Carla Rosen (Junior Associate) £510/hour, Julia Richardson (Paralegal) £285/hour
