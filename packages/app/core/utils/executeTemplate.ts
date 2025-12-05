@@ -1,6 +1,7 @@
-import { z } from "zod";
 import * as vm from "node:vm";
+import Ajv from "ajv";
 import type { DocumentTemplate } from "@ai-starter/core";
+import * as templateLibs from "./templateLibraries";
 
 export interface ExecuteTemplateOptions {
   /** The document template to execute */
@@ -20,6 +21,8 @@ export interface ExecuteTemplateResult {
   error?: string;
 }
 
+const ajv = new Ajv();
+
 /**
  * Execute a document template in a secure VM context.
  * Templates receive `data` and `console.log` (captured).
@@ -32,9 +35,29 @@ export const executeTemplate = async (
   const logs: string[] = [];
 
   try {
-    // Validate data against template schema
-    // For now, skip validation to focus on template execution
-    // TODO: Implement proper JSON Schema to Zod conversion
+    // Parse and validate data against template schema
+    let schema;
+    try {
+      schema = JSON.parse(template.dataSchema);
+    } catch (error) {
+      return {
+        output: "",
+        logs,
+        error: `Invalid JSON Schema in template: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
+    }
+
+    const validate = ajv.compile(schema);
+    if (!validate(data)) {
+      return {
+        output: "",
+        logs,
+        error: `Data validation failed: ${ajv.errorsText(validate.errors)}`,
+      };
+    }
+
     const validatedData = data;
 
     // Create sandbox context
@@ -51,6 +74,8 @@ export const executeTemplate = async (
           );
         },
       },
+      // Template libraries
+      ...templateLibs,
     };
 
     // Wrap template code in async function

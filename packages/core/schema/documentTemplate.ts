@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { z } from "zod";
 import { timestamps } from "./utils/timestamps";
 import { ulidSchema } from "./utils/validation";
@@ -15,7 +15,7 @@ export const documentTemplateSchema = sqliteTable("document_template", {
   })
     .notNull()
     .$default(() => "text"),
-  dataSchema: text("data_schema", { mode: "json" }).notNull(),
+  dataSchema: text("data_schema").notNull(),
   templateCode: text("template_code").notNull(),
   ...timestamps,
 });
@@ -46,8 +46,8 @@ export const newDocumentTemplateInputSchema = z.object({
     "Output format of the generated document"
   ),
   dataSchema: z
-    .unknown()
-    .describe("JSON Schema describing the expected input data"),
+    .string()
+    .describe("JSON Schema string describing the expected input data"),
   templateCode: z
     .string()
     .describe("JavaScript code that generates the document content"),

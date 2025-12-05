@@ -3,7 +3,7 @@ import {
   testDB,
   createTimeTrackingTestContext,
 } from "@ai-starter/db/test-utils";
-import { getRepos } from "@ai-starter/db";
+import { getRepos, MockFileStorage } from "@ai-starter/db";
 import { CoreAppService } from "@ai-starter/app";
 import { processNextJob } from "../apps/worker/processor";
 import { wrapAISDKModel } from "evalite/ai-sdk";
@@ -15,7 +15,8 @@ import { anthropic } from "@ai-sdk/anthropic";
 async function setupTest() {
   const db = await testDB({ seed: false });
   const repos = getRepos(db);
-  const app = CoreAppService({ repos });
+  const storage = MockFileStorage();
+  const app = CoreAppService({ repos, storage });
   const context = await createTimeTrackingTestContext(db, { seedRoles: true });
   const model = wrapAISDKModel(anthropic("claude-haiku-4-5"));
   return { app, context, model };

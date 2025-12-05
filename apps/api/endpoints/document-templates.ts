@@ -5,7 +5,6 @@ import {
   newDocumentTemplateInputSchema,
   updateDocumentTemplateInputSchema,
 } from "@ai-starter/core/schema/documentTemplate";
-import { ulidSchema } from "@ai-starter/core/schema/utils/validation";
 
 const templateIdParamsSchema = t.Object({
   templateId: t.String(),

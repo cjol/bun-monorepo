@@ -3,22 +3,18 @@ import { DocumentService } from "./DocumentService";
 import { DrizzleDocumentRepository } from "@ai-starter/db/repositories";
 import { DrizzleDocumentTemplateRepository } from "@ai-starter/db/repositories";
 import { DrizzleMatterRepository } from "@ai-starter/db/repositories";
-import { LocalFileStorage } from "@ai-starter/db/storage";
+import { MockFileStorage } from "@ai-starter/db/storage";
 import type { DB } from "@ai-starter/db";
 import { testDB } from "@ai-starter/db/test-utils/db";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 
 describe("DocumentService", () => {
   let db: DB;
   let service: ReturnType<typeof DocumentService>;
-  let storage: ReturnType<typeof LocalFileStorage>;
-  let tempDir: string;
+  let storage: ReturnType<typeof MockFileStorage>;
   let testMatterId: string;
 
   beforeEach(async () => {
-    tempDir = join(tmpdir(), `document-service-test-${Date.now()}`);
-    storage = LocalFileStorage({ basePath: tempDir });
+    storage = MockFileStorage();
 
     db = await testDB({ seed: false });
     service = DocumentService({
@@ -69,10 +65,10 @@ describe("DocumentService", () => {
       const template = await templateRepo.create({
         name: "Test Template",
         outputFormat: "csv",
-        dataSchema: {
+        dataSchema: JSON.stringify({
           type: "object",
           properties: { name: { type: "string" } },
-        },
+        }),
         templateCode: "return `Name,${data.name}`;",
       });
 

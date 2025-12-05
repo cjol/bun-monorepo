@@ -1,8 +1,6 @@
 import { Elysia, t } from "elysia";
 import { notFound } from "@hapi/boom";
-import type { Context } from "../context";
-import { newDocumentInputSchema } from "@ai-starter/core/schema/document";
-import { ulidSchema } from "@ai-starter/core/schema/utils/validation";
+import type { Context } from "../../context";
 
 const matterIdParamsSchema = t.Object({
   matterId: t.String(),
@@ -13,9 +11,9 @@ const documentIdParamsSchema = t.Object({
 });
 
 const generateDocumentSchema = t.Object({
-  templateId: t.String().describe("ID of the template to use"),
-  data: t.Unknown().describe("Data to pass to the template"),
-  name: t.String().describe("Name for the generated document"),
+  templateId: t.String({ description: "ID of the template to use" }),
+  data: t.Unknown({ description: "Data to pass to the template" }),
+  name: t.String({ description: "Name for the generated document" }),
 });
 
 export const matterDocumentRoutes = ({ app }: Context) =>
@@ -52,7 +50,7 @@ export const matterDocumentRoutes = ({ app }: Context) =>
     )
     .get(
       "/:documentId/download",
-      async ({ params, status, set }) => {
+      async ({ params }) => {
         const document = await app.document.getDocument(params.documentId);
         if (!document)
           throw notFound(`Document with ID ${params.documentId} not found`);
@@ -61,7 +59,8 @@ export const matterDocumentRoutes = ({ app }: Context) =>
           params.documentId
         );
 
-        return new Response(content, {
+        // I'm unhappy with this cast but I think it's because Bun handles stuff that the base Response type can't
+        return new Response(content as unknown as ArrayBuffer, {
           status: 200,
           headers: {
             "Content-Type": document.mimeType,

@@ -23,10 +23,10 @@ describe("DrizzleDocumentTemplateRepository", () => {
         name: "Test Template",
         description: "A test template",
         outputFormat: "csv",
-        dataSchema: {
+        dataSchema: JSON.stringify({
           type: "object",
           properties: { name: { type: "string" } },
-        },
+        }),
         templateCode: "return `Name: ${data.name}`;",
       });
 
@@ -42,10 +42,10 @@ describe("DrizzleDocumentTemplateRepository", () => {
         name: "Test Template",
         description: "A test template",
         outputFormat: "csv",
-        dataSchema: {
+        dataSchema: JSON.stringify({
           type: "object",
           properties: { name: { type: "string" } },
-        },
+        }),
         templateCode: "return `Name: ${data.name}`;",
       });
 
@@ -56,10 +56,10 @@ describe("DrizzleDocumentTemplateRepository", () => {
         name: "Test Template",
         description: "A test template",
         outputFormat: "csv",
-        dataSchema: {
+        dataSchema: JSON.stringify({
           type: "object",
           properties: { name: { type: "string" } },
-        },
+        }),
         templateCode: "return `Name: ${data.name}`;",
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
@@ -72,14 +72,14 @@ describe("DrizzleDocumentTemplateRepository", () => {
       await repository.create({
         name: "Template 1",
         outputFormat: "csv",
-        dataSchema: {},
+        dataSchema: JSON.stringify({}),
         templateCode: "return 'test';",
       });
 
       await repository.create({
         name: "Template 2",
         outputFormat: "html",
-        dataSchema: {},
+        dataSchema: JSON.stringify({}),
         templateCode: "return '<p>test</p>';",
       });
 
@@ -97,7 +97,7 @@ describe("DrizzleDocumentTemplateRepository", () => {
       const created = await repository.create({
         name: "Original Name",
         outputFormat: "csv",
-        dataSchema: {},
+        dataSchema: JSON.stringify({}),
         templateCode: "return 'test';",
       });
 
@@ -116,7 +116,7 @@ describe("DrizzleDocumentTemplateRepository", () => {
       const created = await repository.create({
         name: "To Delete",
         outputFormat: "csv",
-        dataSchema: {},
+        dataSchema: JSON.stringify({}),
         templateCode: "return 'test';",
       });
 
