@@ -9,7 +9,8 @@ import type { SandboxFunction } from "./createSandboxTool";
  * @returns Formatted documentation string
  */
 export function generateFunctionDocs(
-  functions: Record<string, SandboxFunction<unknown, unknown>>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  functions: Record<string, SandboxFunction<any, unknown>>
 ): string {
   const entries = Object.entries(functions);
   if (entries.length === 0) {

@@ -39,7 +39,8 @@ export interface CreateSandboxToolOptions {
    * Functions that will be available to the sandboxed code.
    * The key is the function name that will be accessible in the sandbox.
    */
-  functions: Record<string, SandboxFunction<unknown, unknown>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  functions: Record<string, SandboxFunction<any, unknown>>;
 
   /**
    * Memory limit for the context in MB. Defaults to 128MB.
