@@ -21,6 +21,7 @@ import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconPlus, IconEye } from "@tabler/icons-react";
+import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import { api } from "../../../../lib/api";
 
@@ -42,6 +43,7 @@ export default function BillsPage() {
   const params = useParams<{ matterId: string }>();
   const matterId = params.matterId;
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const form = useForm<BillFormValues>({
     initialValues: {
@@ -147,7 +149,12 @@ export default function BillsPage() {
                   </Table.Td>
                   <Table.Td>
                     <Group gap="xs">
-                      <ActionIcon variant="subtle">
+                      <ActionIcon
+                        variant="subtle"
+                        onClick={() =>
+                          router.push(`/matters/${matterId}/bills/${bill.id}`)
+                        }
+                      >
                         <IconEye size={16} />
                       </ActionIcon>
                     </Group>

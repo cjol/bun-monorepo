@@ -2,7 +2,10 @@ import { Elysia, t } from "elysia";
 import { notFound } from "@hapi/boom";
 
 import type { Context } from "../../context";
-import { newBillInputSchema } from "@ai-starter/core/schema/bill";
+import {
+  newBillInputSchema,
+  updateBillInputSchema,
+} from "@ai-starter/core/schema/bill";
 
 const matterBillParamsSchema = t.Object({
   matterId: t.String(),
@@ -66,6 +69,33 @@ export const matterBillRoutes = ({ app }: Context) =>
         detail: {
           summary: "Create Bill",
           description: "Create a new bill for a matter.",
+        },
+      }
+    )
+    .patch(
+      "/:billId",
+      async ({ params, body, status: statusCode }) => {
+        // Verify the bill belongs to the matter before updating
+        const existing = await app.bill.getBill(params.billId);
+        if (!existing || existing.matterId !== params.matterId) {
+          throw notFound(
+            `Bill with ID ${params.billId} not found in matter ${params.matterId}`
+          );
+        }
+        const { periodStart, periodEnd, status } = body;
+        const result = await app.bill.updateBill(params.billId, {
+          ...(periodStart ? { periodStart: new Date(periodStart) } : {}),
+          ...(periodEnd ? { periodEnd: new Date(periodEnd) } : {}),
+          ...(status ? { status } : {}),
+        });
+        return statusCode(200, result);
+      },
+      {
+        params: matterBillParamsSchema,
+        body: updateBillInputSchema,
+        detail: {
+          summary: "Update Bill",
+          description: "Update an existing bill within a matter.",
         },
       }
     );
