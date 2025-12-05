@@ -86,3 +86,12 @@
 - [ ] Create an EmailIngestionService (e.g., via webhook) that parses inbound emails and creates new Conversation and Message records.
 - [ ] Web chat interface for users to interact with agents directly.
 - [ ] View change log for time entries in the web UI
+- [ ] Ensure the AI Agent knows what "AI Suggestions" are for and how the workflow works
+- [ ] Include suggestion description for AI suggestions and propagate to change log
+
+- evidence of consulting the DMS/Fee earner emails
+- Evidence of the narrative being rewritten
+- More "matter context" stuff? Workflow description/visualisation?
+- Entry dashboard view for the matter
+- bill detail view
+- Any kind of review process
