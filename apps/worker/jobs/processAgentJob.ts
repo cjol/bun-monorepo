@@ -1,6 +1,12 @@
 import { createCustomerAgent, buildMatterContext } from "@ai-starter/app";
 import type { Job } from "@ai-starter/core";
 import type { ProcessorDeps } from "../processor";
+import type { GenerateTextResult, ToolSet } from "ai";
+
+export type ResponseMessage = GenerateTextResult<
+  ToolSet,
+  unknown
+>["response"]["messages"][number];
 
 export interface AgentJobParameters {
   prompt: string;
@@ -9,15 +15,17 @@ export interface AgentJobParameters {
 }
 export interface AgentResultType {
   success: true;
-  result: string;
-  logs: string[];
+  result: ResponseMessage[];
 }
 
 /**
  * Process an "agent" type job by executing the GeneralPurposeAgent
  * with the matter context, workflow instructions and prompt.
  */
-export async function processAgentJob(job: Job, { app, model }: ProcessorDeps) {
+export async function processAgentJob(
+  job: Job,
+  { app, model }: ProcessorDeps
+): Promise<AgentResultType> {
   const params = job.parameters as unknown as AgentJobParameters;
 
   // Get the workflow for its instructions
@@ -61,7 +69,6 @@ export async function processAgentJob(job: Job, { app, model }: ProcessorDeps) {
 
   return {
     success: true,
-    result: result.content,
-    logs: result.steps.map((s) => s.content),
+    result: result.response.messages,
   };
 }

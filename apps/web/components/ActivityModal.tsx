@@ -3,8 +3,12 @@
 import { useState } from "react";
 import { Modal, Group, Text, Paper, Stack, Title } from "@mantine/core";
 import type { Job } from "@ai-starter/core";
-import type { AgentJobParameters } from "../../worker/jobs/processAgentJob";
+import type {
+  AgentJobParameters,
+  ResponseMessage,
+} from "../../worker/jobs/processAgentJob";
 import { JobResultType } from "../../worker/processor";
+import { MessageRenderer } from "./messages/MessageRenderer";
 
 interface ActivityModalProps {
   opened: boolean;
@@ -180,19 +184,23 @@ export function ActivityModal({ opened, onClose, jobs }: ActivityModalProps) {
                         selectedJob.result !== undefined && (
                           <div>
                             <Title order={5}>Result</Title>
-                            <Paper p="xs" bg="gray.0">
-                              <pre
-                                style={{
-                                  margin: 0,
-                                  fontSize: "12px",
-                                  whiteSpace: "pre-wrap",
-                                  wordBreak: "break-word",
-                                }}
-                              >
-                                {"error" in result
-                                  ? result.error
-                                  : JSON.stringify(result.result)}
-                              </pre>
+                            <Paper p="md" bg="gray.0">
+                              {"error" in result ? (
+                                <pre
+                                  style={{
+                                    margin: 0,
+                                    fontSize: "12px",
+                                    whiteSpace: "pre-wrap",
+                                    wordBreak: "break-word",
+                                  }}
+                                >
+                                  {result.error}
+                                </pre>
+                              ) : (
+                                <MessageRenderer
+                                  messages={result.result as ResponseMessage[]}
+                                />
+                              )}
                             </Paper>
                           </div>
                         )}
