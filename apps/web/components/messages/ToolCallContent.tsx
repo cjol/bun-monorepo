@@ -3,15 +3,17 @@
 import { ToolCallPart } from "@ai-starter/core";
 import { Group, Text } from "@mantine/core";
 import { SendEmailInput } from "../../../../packages/app/agent/utils/createSendEmailTool";
+import { SearchDocumentStoreResult } from "../../../../packages/app";
 
 interface ToolCallContentProps {
   part: ToolCallPart;
-  result?: {
-    output: unknown;
-  };
+  result?: unknown;
 }
 
-function getToolDisplayInfo({ toolName, input }: ToolCallPart, result: any) {
+function getToolDisplayInfo(
+  { toolName, input }: ToolCallPart,
+  result?: unknown
+) {
   switch (toolName) {
     case "runCode":
       return {
@@ -32,10 +34,10 @@ function getToolDisplayInfo({ toolName, input }: ToolCallPart, result: any) {
         success: (
           <span>
             Document search complete:{" "}
-            {result.output.results.map(
-              (doc: { id: string; title: string }, index: number) => (
-                <span key={doc.id}>
-                <br />
+            {!!result &&
+              (result as SearchDocumentStoreResult).results.map((doc) => (
+                <span key={doc.title}>
+                  <br />
                   <a
                     href="#"
                     style={{ color: "inherit", textDecoration: "underline" }}
@@ -43,8 +45,7 @@ function getToolDisplayInfo({ toolName, input }: ToolCallPart, result: any) {
                     📄 {doc.title}
                   </a>
                 </span>
-              )
-            )}
+              ))}
           </span>
         ),
       };
@@ -63,7 +64,11 @@ export function ToolCallContent({ result, part }: ToolCallContentProps) {
 
   if (!result) {
     status = "pending";
-  } else if ("error" in result.output) {
+  } else if (
+    typeof result === "object" &&
+    result !== null &&
+    "error" in result
+  ) {
     status = "error";
   } else {
     status = "success";

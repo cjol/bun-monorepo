@@ -11,32 +11,17 @@ interface MessageRendererProps {
 
 export function MessageRenderer({ messages }: MessageRendererProps) {
   // Build a map of toolCallId to tool result for quick lookup
-  const toolResults = new Map<string, { output: unknown }>();
+  const toolResults = new Map<string, unknown>();
 
   // Collect all tool results from all messages
   for (const message of messages) {
     if (message.role === "tool") {
       for (const resultPart of message.content) {
-        if (resultPart.type === "tool-result") {
-          // Extract error from the output structure
-          let error: string | undefined;
-          if (
-            resultPart.output.type === "json" &&
-            typeof resultPart.output.value === "object" &&
-            resultPart.output.value !== null
-          ) {
-            const output = resultPart.output.value as { error?: string };
-            error = output.error;
-          } else if (
-            resultPart.output.type === "error-text" ||
-            resultPart.output.type === "error-json"
-          ) {
-            error = String(resultPart.output.value);
-          }
-
-          toolResults.set(resultPart.toolCallId, {
-            output: resultPart.output.value,
-          });
+        if (
+          resultPart.type === "tool-result" &&
+          resultPart.output.type === "json"
+        ) {
+          toolResults.set(resultPart.toolCallId, resultPart.output.value);
         }
       }
     }
