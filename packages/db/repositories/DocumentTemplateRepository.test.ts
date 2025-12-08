@@ -4,7 +4,7 @@ import type { DB } from "../db";
 import { testDB } from "../test-utils/db";
 import { createBasicTestContext, type BasicTestContext } from "../test-utils";
 
-describe.skip("DrizzleDocumentTemplateRepository", () => {
+describe("DrizzleDocumentTemplateRepository", () => {
   let db: DB;
   let repository: ReturnType<typeof DrizzleDocumentTemplateRepository>;
   let context: BasicTestContext;

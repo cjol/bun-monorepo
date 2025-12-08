@@ -15,6 +15,7 @@ import type {
   RoleService as RoleServiceType,
   DocumentService as DocumentServiceType,
   DocumentTemplateService as DocumentTemplateServiceType,
+  ActivityLogService as ActivityLogServiceType,
 } from "../core";
 import { createMatterSandboxFunctions } from "./sandbox/MatterServiceSandbox";
 import { createBillSandboxFunctions } from "./sandbox/BillServiceSandbox";
@@ -30,6 +31,8 @@ import {
   createSandboxTool,
   generateFunctionDocs,
   filterSandboxFunctions,
+  createSendEmailTool,
+  createSearchDocumentStoreTool,
 } from "./utils";
 import { anthropic } from "@ai-sdk/anthropic";
 
@@ -51,6 +54,7 @@ export interface CreateGeneralPurposeAgentOptions {
     role: RoleServiceType;
     document: DocumentServiceType;
     documentTemplate: DocumentTemplateServiceType;
+    activityLog: ActivityLogServiceType;
   };
 
   /**
@@ -74,6 +78,12 @@ export interface CreateGeneralPurposeAgentOptions {
    * Use this to restrict agent capabilities for specific use cases.
    */
   allowedFunctions?: SandboxFunctionName[];
+
+  /**
+   * Optional context for time entries being processed.
+   * Used for linking email activities to specific time entries.
+   */
+  timeEntryContext?: { timeEntryIds?: string[] };
 }
 
 /**
@@ -135,8 +145,13 @@ export type SandboxFunctionName = keyof ReturnType<
 export function createGeneralPurposeAgent(
   options: CreateGeneralPurposeAgentOptions
 ) {
-  const { services, matterContext, workflowInstructions, allowedFunctions } =
-    options;
+  const {
+    services,
+    matterContext,
+    workflowInstructions,
+    allowedFunctions,
+    timeEntryContext,
+  } = options;
   const allSandboxFunctions = createSandboxFunctions(services);
 
   const sandboxFunctions = allowedFunctions
@@ -145,7 +160,13 @@ export function createGeneralPurposeAgent(
 
   const systemPrompt = `You are a timesheet management assistant. You help users manage matters, bills, time entries, and documents.
 
-You have access to a code sandbox where you can execute JavaScript code to process and analyze timesheet data.
+You have access to the following tools:
+
+1. **runCode**: A code sandbox where you can execute JavaScript code to process and analyze timesheet data.
+2. **sendEmail**: Send emails to timekeepers or other stakeholders when you need additional information.
+3. **searchDocumentStore**: Search the document management system for relevant documents, contracts, or correspondence.
+
+## Using the Code Sandbox (runCode)
 You can call functions directly from your code to fetch data and perform operations.
 
 All functions are async and must be awaited.
@@ -191,6 +212,12 @@ Use console.log() for debugging -- you will be able to see the logs in the outpu
 
 The return value will be shown to the user, but not to you to preserve your context window and protect sensitive information.
 
+## Sending Emails (sendEmail)
+Use this tool when you need to communicate with timekeepers or request additional information about time entries. Provide a clear subject line and professional body content.
+
+## Searching Documents (searchDocumentStore)
+Use this tool to find relevant documents that may provide context for time entries or matter work. Search for contracts, engagement letters, correspondence, or other relevant materials.
+
 ${matterContext ? `\n${matterContext}\n` : ""}
 ${workflowInstructions ? `\n## Workflow Instructions\n\n${workflowInstructions}\n\nFollow these instructions when executing tasks.\n` : ""}
 ${generateFunctionDocs(sandboxFunctions)}`;
@@ -203,6 +230,8 @@ ${generateFunctionDocs(sandboxFunctions)}`;
         functions: sandboxFunctions,
         timeout: 30000,
       }),
+      sendEmail: createSendEmailTool(services.activityLog, timeEntryContext),
+      searchDocumentStore: createSearchDocumentStoreTool(),
     },
     stopWhen: stepCountIs(10),
   });

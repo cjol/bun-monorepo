@@ -7,6 +7,7 @@ export const jobSchema = sqliteTable("job", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => generateId()),
+  name: text("name").notNull(),
   type: text("type", { enum: ["agent"] }).notNull(),
   status: text("status", {
     enum: ["pending", "running", "completed", "failed"],
@@ -46,6 +47,7 @@ export const agentJobParametersSchema = z.object({
 });
 
 export const newJobInputSchema = z.object({
+  name: z.string().describe("The name of the job"),
   type: jobTypeSchema.describe("The type of job to create"),
   parameters: z
     .record(z.string(), z.unknown())

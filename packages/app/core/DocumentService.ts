@@ -40,6 +40,7 @@ export const DocumentService = (deps: Deps) => {
   return {
     getDocument: repos.document.get,
     listByMatter: repos.document.listByMatter,
+    listByBill: repos.document.listByBill,
 
     async getDocumentContent(documentId: string): Promise<Buffer> {
       const document = await repos.document.get(documentId);

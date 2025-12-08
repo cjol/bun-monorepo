@@ -33,8 +33,14 @@ export type NewBill = typeof billSchema.$inferInsert;
 export const billStatusSchema = z.enum(["draft", "finalized", "sent", "paid"]);
 
 export const newBillInputSchema = z.object({
-  matterId: ulidSchema.describe("The ULID of the matter"),
+  matterId: ulidSchema.describe("The ULID of matter"),
   periodStart: isoDateSchema.describe("Period start date"),
   periodEnd: isoDateSchema.describe("Period end date"),
   status: billStatusSchema.describe("Status of the bill"),
+});
+
+export const updateBillInputSchema = z.object({
+  periodStart: isoDateSchema.optional().describe("Period start date"),
+  periodEnd: isoDateSchema.optional().describe("Period end date"),
+  status: billStatusSchema.optional().describe("Status of the bill"),
 });

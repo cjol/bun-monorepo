@@ -5,11 +5,11 @@ import type {
   TimekeeperRole,
   Matter,
   TimeEntry,
-  Job,
+  ActivityLog,
 } from "@ai-starter/core";
 import { api } from "../lib/api";
 
-type TimeEntryWithJobs = TimeEntry & { jobs?: Job[] };
+type TimeEntryWithActivities = TimeEntry & { activities?: ActivityLog[] };
 
 /**
  * Custom hook to fetch all data needed for displaying enriched time entries.
@@ -73,13 +73,13 @@ export function useTimeEntryData(matterId: string) {
     data: timeEntries,
     isLoading: isLoadingTimeEntries,
     error: timeEntriesError,
-  } = useQuery<TimeEntryWithJobs[]>({
+  } = useQuery<TimeEntryWithActivities[]>({
     queryKey: ["time-entries", matterId],
     queryFn: async () => {
       const matterApi = api.matters({ matterId });
       const response = await matterApi["time-entries"].get();
       if (response.error) throw new Error("Failed to fetch time entries");
-      return response.data as TimeEntryWithJobs[];
+      return response.data as TimeEntryWithActivities[];
     },
     refetchInterval: 1000,
   });

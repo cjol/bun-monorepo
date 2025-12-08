@@ -37,7 +37,8 @@ export const AiSuggestionService = (deps: Deps) => {
 
       await services.timeEntry.updateTimeEntry(
         suggestion.timeEntryId,
-        suggestion.suggestedChanges
+        suggestion.suggestedChanges,
+        suggestion.explanation
       );
 
       return repos.aiSuggestion.updateStatus(id, "approved");

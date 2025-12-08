@@ -80,9 +80,18 @@
 ## TODO List:
 
 - [x] Prevent AI Agents from creating time entries directly, instead making them create suggestions
-- [ ] Improve UI display of AI suggestions and allow users to accept/reject them
-- [ ] Allow generation of documents (define document templates and allow AI agents to invoke a template from code sandbox)
+- [x] Include suggestion description for AI suggestions and propagate to change log
+- [x] Improve UI display of AI suggestions and allow users to accept/reject them
+- [x] Allow generation of documents (define document templates and allow AI agents to invoke a template from code sandbox)
 - [ ] Create an EmailSendingService that agents can call via a tool, which sends a Message as an outbound email.
 - [ ] Create an EmailIngestionService (e.g., via webhook) that parses inbound emails and creates new Conversation and Message records.
 - [ ] Web chat interface for users to interact with agents directly.
+
+- email jobs (add "waiting for email" jobs to the jobs system, then time entry status is either "awaiting system review" if there's a pending AI job, or "awaiting external action" if there's a pending "wait for email" job assigned to a user, or "awaiting your review" if there's outstanding AI suggestions on an entry)
+- Any kind of review process (TBC how but probably fits into the job system attached to a bill/document entity instead of time entries)
+
+- Entry dashboard view for the matter
+- More "matter context" stuff? Workflow description/visualisation?
+
 - [ ] View change log for time entries in the web UI
+- [ ] Ensure the AI Agent knows what "AI Suggestions" are for and how the workflow works

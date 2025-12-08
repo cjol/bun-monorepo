@@ -5,6 +5,7 @@ import { ulidSchema } from "./utils/validation";
 import { generateId } from "./utils/generateId";
 import { matterSchema } from "./matter";
 import { documentTemplateSchema } from "./documentTemplate";
+import { billSchema } from "./bill";
 
 export const documentSchema = sqliteTable("document", {
   id: text("id")
@@ -13,6 +14,9 @@ export const documentSchema = sqliteTable("document", {
   matterId: text("matter_id")
     .notNull()
     .references(() => matterSchema.id, { onDelete: "cascade" }),
+  billId: text("bill_id").references(() => billSchema.id, {
+    onDelete: "set null",
+  }),
   templateId: text("template_id").references(() => documentTemplateSchema.id, {
     onDelete: "set null",
   }),
@@ -42,6 +46,7 @@ export const generatedBySchema = z.enum(["agent", "user", "system"]);
 
 export const newDocumentInputSchema = z.object({
   matterId: ulidSchema.describe("The ULID of the matter"),
+  billId: ulidSchema.nullable().describe("The ULID of the bill (optional)"),
   templateId: ulidSchema
     .nullable()
     .describe("The ULID of the template used (optional)"),

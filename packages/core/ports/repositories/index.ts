@@ -13,3 +13,4 @@ export * from "./RoleRepository";
 export * from "./JobRepository";
 export * from "./DocumentTemplateRepository";
 export * from "./DocumentRepository";
+export * from "./ActivityLogRepository";

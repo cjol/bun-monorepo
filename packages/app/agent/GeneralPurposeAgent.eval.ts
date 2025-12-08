@@ -24,6 +24,7 @@ import {
   JobService,
   DocumentService,
   DocumentTemplateService,
+  ActivityLogService,
 } from "../core";
 import { createGeneralPurposeAgent } from "./GeneralPurposeAgent";
 import type { TimeEntry } from "@ai-starter/core";
@@ -37,7 +38,11 @@ async function setupTest() {
   await doSeedRoles(db);
   const workflow = WorkflowService({ repos });
   const job = JobService({ repos });
-  const timeEntry = TimeEntryService({ repos, services: { workflow, job } });
+  const activityLog = ActivityLogService({ repos });
+  const timeEntry = TimeEntryService({
+    repos,
+    services: { workflow, job, activityLog },
+  });
   const documentTemplate = DocumentTemplateService({ repos });
   const document = DocumentService({
     repos: {
@@ -50,6 +55,7 @@ async function setupTest() {
     job,
     workflow,
     timeEntry,
+    activityLog,
     matter: MatterService({ repos }),
     bill: BillService({ repos }),
     aiSuggestion: AiSuggestionService({ repos, services: { timeEntry } }),

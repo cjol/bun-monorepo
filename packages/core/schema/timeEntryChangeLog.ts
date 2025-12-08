@@ -11,6 +11,7 @@ export const timeEntryChangeLogSchema = sqliteTable("time_entry_change_log", {
     .references(() => timeEntrySchema.id, { onDelete: "cascade" }),
   beforeData: jsonTimeEntry("before_data"),
   afterData: jsonTimeEntry("after_data").notNull(),
+  reason: text("reason"),
   changedAt: integer("changed_at", { mode: "timestamp" })
     .notNull()
     .$defaultFn(() => new Date()),

@@ -14,6 +14,7 @@ import { DrizzleRoleRepository } from "./RoleRepository";
 import { DrizzleJobRepository } from "./JobRepository";
 import { DrizzleDocumentTemplateRepository } from "./DocumentTemplateRepository";
 import { DrizzleDocumentRepository } from "./DocumentRepository";
+import { DrizzleActivityLogRepository } from "./ActivityLogRepository";
 
 export * from "./FooRepository";
 export * from "./ConversationRepository";
@@ -30,6 +31,7 @@ export * from "./RoleRepository";
 export * from "./JobRepository";
 export * from "./DocumentTemplateRepository";
 export * from "./DocumentRepository";
+export * from "./ActivityLogRepository";
 
 export const getRepos = (db: DB) => {
   return {
@@ -48,5 +50,6 @@ export const getRepos = (db: DB) => {
     job: DrizzleJobRepository({ db }),
     documentTemplate: DrizzleDocumentTemplateRepository({ db }),
     document: DrizzleDocumentRepository({ db }),
+    activityLog: DrizzleActivityLogRepository({ db }),
   };
 };

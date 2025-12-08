@@ -187,6 +187,7 @@ describe("API e2e", () => {
       .matters({ matterId: matter.id })
       .suggestions.post({
         timeEntryId: timeEntry1.id,
+        explanation: "Improve description for clarity",
         suggestedChanges: {
           matterId: matter.id,
           timekeeperId: timekeeper.id,
@@ -230,6 +231,7 @@ describe("API e2e", () => {
       .matters({ matterId: matter.id })
       .suggestions.post({
         timeEntryId: timeEntry2.id,
+        explanation: "Improve description for clarity",
         suggestedChanges: {
           matterId: matter.id,
           timekeeperId: timekeeper.id,

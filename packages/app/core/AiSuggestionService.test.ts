@@ -10,6 +10,7 @@ import {
 } from "@ai-starter/db/test-utils";
 import { WorkflowService } from "./WorkflowService";
 import { JobService } from "./JobService";
+import { ActivityLogService } from "./ActivityLogService";
 
 describe("AiSuggestionService", () => {
   let db: DB;
@@ -27,6 +28,7 @@ describe("AiSuggestionService", () => {
       services: {
         workflow: WorkflowService({ repos }),
         job: JobService({ repos }),
+        activityLog: ActivityLogService({ repos }),
       },
     });
     service = AiSuggestionService({
@@ -55,6 +57,7 @@ describe("AiSuggestionService", () => {
       const suggestion = await service.createSuggestion({
         timeEntryId: timeEntry.id,
         suggestedChanges: { ...timeEntry, hours: 3.5 },
+        explanation: "Test explanation for hours change",
       });
 
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -84,6 +87,7 @@ describe("AiSuggestionService", () => {
       const suggestion = await service.createSuggestion({
         timeEntryId: timeEntry.id,
         suggestedChanges: { ...timeEntry, hours: 3.5 },
+        explanation: "Test explanation for hours change",
       });
 
       await service.approveSuggestion(suggestion.id);
@@ -97,6 +101,7 @@ describe("AiSuggestionService", () => {
       const suggestion = await service.createSuggestion({
         timeEntryId: timeEntry.id,
         suggestedChanges: { ...timeEntry, hours: 3.5 },
+        explanation: "Test explanation for hours change",
       });
 
       const result = await service.rejectSuggestion(suggestion.id);

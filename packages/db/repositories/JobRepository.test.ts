@@ -22,6 +22,7 @@ describe("DrizzleJobRepository", () => {
   describe("create", () => {
     it("should create a new job with pending status", async () => {
       const job = await repository.create({
+        name: "Test Job",
         type: "agent",
         parameters: {
           prompt: "Test prompt",
@@ -31,6 +32,7 @@ describe("DrizzleJobRepository", () => {
       });
 
       expect(job.id).toBeDefined();
+      expect(job.name).toBe("Test Job");
       expect(job.type).toBe("agent");
       expect(job.status).toBe("pending");
       expect(job.parameters).toEqual({
@@ -51,6 +53,7 @@ describe("DrizzleJobRepository", () => {
   describe("update", () => {
     it("should update a job", async () => {
       const job = await repository.create({
+        name: "Test Job",
         type: "agent",
         parameters: { prompt: "Test" },
       });
@@ -79,6 +82,7 @@ describe("DrizzleJobRepository", () => {
   describe("delete", () => {
     it("should delete a job", async () => {
       const job = await repository.create({
+        name: "Test Job",
         type: "agent",
         parameters: { prompt: "Test" },
       });
@@ -102,6 +106,7 @@ describe("DrizzleJobRepository", () => {
 
     it("should return all jobs ordered by scheduledAt", async () => {
       const job1 = await repository.create({
+        name: "First Job",
         type: "agent",
         parameters: { prompt: "First" },
       });
@@ -110,6 +115,7 @@ describe("DrizzleJobRepository", () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       const job2 = await repository.create({
+        name: "Second Job",
         type: "agent",
         parameters: { prompt: "Second" },
       });
@@ -130,11 +136,13 @@ describe("DrizzleJobRepository", () => {
 
     it("should return only pending jobs", async () => {
       const pendingJob = await repository.create({
+        name: "Pending Job",
         type: "agent",
         parameters: { prompt: "Pending" },
       });
 
       await repository.create({
+        name: "Running Job",
         type: "agent",
         parameters: { prompt: "Running" },
         status: "running",
@@ -156,6 +164,7 @@ describe("DrizzleJobRepository", () => {
 
     it("should claim the oldest pending job", async () => {
       const job1 = await repository.create({
+        name: "First Job",
         type: "agent",
         parameters: { prompt: "First" },
       });
@@ -163,6 +172,7 @@ describe("DrizzleJobRepository", () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       await repository.create({
+        name: "Second Job",
         type: "agent",
         parameters: { prompt: "Second" },
       });
@@ -182,12 +192,14 @@ describe("DrizzleJobRepository", () => {
 
     it("should not claim already running or completed jobs", async () => {
       await repository.create({
+        name: "Running Job",
         type: "agent",
         parameters: { prompt: "Running" },
         status: "running",
       });
 
       await repository.create({
+        name: "Completed Job",
         type: "agent",
         parameters: { prompt: "Completed" },
         status: "completed",
@@ -203,6 +215,7 @@ describe("DrizzleJobRepository", () => {
       it("should create a job with linked entities", async () => {
         const job = await repository.create(
           {
+            name: "Test Job",
             type: "agent",
             parameters: { prompt: "Test" },
           },
@@ -224,6 +237,7 @@ describe("DrizzleJobRepository", () => {
 
       it("should create a job without entities when none provided", async () => {
         const job = await repository.create({
+          name: "Test Job",
           type: "agent",
           parameters: { prompt: "Test" },
         });
@@ -238,6 +252,7 @@ describe("DrizzleJobRepository", () => {
     describe("listEntitiesByJob", () => {
       it("should return empty array when no entities are linked", async () => {
         const job = await repository.create({
+          name: "Test Job",
           type: "agent",
           parameters: { prompt: "Test" },
         });
@@ -249,6 +264,7 @@ describe("DrizzleJobRepository", () => {
       it("should return all entities for a job", async () => {
         const job = await repository.create(
           {
+            name: "Test Job",
             type: "agent",
             parameters: { prompt: "Test" },
           },
@@ -273,6 +289,7 @@ describe("DrizzleJobRepository", () => {
       it("should return all jobs for an entity", async () => {
         const job1 = await repository.create(
           {
+            name: "Job 1",
             type: "agent",
             parameters: { prompt: "Job 1" },
           },
@@ -281,6 +298,7 @@ describe("DrizzleJobRepository", () => {
 
         const job2 = await repository.create(
           {
+            name: "Job 2",
             type: "agent",
             parameters: { prompt: "Job 2" },
           },
@@ -297,6 +315,7 @@ describe("DrizzleJobRepository", () => {
       it("should not return jobs for other entities", async () => {
         await repository.create(
           {
+            name: "Job 1",
             type: "agent",
             parameters: { prompt: "Job 1" },
           },
@@ -305,6 +324,7 @@ describe("DrizzleJobRepository", () => {
 
         await repository.create(
           {
+            name: "Job 2",
             type: "agent",
             parameters: { prompt: "Job 2" },
           },
@@ -321,6 +341,7 @@ describe("DrizzleJobRepository", () => {
       it("should delete job entities when job is deleted", async () => {
         const job = await repository.create(
           {
+            name: "Test Job",
             type: "agent",
             parameters: { prompt: "Test" },
           },

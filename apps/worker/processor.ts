@@ -1,7 +1,7 @@
 import { CoreAppService } from "@ai-starter/app";
 import { type LanguageModel } from "@ai-starter/app/agent";
 import type { Job } from "@ai-starter/core";
-import { processAgentJob } from "./jobs/processAgentJob";
+import { processAgentJob, type AgentResultType } from "./jobs/processAgentJob";
 
 export interface ProcessorDeps {
   app: ReturnType<typeof CoreAppService>;
@@ -55,3 +55,5 @@ export async function processNextJob(deps: ProcessorDeps): Promise<boolean> {
     return true;
   }
 }
+
+export type JobResultType = { error: string; stack?: string } | AgentResultType;

@@ -1,18 +1,31 @@
 import { createCustomerAgent, buildMatterContext } from "@ai-starter/app";
 import type { Job } from "@ai-starter/core";
 import type { ProcessorDeps } from "../processor";
+import type { GenerateTextResult, ToolSet } from "ai";
+
+export type ResponseMessage = GenerateTextResult<
+  ToolSet,
+  unknown
+>["response"]["messages"][number];
 
 export interface AgentJobParameters {
   prompt: string;
   matterId: string;
   workflowId: string;
 }
+export interface AgentResultType {
+  success: true;
+  result: ResponseMessage[];
+}
 
 /**
  * Process an "agent" type job by executing the GeneralPurposeAgent
  * with the matter context, workflow instructions and prompt.
  */
-export async function processAgentJob(job: Job, { app, model }: ProcessorDeps) {
+export async function processAgentJob(
+  job: Job,
+  { app, model }: ProcessorDeps
+): Promise<AgentResultType> {
   const params = job.parameters as unknown as AgentJobParameters;
 
   // Get the workflow for its instructions
@@ -30,6 +43,12 @@ export async function processAgentJob(job: Job, { app, model }: ProcessorDeps) {
     },
   });
 
+  // Get time entry IDs from job entities for context
+  const jobEntities = await app.job.listEntitiesByJob(job.id);
+  const timeEntryIds = jobEntities
+    .filter((entity) => entity.entityType === "time_entry")
+    .map((entity) => entity.entityId);
+
   // Create agent with matter context and workflow instructions
   const agent = createCustomerAgent({
     services: {
@@ -43,10 +62,12 @@ export async function processAgentJob(job: Job, { app, model }: ProcessorDeps) {
       role: app.role,
       document: app.document,
       documentTemplate: app.documentTemplate,
+      activityLog: app.activityLog,
     },
     matterContext,
     workflowInstructions: workflow.instructions,
     model: model,
+    timeEntryContext: { timeEntryIds },
   });
 
   // Execute the agent
@@ -56,7 +77,6 @@ export async function processAgentJob(job: Job, { app, model }: ProcessorDeps) {
 
   return {
     success: true,
-    result: result.content,
-    logs: result.steps.map((s) => s.content),
+    result: result.response.messages,
   };
 }
