@@ -13,3 +13,12 @@ export {
   type BuildMatterContextDeps,
 } from "./buildMatterContext";
 export { filterSandboxFunctions } from "./filterSandboxFunctions";
+export {
+  createSendEmailTool,
+  type SendEmailResult,
+} from "./createSendEmailTool";
+export {
+  createSearchDocumentStoreTool,
+  type DocumentSearchResult,
+  type SearchDocumentStoreResult,
+} from "./createSearchDocumentStoreTool";
