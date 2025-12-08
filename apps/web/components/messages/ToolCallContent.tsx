@@ -1,8 +1,10 @@
 "use client";
 
+import { ToolCallPart } from "@ai-starter/core";
 import { Group, Text } from "@mantine/core";
 
 interface ToolCallContentProps {
+  part: ToolCallPart
   result?: {
     output: {
       error?: string;
@@ -10,24 +12,22 @@ interface ToolCallContentProps {
   };
 }
 
-export function ToolCallContent({ result }: ToolCallContentProps) {
+export function ToolCallContent({ result, part }: ToolCallContentProps) {
   // Determine status based on result
-  let statusIcon: string;
-  let statusColor: string;
+  let status : "pending" | "error" | "success";
 
   if (!result) {
-    // No result yet - show working icon
-    statusIcon = "⚙️";
-    statusColor = "gray";
+    status = "pending";
   } else if (result.output.error) {
-    // Error occurred
-    statusIcon = "✗";
-    statusColor = "red";
+    status = "error";
   } else {
-    // Success
-    statusIcon = "✓";
-    statusColor = "green";
+    status = "success";
   }
+
+  const statusIcon = status === "pending" ? "⚙️" : status === "error" ? "✗" : "✓";
+  const statusColor = status === "pending" ? "gray" : status === "error" ? "red" : "green";
+
+
 
   return (
     <Group gap="xs" c="dimmed">
@@ -35,7 +35,9 @@ export function ToolCallContent({ result }: ToolCallContentProps) {
         {statusIcon}
       </Text>
       <Text size="sm" c="dimmed">
-        Working...
+        {
+          part.toolName === "runCode"? status === "pending" ? "Working..." : status === "error" ? "Task failed" : "Task successful" : `Working... [${part.toolName}]`
+        }
       </Text>
     </Group>
   );

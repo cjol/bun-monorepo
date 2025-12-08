@@ -62,6 +62,7 @@ export function MessageRenderer({ messages }: MessageRendererProps) {
                       return (
                         <ToolCallContent
                           key={partIndex}
+                          part={part}
                           result={toolResults.get(part.toolCallId)}
                         />
                       );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Modal, Group, Text, Paper, Stack, Title } from "@mantine/core";
+import { Modal, Group, Text, Paper, Stack, Title, Collapse } from "@mantine/core";
 import type { Job } from "@ai-starter/core";
 import type {
   AgentJobParameters,
@@ -9,6 +9,7 @@ import type {
 } from "../../worker/jobs/processAgentJob";
 import { JobResultType } from "../../worker/processor";
 import { MessageRenderer } from "./messages/MessageRenderer";
+import { useDisclosure } from "@mantine/hooks";
 
 interface ActivityModalProps {
   opened: boolean;
@@ -17,6 +18,7 @@ interface ActivityModalProps {
 }
 
 export function ActivityModal({ opened, onClose, jobs }: ActivityModalProps) {
+  const [paramsOpened, { toggle: toggleParamsOpened }] = useDisclosure(false);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(
     jobs.length > 0 ? jobs[0].id : null
   );
@@ -161,30 +163,10 @@ export function ActivityModal({ opened, onClose, jobs }: ActivityModalProps) {
                         )}
                       </Group>
 
-                      {selectedJob.parameters !== null &&
-                        selectedJob.parameters !== undefined && (
-                          <div>
-                            <Title order={5}>Parameters</Title>
-                            <Paper p="xs" bg="gray.0">
-                              <pre
-                                style={{
-                                  margin: 0,
-                                  fontSize: "12px",
-                                  whiteSpace: "pre-wrap",
-                                  wordBreak: "break-word",
-                                }}
-                              >
-                                {params?.prompt}
-                              </pre>
-                            </Paper>
-                          </div>
-                        )}
-
                       {selectedJob.result !== null &&
                         selectedJob.result !== undefined && (
                           <div>
-                            <Title order={5}>Result</Title>
-                            <Paper p="md" bg="gray.0">
+                            <Paper p="md" >
                               {"error" in result ? (
                                 <pre
                                   style={{
@@ -203,6 +185,26 @@ export function ActivityModal({ opened, onClose, jobs }: ActivityModalProps) {
                               )}
                             </Paper>
                           </div>
+                        )}
+
+                      {selectedJob.parameters !== null &&
+                        selectedJob.parameters !== undefined && (
+                            <>
+                            <Title order={6} onClick={toggleParamsOpened} c="gray.6">{paramsOpened ? "▼" : "▶"} Parameters</Title>
+      <Collapse in={paramsOpened}>
+                            <Paper p="xs" bg="gray.1">
+                              <pre
+                                style={{
+                                  margin: 0,
+                                  fontSize: "12px",
+                                  whiteSpace: "pre-wrap",
+                                  wordBreak: "break-word",
+                                }}
+                              >
+                                {params?.prompt}
+                              </pre>
+                            </Paper>
+      </Collapse></>
                         )}
                     </Stack>
                   );

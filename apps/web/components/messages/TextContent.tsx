@@ -1,5 +1,6 @@
 "use client";
 
+import { Paper } from "@mantine/core";
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 
@@ -149,8 +150,9 @@ const components: Components = {
 
 export function TextContent({ text }: TextContentProps) {
   return (
-    <div style={{ fontSize: "14px", lineHeight: "1.6", color: "#212529" }}>
+
+                            <Paper p="md" bg="gray.1">
       <ReactMarkdown components={components}>{text}</ReactMarkdown>
-    </div>
+</Paper>
   );
 }
