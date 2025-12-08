@@ -10,7 +10,7 @@ import {
   Title,
   Collapse,
 } from "@mantine/core";
-import type { Job } from "@ai-starter/core";
+import type { ActivityLog } from "@ai-starter/core";
 import type {
   AgentJobParameters,
   ResponseMessage,
@@ -22,23 +22,27 @@ import { useDisclosure } from "@mantine/hooks";
 interface ActivityModalProps {
   opened: boolean;
   onClose: () => void;
-  jobs: Job[];
+  activities: ActivityLog[];
 }
 
-export function ActivityModal({ opened, onClose, jobs }: ActivityModalProps) {
+export function ActivityModal({
+  opened,
+  onClose,
+  activities,
+}: ActivityModalProps) {
   const [paramsOpened, { toggle: toggleParamsOpened }] = useDisclosure(false);
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(
-    jobs.length > 0 ? jobs[0].id : null
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(
+    activities.length > 0 ? activities[0].id : null
   );
 
-  // Reset selected job when jobs change
-  if (jobs.length > 0 && !selectedJobId) {
-    setSelectedJobId(jobs[0].id);
+  // Reset selected activity when activities change
+  if (activities.length > 0 && !selectedActivityId) {
+    setSelectedActivityId(activities[0].id);
   }
 
   const handleClose = () => {
     onClose();
-    setSelectedJobId(null);
+    setSelectedActivityId(null);
   };
 
   return (
@@ -54,28 +58,30 @@ export function ActivityModal({ opened, onClose, jobs }: ActivityModalProps) {
         },
       }}
     >
-      {jobs.length === 0 ? (
+      {activities.length === 0 ? (
         <Text c="dimmed" ta="center" py="xl">
-          No jobs found
+          No activities found
         </Text>
       ) : (
         <Group gap="md" h="100%">
-          {/* Left pane - Job list navigation */}
+          {/* Left pane - Activity list navigation */}
           <Paper withBorder radius="md" w={300} h="100%" p="sm">
             <Stack gap="xs" style={{ height: "100%", overflow: "auto" }}>
-              {jobs.map((job) => {
-                const isSelected = job.id === selectedJobId;
+              {activities.map((activity) => {
+                const isSelected = activity.id === selectedActivityId;
                 const latestTime =
-                  job.finishedAt || job.startedAt || job.scheduledAt;
+                  activity.finishedAt ||
+                  activity.startedAt ||
+                  activity.scheduledAt;
 
                 return (
                   <Paper
-                    key={job.id}
+                    key={activity.id}
                     p="sm"
                     withBorder
                     bg={isSelected ? "blue.0" : undefined}
                     style={{ cursor: "pointer" }}
-                    onClick={() => setSelectedJobId(job.id)}
+                    onClick={() => setSelectedActivityId(activity.id)}
                   >
                     <Stack gap="xs">
                       <Group gap="xs" align="center">
@@ -85,18 +91,18 @@ export function ActivityModal({ opened, onClose, jobs }: ActivityModalProps) {
                             size="xs"
                             style={{ marginRight: 6 }}
                             c={
-                              job.status === "completed"
+                              activity.status === "completed"
                                 ? "green"
-                                : job.status === "failed"
+                                : activity.status === "failed"
                                   ? "red"
-                                  : job.status === "running"
+                                  : activity.status === "running"
                                     ? "blue"
                                     : "gray"
                             }
                           >
                             ●
                           </Text>
-                          {job.name}
+                          {activity.name}
                         </Text>
                       </Group>
                       {latestTime && (
@@ -111,68 +117,82 @@ export function ActivityModal({ opened, onClose, jobs }: ActivityModalProps) {
             </Stack>
           </Paper>
 
-          {/* Right pane - Job details */}
+          {/* Right pane - Activity details */}
           <Paper withBorder radius="md" style={{ flex: 1 }} h="100%" p="md">
             <div style={{ height: "100%", overflow: "auto" }}>
-              {selectedJobId ? (
+              {selectedActivityId ? (
                 (() => {
-                  const selectedJob = jobs.find(
-                    (job) => job.id === selectedJobId
+                  const selectedActivity = activities.find(
+                    (activity) => activity.id === selectedActivityId
                   );
-                  if (!selectedJob) return null;
+                  if (!selectedActivity) return null;
 
                   const params =
-                    selectedJob.type === "agent"
-                      ? (selectedJob.parameters as AgentJobParameters)
-                      : null;
-                  const result = selectedJob.result as JobResultType;
+                    selectedActivity.type === "agent_job"
+                      ? (selectedActivity.parameters as AgentJobParameters)
+                      : selectedActivity.type === "reviewing_email"
+                        ? (selectedActivity.parameters as {
+                            to: string;
+                            subject: string;
+                            body: string;
+                            messageId: string;
+                            timestamp: string;
+                          })
+                        : null;
+                  const result = selectedActivity.result as JobResultType;
 
                   return (
                     <Stack gap="md">
                       <Group justify="space-between">
                         <Text fw={600} size="lg">
-                          {selectedJob.name}
+                          {selectedActivity.name}
                         </Text>
                         <Text
                           size="sm"
                           fw={500}
                           c={
-                            selectedJob.status === "completed"
+                            selectedActivity.status === "completed"
                               ? "green"
-                              : selectedJob.status === "failed"
+                              : selectedActivity.status === "failed"
                                 ? "red"
-                                : selectedJob.status === "running"
+                                : selectedActivity.status === "running"
                                   ? "blue"
                                   : "gray"
                           }
                         >
-                          {selectedJob.status.toUpperCase()}
+                          {selectedActivity.status.toUpperCase()}
                         </Text>
                       </Group>
 
                       <Group gap="lg" wrap="nowrap">
-                        {selectedJob.scheduledAt && (
+                        {selectedActivity.scheduledAt && (
                           <Text size="xs" c="dimmed">
                             Scheduled:{" "}
-                            {new Date(selectedJob.scheduledAt).toLocaleString()}
+                            {new Date(
+                              selectedActivity.scheduledAt
+                            ).toLocaleString()}
                           </Text>
                         )}
-                        {selectedJob.startedAt && (
+                        {selectedActivity.startedAt && (
                           <Text size="xs" c="dimmed">
                             Started:{" "}
-                            {new Date(selectedJob.startedAt).toLocaleString()}
+                            {new Date(
+                              selectedActivity.startedAt
+                            ).toLocaleString()}
                           </Text>
                         )}
-                        {selectedJob.finishedAt && (
+                        {selectedActivity.finishedAt && (
                           <Text size="xs" c="dimmed">
                             Finished:{" "}
-                            {new Date(selectedJob.finishedAt).toLocaleString()}
+                            {new Date(
+                              selectedActivity.finishedAt
+                            ).toLocaleString()}
                           </Text>
                         )}
                       </Group>
 
-                      {selectedJob.result !== null &&
-                        selectedJob.result !== undefined && (
+                      {selectedActivity.result !== null &&
+                        selectedActivity.result !== undefined && (
                           <div>
                             <Paper p="md">
                               {"error" in result ? (
@@ -195,8 +215,8 @@ export function ActivityModal({ opened, onClose, jobs }: ActivityModalProps) {
                           </div>
                         )}
 
-                      {selectedJob.parameters !== null &&
-                        selectedJob.parameters !== undefined && (
+                      {selectedActivity.parameters !== null &&
+                        selectedActivity.parameters !== undefined && (
                           <>
                             <Title
                               order={6}
@@ -215,7 +235,12 @@ export function ActivityModal({ opened, onClose, jobs }: ActivityModalProps) {
                                     wordBreak: "break-word",
                                   }}
                                 >
-                                  {params?.prompt}
+                                  {selectedActivity.type === "agent_job"
+                                    ? (params as AgentJobParameters)?.prompt
+                                    : selectedActivity.type ===
+                                        "reviewing_email"
+                                      ? `To: ${(params as { to: string; subject: string; body: string })?.to}\nSubject: ${(params as { to: string; subject: string; body: string })?.subject}\n\n${(params as { to: string; subject: string; body: string })?.body}`
+                                      : JSON.stringify(params, null, 2)}
                                 </pre>
                               </Paper>
                             </Collapse>
@@ -226,7 +251,7 @@ export function ActivityModal({ opened, onClose, jobs }: ActivityModalProps) {
                 })()
               ) : (
                 <Text c="dimmed" ta="center" py="xl">
-                  Select a job to view details
+                  Select an activity to view details
                 </Text>
               )}
             </div>

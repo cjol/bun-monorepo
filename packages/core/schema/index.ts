@@ -20,3 +20,5 @@ export * from "./job";
 export * from "./jobEntity";
 export * from "./documentTemplate";
 export * from "./document";
+export * from "./activityLog";
+export * from "./activityLogEntity";

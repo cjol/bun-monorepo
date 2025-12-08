@@ -22,7 +22,7 @@ import { notifications } from "@mantine/notifications";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconPlus } from "@tabler/icons-react";
 import { api } from "../../../../lib/api";
-import type { Bill, Job } from "@ai-starter/core";
+import type { Bill, ActivityLog } from "@ai-starter/core";
 import { useTimeEntryData } from "../../../../hooks/useTimeEntryData";
 import { useEnrichedTimeEntries } from "../../../../hooks/useEnrichedTimeEntries";
 import { useMetadataFields } from "../../../../hooks/useMetadataFields";
@@ -41,8 +41,10 @@ interface TimeEntryFormValues {
 export default function TimeEntriesPage() {
   const [editingEntry, setEditingEntry] = useState<string | null>(null);
   const [opened, setOpened] = useState(false);
-  const [jobsModalOpened, setJobsModalOpened] = useState(false);
-  const [selectedJobs, setSelectedJobs] = useState<Job[]>([]);
+  const [activitiesModalOpened, setActivitiesModalOpened] = useState(false);
+  const [selectedActivities, setSelectedActivities] = useState<ActivityLog[]>(
+    []
+  );
   const [suggestionIndices, setSuggestionIndices] = useState<
     Record<string, number>
   >({});
@@ -254,9 +256,9 @@ export default function TimeEntriesPage() {
             onRejectSuggestion={(suggestionId) =>
               rejectSuggestionMutation.mutate(suggestionId)
             }
-            onViewJobs={(jobs) => {
-              setSelectedJobs(jobs);
-              setJobsModalOpened(true);
+            onViewActivities={(activities) => {
+              setSelectedActivities(activities);
+              setActivitiesModalOpened(true);
             }}
             isApprovePending={approveSuggestionMutation.isPending}
             isRejectPending={rejectSuggestionMutation.isPending}
@@ -339,14 +341,14 @@ export default function TimeEntriesPage() {
         </form>
       </Modal>
 
-      {/* Jobs Modal */}
+      {/* Activities Modal */}
       <ActivityModal
-        opened={jobsModalOpened}
+        opened={activitiesModalOpened}
         onClose={() => {
-          setJobsModalOpened(false);
-          setSelectedJobs([]);
+          setActivitiesModalOpened(false);
+          setSelectedActivities([]);
         }}
-        jobs={selectedJobs}
+        activities={selectedActivities}
       />
     </Container>
   );

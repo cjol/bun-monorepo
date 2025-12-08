@@ -12,6 +12,7 @@ import type {
   JobRepository,
   DocumentTemplateRepository,
   DocumentRepository,
+  ActivityLogRepository,
 } from "@ai-starter/core";
 import { MatterService } from "./MatterService";
 import { BillService } from "./BillService";
@@ -23,6 +24,7 @@ import { TimekeeperService } from "./TimekeeperService";
 import { TimekeeperRoleService } from "./TimekeeperRoleService";
 import { RoleService } from "./RoleService";
 import { JobService } from "./JobService";
+import { ActivityLogService } from "./ActivityLogService";
 import { CsvHeaderMappingService } from "./CsvHeaderMappingService";
 import { DocumentTemplateService } from "./DocumentTemplateService";
 import { DocumentService } from "./DocumentService";
@@ -43,6 +45,7 @@ export interface Deps {
     job: JobRepository;
     documentTemplate: DocumentTemplateRepository;
     document: DocumentRepository;
+    activityLog: ActivityLogRepository;
   };
   storage: FileStorage;
 }
@@ -72,8 +75,13 @@ export const CoreAppService = (deps: Deps) => {
   const roleService = RoleService({
     repos: { role: repos.role },
   });
+  const activityLogService = ActivityLogService({
+    repos: { activityLog: repos.activityLog },
+  });
+
   const jobService = JobService({
     repos: { job: repos.job },
+    services: { activityLog: activityLogService },
   });
 
   const timeEntryService = TimeEntryService({
@@ -85,6 +93,7 @@ export const CoreAppService = (deps: Deps) => {
     services: {
       workflow: workflowService,
       job: jobService,
+      activityLog: activityLogService,
     },
   });
 
@@ -139,6 +148,7 @@ export const CoreAppService = (deps: Deps) => {
     timekeeperRole: timekeeperRoleService,
     role: roleService,
     job: jobService,
+    activityLog: activityLogService,
     documentTemplate: documentTemplateService,
     document: documentService,
   };

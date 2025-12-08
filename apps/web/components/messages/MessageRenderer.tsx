@@ -11,7 +11,7 @@ interface MessageRendererProps {
 
 export function MessageRenderer({ messages }: MessageRendererProps) {
   // Build a map of toolCallId to tool result for quick lookup
-  const toolResults = new Map<string, { output: { error?: string } }>();
+  const toolResults = new Map<string, { output: unknown }>();
 
   // Collect all tool results from all messages
   for (const message of messages) {
@@ -35,7 +35,7 @@ export function MessageRenderer({ messages }: MessageRendererProps) {
           }
 
           toolResults.set(resultPart.toolCallId, {
-            output: { error },
+            output: resultPart.output.value,
           });
         }
       }

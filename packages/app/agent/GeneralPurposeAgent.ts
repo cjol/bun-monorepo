@@ -15,6 +15,7 @@ import type {
   RoleService as RoleServiceType,
   DocumentService as DocumentServiceType,
   DocumentTemplateService as DocumentTemplateServiceType,
+  ActivityLogService as ActivityLogServiceType,
 } from "../core";
 import { createMatterSandboxFunctions } from "./sandbox/MatterServiceSandbox";
 import { createBillSandboxFunctions } from "./sandbox/BillServiceSandbox";
@@ -53,6 +54,7 @@ export interface CreateGeneralPurposeAgentOptions {
     role: RoleServiceType;
     document: DocumentServiceType;
     documentTemplate: DocumentTemplateServiceType;
+    activityLog: ActivityLogServiceType;
   };
 
   /**
@@ -76,6 +78,12 @@ export interface CreateGeneralPurposeAgentOptions {
    * Use this to restrict agent capabilities for specific use cases.
    */
   allowedFunctions?: SandboxFunctionName[];
+
+  /**
+   * Optional context for time entries being processed.
+   * Used for linking email activities to specific time entries.
+   */
+  timeEntryContext?: { timeEntryIds?: string[] };
 }
 
 /**
@@ -137,8 +145,13 @@ export type SandboxFunctionName = keyof ReturnType<
 export function createGeneralPurposeAgent(
   options: CreateGeneralPurposeAgentOptions
 ) {
-  const { services, matterContext, workflowInstructions, allowedFunctions } =
-    options;
+  const {
+    services,
+    matterContext,
+    workflowInstructions,
+    allowedFunctions,
+    timeEntryContext,
+  } = options;
   const allSandboxFunctions = createSandboxFunctions(services);
 
   const sandboxFunctions = allowedFunctions
@@ -217,7 +230,7 @@ ${generateFunctionDocs(sandboxFunctions)}`;
         functions: sandboxFunctions,
         timeout: 30000,
       }),
-      sendEmail: createSendEmailTool(),
+      sendEmail: createSendEmailTool(services.activityLog, timeEntryContext),
       searchDocumentStore: createSearchDocumentStoreTool(),
     },
     stopWhen: stepCountIs(10),

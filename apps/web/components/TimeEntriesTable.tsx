@@ -8,7 +8,7 @@ import {
   IconCheck,
   IconX,
 } from "@tabler/icons-react";
-import type { Job, AiSuggestion, Timekeeper } from "@ai-starter/core";
+import type { ActivityLog, AiSuggestion, Timekeeper } from "@ai-starter/core";
 import type { EnrichedTimeEntry } from "../hooks/useEnrichedTimeEntries";
 import { formatCurrency } from "../hooks/useEnrichedTimeEntries";
 import { SuggestionDiff } from "./SuggestionDiff";
@@ -27,7 +27,7 @@ interface TimeEntriesTableProps {
   onCycleSuggestion: (timeEntryId: string) => void;
   onApproveSuggestion: (suggestionId: string) => void;
   onRejectSuggestion: (suggestionId: string) => void;
-  onViewJobs: (jobs: Job[]) => void;
+  onViewActivities: (activities: ActivityLog[]) => void;
   isApprovePending: boolean;
   isRejectPending: boolean;
   timekeepers?: Timekeeper[];
@@ -41,16 +41,19 @@ export function TimeEntriesTable({
   onCycleSuggestion,
   onApproveSuggestion,
   onRejectSuggestion,
-  onViewJobs,
+  onViewActivities,
   isApprovePending,
   isRejectPending,
   timekeepers = [],
 }: TimeEntriesTableProps) {
-  const getJobIconColor = (jobs: Job[]) => {
-    if (jobs.some((job) => job.status === "running")) return "green";
-    if (jobs.some((job) => job.status === "failed")) return "red";
-    if (jobs.some((job) => job.status === "completed")) return "blue";
-    return "gray"; // all pending
+  const getActivityIconColor = (activities: ActivityLog[]) => {
+    if (activities.some((activity) => activity.status === "running"))
+      return "green";
+    if (activities.some((activity) => activity.status === "failed"))
+      return "red";
+    if (activities.some((activity) => activity.status === "completed"))
+      return "blue";
+    return "gray";
   };
 
   // Helper to get the current suggestion for a time entry
@@ -233,12 +236,12 @@ export function TimeEntriesTable({
                       </ActionIcon>
                     </>
                   )}
-                  {entry.jobs && entry.jobs.length > 0 && (
+                  {entry.activities && entry.activities.length > 0 && (
                     <ActionIcon
                       variant="subtle"
-                      color={getJobIconColor(entry.jobs)}
+                      color={getActivityIconColor(entry.activities)}
                       onClick={() => {
-                        onViewJobs(entry.jobs || []);
+                        onViewActivities(entry.activities || []);
                       }}
                     >
                       <IconRobot size={16} />

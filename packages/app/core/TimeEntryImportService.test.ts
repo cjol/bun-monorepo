@@ -10,7 +10,8 @@ import type { TimeEntry } from "@ai-starter/core";
 import { TimeEntryService } from "./TimeEntryService";
 import type { CsvHeaderMappingService } from "./CsvHeaderMappingService";
 import { WorkflowService } from "./WorkflowService";
-import { JobService } from "..";
+import { JobService } from "./JobService";
+import { ActivityLogService } from "./ActivityLogService";
 
 describe("TimeEntryImportService", () => {
   let db: DB;
@@ -44,11 +45,15 @@ describe("TimeEntryImportService", () => {
     mockCsvMappingService.mapCsvHeaders.mockClear();
     const workflow = WorkflowService({ repos });
     const job = JobService({ repos });
+    const activityLog = ActivityLogService({ repos });
 
     service = TimeEntryImportService({
       repos,
       services: {
-        timeEntry: TimeEntryService({ repos, services: { workflow, job } }),
+        timeEntry: TimeEntryService({
+          repos,
+          services: { workflow, job, activityLog },
+        }),
         csvMapping: mockCsvMappingService,
       },
     });

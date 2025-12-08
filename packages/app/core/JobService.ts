@@ -1,13 +1,17 @@
 import { type JobRepository } from "@ai-starter/core";
+import type { ActivityLogService as ActivityLogServiceType } from "./ActivityLogService";
 
 export interface Deps {
   repos: {
     job: JobRepository;
   };
+  services?: {
+    activityLog?: ActivityLogServiceType;
+  };
 }
 
 export const JobService = (deps: Deps) => {
-  const { repos } = deps;
+  const { repos, services } = deps;
 
   return {
     getJob: repos.job.get,
@@ -22,22 +26,58 @@ export const JobService = (deps: Deps) => {
      * Complete a job with a successful result.
      */
     completeJob: async (id: string, result: Record<string, unknown>) => {
-      return repos.job.update(id, {
+      const updatedJob = await repos.job.update(id, {
         status: "completed",
         result,
         finishedAt: new Date(),
       });
+
+      // Sync activity log if service is available
+      if (services?.activityLog) {
+        try {
+          await services.activityLog.syncAgentJobActivity(id, {
+            status: "completed",
+            result,
+            finishedAt: new Date(),
+          });
+        } catch (error) {
+          console.error(
+            "Failed to sync activity log for completed job:",
+            error
+          );
+        }
+      }
+
+      return updatedJob;
     },
 
     /**
      * Fail a job with an error.
      */
     failJob: async (id: string, error: Record<string, unknown>) => {
-      return repos.job.update(id, {
+      const updatedJob = await repos.job.update(id, {
         status: "failed",
         result: error,
         finishedAt: new Date(),
       });
+
+      // Sync activity log if service is available
+      if (services?.activityLog) {
+        try {
+          await services.activityLog.syncAgentJobActivity(id, {
+            status: "failed",
+            result: error,
+            finishedAt: new Date(),
+          });
+        } catch (syncError) {
+          console.error(
+            "Failed to sync activity log for failed job:",
+            syncError
+          );
+        }
+      }
+
+      return updatedJob;
     },
 
     /**

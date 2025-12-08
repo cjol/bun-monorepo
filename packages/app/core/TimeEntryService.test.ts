@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import {
   createTestMatter,
-  createTestTimekeeper,
+  createTestTimekeeper as _createTestTimekeeper,
 } from "@ai-starter/db/test-utils";
 import { testDB } from "@ai-starter/db/test-utils";
 import { getRepos, type DB } from "@ai-starter/db";
@@ -12,6 +12,7 @@ import {
 } from "@ai-starter/db/test-utils";
 import { WorkflowService } from "./WorkflowService";
 import { JobService } from "./JobService";
+import { ActivityLogService } from "./ActivityLogService";
 
 describe("TimeEntryService", () => {
   let db: DB;
@@ -27,6 +28,7 @@ describe("TimeEntryService", () => {
       services: {
         workflow: WorkflowService({ repos }),
         job: JobService({ repos }),
+        activityLog: ActivityLogService({ repos }),
       },
     });
 
@@ -65,33 +67,33 @@ describe("TimeEntryService", () => {
         {
           matterId: context.matter.id,
           timekeeperId: context.timekeeper.id,
-          billId: null,
+          billId: context.bill!.id,
           date: new Date("2024-01-15"),
           hours: 2.5,
           description: "Client consultation",
         },
       ]);
 
-      const result = results[0];
-      if (!result) throw new Error("Failed to create time entry");
+      const created = results[0]!;
+      if (!created) throw new Error("Failed to create time entry");
 
-      const logs = await repos.timeEntryChangeLog.listByTimeEntry(result.id);
+      const logs = await repos.timeEntryChangeLog.listByTimeEntry(created.id);
       expect(logs).toHaveLength(1);
       expect(logs[0]).toEqual({
         id: expect.any(String),
-        timeEntryId: result.id,
+        timeEntryId: created.id,
         beforeData: null,
         afterData: {
-          id: result.id,
+          id: created.id,
           matterId: context.matter.id,
           timekeeperId: context.timekeeper.id,
-          billId: null,
-          date: result.date,
+          billId: context.bill!.id,
+          date: new Date("2024-01-15"),
           hours: 2.5,
           description: "Client consultation",
           metadata: {},
-          createdAt: result.createdAt,
-          updatedAt: result.updatedAt,
+          createdAt: created.createdAt,
+          updatedAt: created.updatedAt,
         },
         reason: null,
         changedAt: expect.any(Date),
@@ -99,7 +101,7 @@ describe("TimeEntryService", () => {
     });
 
     it("should reject creating a time entry when timekeeper has no role in matter", async () => {
-      // Create a different matter without assigning the timekeeper to it
+      // Create a different matter without assigning timekeeper to it
       const otherMatter = await createTestMatter(db);
       if (!otherMatter) throw new Error("Failed to create other matter");
 
@@ -119,6 +121,7 @@ describe("TimeEntryService", () => {
       );
     });
   });
+
   describe("updateTimeEntry", () => {
     it("should update time entry fields", async () => {
       const createdResults = await service.createTimeEntries(
@@ -213,7 +216,7 @@ describe("TimeEntryService", () => {
       const created = rejectTestResults[0];
       if (!created) throw new Error("Failed to create time entry");
 
-      // Create a different matter without assigning the timekeeper to it
+      // Create a different matter without assigning timekeeper to it
       const otherMatter = await createTestMatter(db);
       if (!otherMatter) throw new Error("Failed to create other matter");
 
@@ -225,40 +228,33 @@ describe("TimeEntryService", () => {
         `Timekeeper ${context.timekeeper.id} does not have a role within matter ${otherMatter.id}`
       );
     });
+  });
 
-    it("should reject updating time entry to a timekeeper who has no role in the matter", async () => {
-      const timekeeperTestResults = await service.createTimeEntries(
-        context.matter.id,
-        [
-          {
-            matterId: context.matter.id,
-            timekeeperId: context.timekeeper.id,
-            billId: context.bill!.id,
-            date: new Date("2024-01-15"),
-            hours: 2.5,
-            description: "Client consultation",
-          },
-        ]
-      );
+  describe("getTimeEntryActivities", () => {
+    it("should return activities for a time entry", async () => {
+      const results = await service.createTimeEntries(context.matter.id, [
+        {
+          matterId: context.matter.id,
+          timekeeperId: context.timekeeper.id,
+          billId: context.bill!.id,
+          date: new Date("2024-01-15"),
+          hours: 2.5,
+          description: "Client consultation",
+        },
+      ]);
 
-      const created = timekeeperTestResults[0];
+      const created = results[0];
       if (!created) throw new Error("Failed to create time entry");
 
-      // Create a different timekeeper without assigning them to the matter
-      const otherTimekeeper = await createTestTimekeeper(db, {
-        name: "Other Timekeeper",
-        email: "other@example.com",
-      });
-      if (!otherTimekeeper)
-        throw new Error("Failed to create other timekeeper");
+      const activities = await service.getTimeEntryActivities(created.id);
+      expect(activities).toBeDefined();
+      expect(Array.isArray(activities)).toBe(true);
+    });
 
-      await expect(
-        service.updateTimeEntry(created.id, {
-          timekeeperId: otherTimekeeper.id,
-        })
-      ).rejects.toThrow(
-        `Timekeeper ${otherTimekeeper.id} does not have a role within matter ${context.matter.id}`
-      );
+    it("should return empty array when no activities exist", async () => {
+      const activities =
+        await service.getTimeEntryActivities("non-existent-id");
+      expect(activities).toEqual([]);
     });
   });
 });

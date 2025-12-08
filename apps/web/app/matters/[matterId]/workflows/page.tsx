@@ -287,7 +287,8 @@ export default function WorkflowsPage() {
               label="Instructions"
               placeholder="Natural language instructions for this workflow..."
               required
-              minRows={6}
+              minRows={15}
+              h="10rem"
               {...form.getInputProps("instructions")}
             />
             <Select

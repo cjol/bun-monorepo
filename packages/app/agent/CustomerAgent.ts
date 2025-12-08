@@ -24,8 +24,8 @@ const CUSTOMER_ALLOWED_FUNCTIONS: SandboxFunctionName[] = [
   "listTimeEntriesByMatter",
   "listTimeEntriesByBill",
   // AiSuggestion (full access - this is the preferred write path)
-  "createAiSuggestion",
-  "listPendingSuggestions",
+  "updateTimeEntry",
+  "listTimeEntryChangeSuggestions",
   // Workflow (read + write for customers)
   "listWorkflows",
   "getWorkflow",

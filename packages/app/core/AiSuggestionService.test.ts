@@ -10,6 +10,7 @@ import {
 } from "@ai-starter/db/test-utils";
 import { WorkflowService } from "./WorkflowService";
 import { JobService } from "./JobService";
+import { ActivityLogService } from "./ActivityLogService";
 
 describe("AiSuggestionService", () => {
   let db: DB;
@@ -27,6 +28,7 @@ describe("AiSuggestionService", () => {
       services: {
         workflow: WorkflowService({ repos }),
         job: JobService({ repos }),
+        activityLog: ActivityLogService({ repos }),
       },
     });
     service = AiSuggestionService({

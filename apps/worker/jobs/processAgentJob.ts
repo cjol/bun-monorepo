@@ -43,6 +43,12 @@ export async function processAgentJob(
     },
   });
 
+  // Get time entry IDs from job entities for context
+  const jobEntities = await app.job.listEntitiesByJob(job.id);
+  const timeEntryIds = jobEntities
+    .filter((entity) => entity.entityType === "time_entry")
+    .map((entity) => entity.entityId);
+
   // Create agent with matter context and workflow instructions
   const agent = createCustomerAgent({
     services: {
@@ -56,10 +62,12 @@ export async function processAgentJob(
       role: app.role,
       document: app.document,
       documentTemplate: app.documentTemplate,
+      activityLog: app.activityLog,
     },
     matterContext,
     workflowInstructions: workflow.instructions,
     model: model,
+    timeEntryContext: { timeEntryIds },
   });
 
   // Execute the agent

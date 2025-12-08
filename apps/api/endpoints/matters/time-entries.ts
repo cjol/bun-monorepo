@@ -34,15 +34,17 @@ export const matterTimeEntryRoutes = ({ app }: Context) =>
             `Time entry with ID ${params.timeEntryId} not found in matter ${params.matterId}`
           );
         }
-        const jobs = await app.timeEntry.getTimeEntryJobs(params.timeEntryId);
-        return status(200, { ...result, jobs });
+        const activities = await app.timeEntry.getTimeEntryActivities(
+          params.timeEntryId
+        );
+        return status(200, { ...result, activities });
       },
       {
         params: matterTimeEntryParamsSchema,
         detail: {
           summary: "Get Time Entry",
           description:
-            "Retrieve a single time entry by ID within a matter, including related jobs.",
+            "Retrieve a single time entry by ID within a matter, including related activities.",
         },
       }
     )
@@ -59,11 +61,13 @@ export const matterTimeEntryRoutes = ({ app }: Context) =>
           entries = await app.timeEntry.listByMatter(params.matterId);
         }
 
-        // Enrich each entry with related jobs
+        // Enrich each entry with related activities
         const enrichedEntries = await Promise.all(
           entries.map(async (entry) => {
-            const jobs = await app.timeEntry.getTimeEntryJobs(entry.id);
-            return { ...entry, jobs };
+            const activities = await app.timeEntry.getTimeEntryActivities(
+              entry.id
+            );
+            return { ...entry, activities };
           })
         );
 
@@ -75,7 +79,7 @@ export const matterTimeEntryRoutes = ({ app }: Context) =>
         detail: {
           summary: "List Time Entries",
           description:
-            "Retrieve a list of all time entries for a matter, optionally filtered by bill. Each entry includes related jobs.",
+            "Retrieve a list of all time entries for a matter, optionally filtered by bill. Each entry includes related activities.",
         },
       }
     )

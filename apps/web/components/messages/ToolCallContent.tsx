@@ -2,45 +2,58 @@
 
 import { ToolCallPart } from "@ai-starter/core";
 import { Group, Text } from "@mantine/core";
+import { SendEmailInput } from "../../../../packages/app/agent/utils/createSendEmailTool";
 
 interface ToolCallContentProps {
   part: ToolCallPart;
   result?: {
-    output: {
-      error?: string;
-    };
+    output: unknown;
   };
 }
 
-function getToolDisplayInfo(
-  toolName: string,
-  status: "pending" | "error" | "success"
-) {
+function getToolDisplayInfo({ toolName, input }: ToolCallPart, result: any) {
   switch (toolName) {
     case "runCode":
       return {
         pending: "Working...",
         error: "Task failed",
         success: "Task successful",
-      }[status];
+      };
     case "sendEmail":
       return {
-        pending: "Sending email...",
-        error: "Failed to send email",
-        success: "Email sent",
-      }[status];
+        pending: `Sending email to ${(input as SendEmailInput).to}...`,
+        error: `Failed to send email to ${(input as SendEmailInput).to}`,
+        success: `Email sent to ${(input as SendEmailInput).to}`,
+      };
     case "searchDocumentStore":
       return {
         pending: "Searching documents...",
-        error: "Search failed",
-        success: "Search complete",
-      }[status];
+        error: "Document search failed",
+        success: (
+          <span>
+            Document search complete:{" "}
+            {result.output.results.map(
+              (doc: { id: string; title: string }, index: number) => (
+                <span key={doc.id}>
+                <br />
+                  <a
+                    href="#"
+                    style={{ color: "inherit", textDecoration: "underline" }}
+                  >
+                    📄 {doc.title}
+                  </a>
+                </span>
+              )
+            )}
+          </span>
+        ),
+      };
     default:
       return {
         pending: `Working... [${toolName}]`,
         error: `Failed [${toolName}]`,
         success: `Complete [${toolName}]`,
-      }[status];
+      };
   }
 }
 
@@ -50,7 +63,7 @@ export function ToolCallContent({ result, part }: ToolCallContentProps) {
 
   if (!result) {
     status = "pending";
-  } else if (result.output.error) {
+  } else if ("error" in result.output) {
     status = "error";
   } else {
     status = "success";
@@ -67,7 +80,7 @@ export function ToolCallContent({ result, part }: ToolCallContentProps) {
         {statusIcon}
       </Text>
       <Text size="sm" c="dimmed">
-        {getToolDisplayInfo(part.toolName, status)}
+        {getToolDisplayInfo(part, result)[status]}
       </Text>
     </Group>
   );

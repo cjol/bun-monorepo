@@ -8,6 +8,7 @@ import {
 import { badRequest } from "@hapi/boom";
 import type { WorkflowService as WorkflowServiceType } from "./WorkflowService";
 import type { JobService as JobServiceType } from "./JobService";
+import type { ActivityLogService as ActivityLogServiceType } from "./ActivityLogService";
 
 export interface Deps {
   repos: {
@@ -18,6 +19,7 @@ export interface Deps {
   services: {
     workflow: WorkflowServiceType;
     job: JobServiceType;
+    activityLog: ActivityLogServiceType;
   };
 }
 
@@ -30,22 +32,14 @@ export const TimeEntryService = (deps: Deps) => {
     listByBill: repos.timeEntry.listByMatterAndBill,
 
     /**
-     * Get all jobs associated with a time entry.
+     * Get all activities associated with a time entry.
      */
-    getTimeEntryJobs: async (timeEntryId: string) => {
-      if (!services?.job) {
+    getTimeEntryActivities: async (timeEntryId: string) => {
+      if (!services?.activityLog) {
         return [];
       }
-      const jobService = services.job;
-      const jobEntities = await jobService.listJobsByEntity(
-        "time_entry",
-        timeEntryId
-      );
-      // Hydrate with full job objects
-      const jobs = await Promise.all(
-        jobEntities.map((je) => jobService.getJob(je.jobId))
-      );
-      return jobs.filter((job) => job !== undefined);
+      const activityLogService = services.activityLog;
+      return activityLogService.listByEntity("time_entry", timeEntryId);
     },
 
     createTimeEntries: async (
@@ -115,7 +109,7 @@ ${timeEntriesJson}
 
 Please process these time entries according to the workflow instructions.`;
 
-            await services.job.createJob(
+            const job = await services.job.createJob(
               {
                 name: workflow.name,
                 type: "agent",
@@ -125,6 +119,21 @@ Please process these time entries according to the workflow instructions.`;
                   workflowId: workflow.id,
                 },
               },
+              subBatch.map((entry: TimeEntry) => ({
+                entityType: "time_entry",
+                entityId: entry.id,
+              }))
+            );
+
+            // Create corresponding activity log entry
+            await services.activityLog.createAgentJobActivity(
+              workflow.name,
+              {
+                prompt,
+                matterId,
+                workflowId: workflow.id,
+              },
+              job.id,
               subBatch.map((entry: TimeEntry) => ({
                 entityType: "time_entry",
                 entityId: entry.id,

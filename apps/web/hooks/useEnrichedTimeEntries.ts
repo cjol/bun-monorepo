@@ -4,20 +4,20 @@ import type {
   Timekeeper,
   Role,
   TimekeeperRole,
-  Job,
+  ActivityLog,
 } from "@ai-starter/core";
 
 export interface EnrichedTimeEntry extends TimeEntry {
   timekeeperName: string;
   roleName: string;
   billableRate: number;
-  jobs?: Job[];
+  activities?: ActivityLog[];
 }
 
-type TimeEntryWithJobs = TimeEntry & { jobs?: Job[] };
+type TimeEntryWithActivities = TimeEntry & { activities?: ActivityLog[] };
 
 interface UseEnrichedTimeEntriesParams {
-  timeEntries?: TimeEntryWithJobs[];
+  timeEntries?: TimeEntryWithActivities[];
   timekeepers?: Timekeeper[];
   roles?: Role[];
   timekeeperRoles?: TimekeeperRole[];
