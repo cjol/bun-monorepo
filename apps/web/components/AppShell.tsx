@@ -14,13 +14,11 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconBriefcase,
-  IconFileInvoice,
   IconClock,
-  IconSparkles,
   IconUsers,
-  IconNote,
   IconChevronDown,
   IconFileDescription,
+  IconSettings,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -40,20 +38,13 @@ const topLevelNavItems = [
 function getMatterNavigationItems(matterId: string) {
   const base = `/matters/${matterId}`;
   return [
-    { icon: IconUsers, label: "Team", href: `${base}/timekeeper-roles` },
-    { icon: IconFileInvoice, label: "Bills", href: `${base}/bills` },
     { icon: IconClock, label: "Time Entries", href: `${base}/time-entries` },
-    {
-      icon: IconSparkles,
-      label: "AI Suggestions",
-      href: `${base}/suggestions`,
-    },
-    { icon: IconNote, label: "Workflows", href: `${base}/workflows` },
     {
       icon: IconFileDescription,
       label: "Documents",
       href: `${base}/documents`,
     },
+    { icon: IconSettings, label: "Settings", href: `${base}/settings` },
   ];
 }
 
