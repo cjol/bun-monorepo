@@ -8,7 +8,7 @@ import {
   doSeedRoles,
   createTestTimekeeper,
 } from "@ai-starter/db/test-utils";
-import { getRepos } from "@ai-starter/db";
+import { getRepos, MockFileStorage } from "@ai-starter/db";
 
 import { faithfulness } from "evalite/scorers";
 import { buildMatterContext } from "./utils/buildMatterContext";
@@ -22,6 +22,8 @@ import {
   TimekeeperRoleService,
   RoleService,
   JobService,
+  DocumentService,
+  DocumentTemplateService,
 } from "../core";
 import { createGeneralPurposeAgent } from "./GeneralPurposeAgent";
 import type { TimeEntry } from "@ai-starter/core";
@@ -36,6 +38,14 @@ async function setupTest() {
   const workflow = WorkflowService({ repos });
   const job = JobService({ repos });
   const timeEntry = TimeEntryService({ repos, services: { workflow, job } });
+  const documentTemplate = DocumentTemplateService({ repos });
+  const document = DocumentService({
+    repos: {
+      document: repos.document,
+      documentTemplate: repos.documentTemplate,
+    },
+    storage: MockFileStorage(), // Mock storage for tests
+  });
   const services = {
     job,
     workflow,
@@ -46,6 +56,8 @@ async function setupTest() {
     timekeeper: TimekeeperService({ repos }),
     timekeeperRole: TimekeeperRoleService({ repos }),
     role: RoleService({ repos }),
+    document,
+    documentTemplate,
   };
   const model = wrapAISDKModel(anthropic("claude-haiku-4-5"));
   return { db, repos, services, model };

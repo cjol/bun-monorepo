@@ -38,3 +38,6 @@ node_modules/.evalite
 *.db
 *.db-shm
 *.db-wal
+
+# Local storage
+/data/

@@ -4,6 +4,7 @@ import { AiAgentService } from "./AiAgentService";
 import { CoreAppService } from "../core/CoreAppService";
 import { testDB } from "@ai-starter/db/test-utils";
 import { getRepos } from "@ai-starter/db";
+import { MockFileStorage } from "@ai-starter/db/storage";
 import type { Message } from "@ai-starter/core";
 import { Experimental_Agent as Agent } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
@@ -15,7 +16,8 @@ import { anthropic } from "@ai-sdk/anthropic";
 async function setupTest() {
   const db = await testDB({ seed: false });
   const repos = getRepos(db);
-  const coreService = CoreAppService({ repos });
+  const storage = MockFileStorage();
+  const coreService = CoreAppService({ repos, storage });
 
   // Create a simple agent for testing with wrapped model
   const agent = new Agent({
