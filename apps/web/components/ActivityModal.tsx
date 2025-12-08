@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Modal, Group, Text, Paper, Stack, Title, Collapse } from "@mantine/core";
+import {
+  Modal,
+  Group,
+  Text,
+  Paper,
+  Stack,
+  Title,
+  Collapse,
+} from "@mantine/core";
 import type { Job } from "@ai-starter/core";
 import type {
   AgentJobParameters,
@@ -166,7 +174,7 @@ export function ActivityModal({ opened, onClose, jobs }: ActivityModalProps) {
                       {selectedJob.result !== null &&
                         selectedJob.result !== undefined && (
                           <div>
-                            <Paper p="md" >
+                            <Paper p="md">
                               {"error" in result ? (
                                 <pre
                                   style={{
@@ -189,22 +197,29 @@ export function ActivityModal({ opened, onClose, jobs }: ActivityModalProps) {
 
                       {selectedJob.parameters !== null &&
                         selectedJob.parameters !== undefined && (
-                            <>
-                            <Title order={6} onClick={toggleParamsOpened} c="gray.6">{paramsOpened ? "▼" : "▶"} Parameters</Title>
-      <Collapse in={paramsOpened}>
-                            <Paper p="xs" bg="gray.1">
-                              <pre
-                                style={{
-                                  margin: 0,
-                                  fontSize: "12px",
-                                  whiteSpace: "pre-wrap",
-                                  wordBreak: "break-word",
-                                }}
-                              >
-                                {params?.prompt}
-                              </pre>
-                            </Paper>
-      </Collapse></>
+                          <>
+                            <Title
+                              order={6}
+                              onClick={toggleParamsOpened}
+                              c="gray.6"
+                            >
+                              {paramsOpened ? "▼" : "▶"} Parameters
+                            </Title>
+                            <Collapse in={paramsOpened}>
+                              <Paper p="xs" bg="gray.1">
+                                <pre
+                                  style={{
+                                    margin: 0,
+                                    fontSize: "12px",
+                                    whiteSpace: "pre-wrap",
+                                    wordBreak: "break-word",
+                                  }}
+                                >
+                                  {params?.prompt}
+                                </pre>
+                              </Paper>
+                            </Collapse>
+                          </>
                         )}
                     </Stack>
                   );

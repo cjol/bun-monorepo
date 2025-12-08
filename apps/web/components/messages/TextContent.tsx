@@ -150,9 +150,8 @@ const components: Components = {
 
 export function TextContent({ text }: TextContentProps) {
   return (
-
-                            <Paper p="md" bg="gray.1">
+    <Paper p="md" bg="gray.1">
       <ReactMarkdown components={components}>{text}</ReactMarkdown>
-</Paper>
+    </Paper>
   );
 }

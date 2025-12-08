@@ -11,9 +11,8 @@ import { ulidSchema } from "@ai-starter/core/schema/utils/validation";
 export function createAiSuggestionSandboxFunctions(
   service: AiSuggestionService
 ) {
-  const createAiSuggestion = defineSandboxFunction({
-    description:
-      "Create an AI suggestion for time entry changes (for review/approval)",
+  const updateTimeEntry = defineSandboxFunction({
+    description: "Suggest a change to a time entry for review/approval",
     inputSchema: newAiSuggestionInputSchema,
     execute: async ({ timeEntryId, suggestedChanges, explanation }) => {
       return service.createSuggestion({
@@ -27,8 +26,8 @@ export function createAiSuggestionSandboxFunctions(
     },
   });
 
-  const listPendingSuggestions = defineSandboxFunction({
-    description: "List all pending AI suggestions for a matter",
+  const listTimeEntryChangeSuggestions = defineSandboxFunction({
+    description: "List all pending change suggestions for a matter",
     inputSchema: z.object({
       matterId: ulidSchema.describe("The ULID of the matter"),
     }),
@@ -38,7 +37,7 @@ export function createAiSuggestionSandboxFunctions(
   });
 
   return {
-    createAiSuggestion,
-    listPendingSuggestions,
+    updateTimeEntry,
+    listTimeEntryChangeSuggestions,
   };
 }

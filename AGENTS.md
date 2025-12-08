@@ -87,9 +87,6 @@
 - [ ] Create an EmailIngestionService (e.g., via webhook) that parses inbound emails and creates new Conversation and Message records.
 - [ ] Web chat interface for users to interact with agents directly.
 
-- evidence of consulting the DMS/Fee earner emails (dummy tools for the agent to call)
-- improved agent log view to show chat messages properly
-- Evidence of the narrative being rewritten (improved workflow script)
 - email jobs (add "waiting for email" jobs to the jobs system, then time entry status is either "awaiting system review" if there's a pending AI job, or "awaiting external action" if there's a pending "wait for email" job assigned to a user, or "awaiting your review" if there's outstanding AI suggestions on an entry)
 - Any kind of review process (TBC how but probably fits into the job system attached to a bill/document entity instead of time entries)
 
